@@ -1,1 +1,2 @@
-# Bakal-ka
+# Bakalarka
+Python simulating program
