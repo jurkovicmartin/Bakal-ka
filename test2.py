@@ -43,7 +43,7 @@ plt.plot(symbTx.real, symbTx.imag,'.', label='Tx')
 plt.axis('square')
 plt.xlabel('In-Phase (I)')
 plt.ylabel('Quadrature (Q)')
-plt.legend(loc='upper right');
+plt.legend(loc='upper right')
 plt.grid()
 
 
@@ -58,6 +58,6 @@ for ind, symb in enumerate(constSymb/np.sqrt(Es)):
     plt.annotate(str(bitMap[ind,:])[1:-1:2], xy = (symb.real, symb.imag))
 # -
 
-pconst(symbRx, whiteb=True);
+pconst(symbRx, whiteb=True)
 
-pconst(symbRx, whiteb=False);
+pconst(symbRx, whiteb=False)

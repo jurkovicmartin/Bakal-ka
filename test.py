@@ -68,10 +68,10 @@ interval = np.arange(16*20,16*50)
 t = interval*Ts/1e-9
 
 # plot psd
-axs[0].set_xlim(-3*Rs,3*Rs);
-axs[0].set_ylim(-180,-80);
+axs[0].set_xlim(-3*Rs,3*Rs)
+axs[0].set_ylim(-180,-80)
 axs[0].psd(sigTx,Fs=Fs, NFFT = 16*1024, sides='twosided', label = 'RF signal spectrum')
-axs[0].legend(loc='upper left');
+axs[0].legend(loc='upper left')
 
 axs[1].plot(t, sigTx[interval], label = 'RF binary signal', linewidth=2)
 axs[1].set_ylabel('Amplitude (a.u.)')
@@ -82,10 +82,10 @@ axs[1].grid()
 
 fig, axs = plt.subplots(1, 2, figsize=(16,3))
 # plot psd
-axs[0].set_xlim(-3*Rs,3*Rs);
-axs[0].set_ylim(-230,-130);
+axs[0].set_xlim(-3*Rs,3*Rs)
+axs[0].set_ylim(-230,-130)
 axs[0].psd(np.abs(sigTxo)**2, Fs=Fs, NFFT = 16*1024, sides='twosided', label = 'Optical signal spectrum')
-axs[0].legend(loc='upper left');
+axs[0].legend(loc='upper left')
 
 axs[1].plot(t, np.abs(sigTxo[interval])**2, label = 'Optical modulated signal', linewidth=2)
 axs[1].set_ylabel('Power (p.u.)')
