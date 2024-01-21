@@ -1,7 +1,7 @@
 # Bakalarka
 Python simulating program
 
-# Modulace v OptiCommPY
+# Modulations in OptiCommPY
 OOK
 PAM
 QAM
