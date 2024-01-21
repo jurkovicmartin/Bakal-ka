@@ -6,6 +6,6 @@
 - tkinter
 ## Display
 - bit sequence
-- constellation diagram
+- constellation diagram (Tx + Rx)
 - time function
-- eye diagram
+- eye diagram (Tx + Rx)
