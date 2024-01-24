@@ -1,9 +1,9 @@
 
-# Example
+# PSK TRY
 
 import numpy as np
 from commpy.utilities  import upsample
-from optic.models.devices import mzm, photodiode, edfa
+from optic.models.devices import mzm, photodiode, edfa, iqm
 from optic.models.channels import linearFiberChannel
 from optic.comm.modulation import GrayMapping, modulateGray
 from optic.dsp.core import pulseShape, lowPassFIR, pnorm, signal_power
@@ -26,20 +26,22 @@ np.random.seed(seed=123) # fixing the seed to get reproducible results
 
 # simulation parameters
 SpS = 16     # samples per symbol
-M = 2        # order of the modulation format
-Rs = 10e9    # Symbol rate (for OOK case Rs = Rb)
+M = 4        # order of the modulation format
+Rs = 5e9    # Symbol rate (for OOK case Rs = Rb)
 Fs = Rs*SpS  # Sampling frequency
 Ts = 1/Fs    # Sampling period
-constType = 'pam'
+constType = 'psk'
 
 # Laser power
 Pi_dBm = 0         # laser optical power at the input of the MZM in dBm
 Pi = dBm2W(Pi_dBm) # convert from dBm to W
 
-# MZM parameters
-paramMZM = parameters()
-paramMZM.Vpi = 2
-paramMZM.Vb = -paramMZM.Vpi/2
+# IQM parameters
+paramIQM = parameters()
+paramIQM.Vpi = 2
+paramIQM.Vbl = -2
+paramIQM.VbQ = -2
+paramIQM.Vphi = 1
 
 # generate pseudo-random bit sequence
 bitsTx = np.random.randint(2, size=100000)
@@ -60,7 +62,7 @@ sigTx = firFilter(pulse, symbolsUp)
 
 # optical modulation
 Ai = np.sqrt(Pi)
-sigTxo = mzm(Ai, sigTx, paramMZM)
+sigTxo = iqm(Ai, sigTx, paramIQM)
 
 print('Average power of the modulated optical signal [mW]: %.3f mW'%(signal_power(sigTxo)/1e-3))
 print('Average power of the modulated optical signal [dBm]: %.3f dBm'%(10*np.log10(signal_power(sigTxo)/1e-3)))

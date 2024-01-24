@@ -1,3 +1,6 @@
+
+# Constellation
+
 from optic.comm.modulation import modulateGray, demodulateGray, GrayMapping
 from optic.comm.metrics import fastBERcalc, theoryBER
 from optic.models.channels import awgn
