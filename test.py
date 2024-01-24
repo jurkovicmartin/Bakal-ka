@@ -12,7 +12,7 @@ except ImportError:
     from optic.dsp.core import firFilter
 
 from utils import parameters, dBm2W
-from optic.plot import eyediagram, pconst
+from optic.plot import eyediagram
 import matplotlib.pyplot as plt
 from scipy.special import erfc
 from tqdm import tqdm
@@ -28,6 +28,7 @@ M = 2        # order of the modulation format
 Rs = 10e9    # Symbol rate (for OOK case Rs = Rb)
 Fs = Rs*SpS  # Sampling frequency
 Ts = 1/Fs    # Sampling period
+constType = 'pam'
 
 # Laser power
 Pi_dBm = 0         # laser optical power at the input of the MZM in dBm
@@ -42,7 +43,7 @@ paramMZM.Vb = -paramMZM.Vpi/2
 bitsTx = np.random.randint(2, size=100000)
 
 # generate 2-PAM modulated symbol sequence
-symbTx = modulateGray(bitsTx, M, 'pam')    
+symbTx = modulateGray(bitsTx, M, constType)
 symbTx = pnorm(symbTx) # power normalization
 
 # upsampling

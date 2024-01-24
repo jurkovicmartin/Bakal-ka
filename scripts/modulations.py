@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def simulateModulation(modulationFormat, modulationOrder):
+def simulateConstellation(modulationFormat, modulationOrder):
     # ## Define modulation, modulate and demodulate data
     # Run AWGN simulation 
     SNRdB = 25 # SNR 
@@ -35,5 +35,4 @@ def simulateModulation(modulationFormat, modulationOrder):
     # print('SNR(est) = %.2f dB'%SNRest)
     # print('BER(theory) = %.2e'%theoryBER(M, EbN0dB, constType))
 
-    pconst(symbTx, whiteb=False)
-    pconst(symbRx, whiteb=False)
+    return pconst(symbRx, whiteb=False)
