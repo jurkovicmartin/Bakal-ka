@@ -27,10 +27,14 @@ symbTx = modulateGray(bits, M, constType)
 
 # normalize symbols energy to 1
 symbTx = pnorm(symbTx)
+print("symbTx")
+print(symbTx)
 
 # AWGN    
 EbN0dB = SNRdB - 10*np.log10(np.log2(M))
 symbRx = awgn(symbTx, SNRdB)
+print("symbRx")
+print(symbRx)
     
 # BER calculation (hard demodulation)
 BER, _, SNRest = fastBERcalc(symbRx, symbTx, M, constType)

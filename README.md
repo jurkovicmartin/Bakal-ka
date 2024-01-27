@@ -1,10 +1,7 @@
 # Notes
-- OOK
-- PAM
-- QAM
-- PSK
-- tkinter
 - Try work with AWGN channel
+- fix rewriting the plot
+- fix ploting 4PAM 
 ## Display
 - karts
 - bit sequence

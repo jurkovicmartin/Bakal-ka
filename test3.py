@@ -30,7 +30,7 @@ M = 4        # order of the modulation format
 Rs = 5e9    # Symbol rate (for OOK case Rs = Rb)
 Fs = Rs*SpS  # Sampling frequency
 Ts = 1/Fs    # Sampling period
-constType = 'psk'
+constType = 'pam'
 
 # Laser power
 Pi_dBm = 0         # laser optical power at the input of the MZM in dBm

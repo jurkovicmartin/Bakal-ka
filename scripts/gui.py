@@ -36,11 +36,12 @@ class Gui:
         self.mFormatComboBox = ttk.Combobox(self.optionsFrame, values=["OOK", "PAM", "PSK", "QAM"], state='readonly')
         self.mFormatComboBox.set("OOK")
         self.mFormatComboBox.pack(padx=10, pady=10)
+        self.mFormatComboBox.bind("<<ComboboxSelected>>", self.modulationFormatChange)
 
         # Choosing modulation order
         self.mOrderLabel = tk.Label(self.optionsFrame, text="Order of modulation")
         self.mOrderLabel.pack()
-        self.mOrderCombobox = ttk.Combobox(self.optionsFrame, values=["2", "4", "8", "16", "32", "64"], state='readonly')
+        self.mOrderCombobox = ttk.Combobox(self.optionsFrame, values=["2"], state='readonly')
         self.mOrderCombobox.set("2")
         self.mOrderCombobox.pack(padx=10, pady=10)
 
@@ -49,18 +50,44 @@ class Gui:
 
         self.root.mainloop()
 
+
     def simulate(self):
-        # OptiCommPy takes lowercase modulation formats (in Combobox is uppercase)
+        # OptiCommPy takes lowercase modulation formats
+        # get( ) return uppercase because of uppercase options
         modulationFormat = self.mFormatComboBox.get().lower()
-        # get returns string and i need to pass int
+        # need to pass int
+        # get() returns string
         modulationOrder = int(self.mOrderCombobox.get())
 
-        if modulationFormat == 'ook':
-            # OOK has only order 2
-            modulationOrder = 2
-
-        # Show figure in app
+        # Show figure in app tab
         constelattionFigure = md.simulateConstellation(modulationFormat, modulationOrder)
         canvas = FigureCanvasTkAgg(constelattionFigure[0], master=self.constellationFrame)
         canvas.draw()
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+
+    def modulationFormatChange(self, event):
+        selectedOption = self.mFormatComboBox.get()
+        orderOptions = self.getModulationOrderOptions(selectedOption)
+
+        # sets new options to modulation order combobox
+        self.mOrderCombobox['values'] = orderOptions
+        self.mOrderCombobox.set(orderOptions[0])
+
+
+    def getModulationOrderOptions(self, modulationFormat):
+        # replacement of switch statement
+        orderOptions = []
+        if modulationFormat == "OOK":
+            orderOptions = ["2"]
+        elif modulationFormat == "PAM":
+            orderOptions = ["2", "4"]
+        elif modulationFormat == "PSK":
+            orderOptions = ["2", "4", "8", "16"]
+        elif modulationFormat == "QAM":
+            orderOptions = ["4", "16", "64"]
+        else:
+            print("Unexpected error of modulation choice")
+
+        return orderOptions
+        

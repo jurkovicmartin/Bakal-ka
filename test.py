@@ -14,7 +14,7 @@ except ImportError:
     from optic.dsp.core import firFilter
 
 from utils import parameters, dBm2W
-from optic.plot import eyediagram
+from optic.plot import eyediagram, pconst
 import matplotlib.pyplot as plt
 from scipy.special import erfc
 from tqdm import tqdm
@@ -26,7 +26,7 @@ np.random.seed(seed=123) # fixing the seed to get reproducible results
 
 # simulation parameters
 SpS = 16     # samples per symbol
-M = 2        # order of the modulation format
+M = 4        # order of the modulation format
 Rs = 10e9    # Symbol rate (for OOK case Rs = Rb)
 Fs = Rs*SpS  # Sampling frequency
 Ts = 1/Fs    # Sampling period
@@ -43,13 +43,19 @@ paramMZM.Vb = -paramMZM.Vpi/2
 
 # generate pseudo-random bit sequence
 bitsTx = np.random.randint(2, size=100000)
+print("bitsTx")
+print(bitsTx)
 
 # generate 2-PAM modulated symbol sequence
 symbTx = modulateGray(bitsTx, M, constType)
 symbTx = pnorm(symbTx) # power normalization
+print("symbTx")
+print(symbTx)
 
 # upsampling
 symbolsUp = upsample(symbTx, SpS)
+print("symbolsUp")
+print(symbolsUp)
 
 # typical NRZ pulse
 pulse = pulseShape('nrz', SpS)
@@ -57,10 +63,14 @@ pulse = pulse/max(abs(pulse))
 
 # pulse shaping
 sigTx = firFilter(pulse, symbolsUp)
+print("sigTx")
+print(sigTx)
 
 # optical modulation
 Ai = np.sqrt(Pi)
 sigTxo = mzm(Ai, sigTx, paramMZM)
+print("sigTxo")
+print(sigTxo)
 
 print('Average power of the modulated optical signal [mW]: %.3f mW'%(signal_power(sigTxo)/1e-3))
 print('Average power of the modulated optical signal [dBm]: %.3f dBm'%(10*np.log10(signal_power(sigTxo)/1e-3)))
@@ -107,6 +117,8 @@ paramCh.Fc = 193.1e12  # central optical frequency [Hz]
 paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
 
 sigCh = linearFiberChannel(sigTxo, paramCh)
+print("sigCh1")
+print(sigCh)
 
 # receiver pre-amplifier
 paramEDFA = parameters()
@@ -116,6 +128,8 @@ paramEDFA.Fc = paramCh.Fc
 paramEDFA.Fs = Fs
 
 sigCh = edfa(sigCh, paramEDFA)
+print("sigCh2")
+print(sigCh)
 
 # ### Direct-detection (DD) pin receiver model
 
@@ -125,6 +139,8 @@ paramPD.ideal = True
 paramPD.Fs = Fs
 
 I_Tx = photodiode(sigTxo.real, paramPD) # transmitted signal
+print("I_Tx")
+print(I_Tx)
 
 # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
 paramPD = parameters()
@@ -133,6 +149,8 @@ paramPD.B = Rs
 paramPD.Fs = Fs
 
 I_Rx = photodiode(sigCh, paramPD) # received signal after fiber channel and non-ideal PD
+print("I_Rx")
+print(I_Rx)
 
 discard = 100
 eyediagram(I_Tx[discard:-discard], I_Tx.size-2*discard, SpS, plotlabel='signal at Tx', ptype='fancy')

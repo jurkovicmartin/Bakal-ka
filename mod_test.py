@@ -11,8 +11,8 @@ import numpy as np
 # ## Define modulation, modulate and demodulate data
 # Run AWGN simulation 
 SNRdB = 25 # SNR 
-M = 2  # order of the modulation format
-constType = 'pam'
+M       = 8  # order of the modulation format
+constType = 'psk'
 
 # generate random bits
 bits = np.random.randint(2, size = int(np.log2(M)*1e6))
