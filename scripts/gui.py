@@ -1,9 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import modulations as md
-
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class Gui:
     def __init__(self):
@@ -12,21 +11,23 @@ class Gui:
         self.root.geometry('1000x600')
         self.root.title("Optical modulaton simulation application")
 
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+
         # Frames
         self.notebookFrame = ttk.Notebook(self.root)
-        self.notebookFrame.pack(pady=10, expand=True)
+        self.notebookFrame.grid(row=0, column=0, sticky='nsew')
 
         self.optionsFrame = ttk.Frame(self.notebookFrame)
         self.constellationFrame = ttk.Frame(self.notebookFrame)
 
-        self.constellationFrame.pack(fill='both', expand=True)
-        self.optionsFrame.pack(fill='both', expand=True)
+        self.optionsFrame.pack()
+        self.constellationFrame.pack()
 
         self.notebookFrame.add(self.optionsFrame, text="Options")
         self.notebookFrame.add(self.constellationFrame, text="Constelattion diagram")
 
-
-        # Options tab widgeds
+        # Options tab widgets
         self.titleLabel = tk.Label(self.optionsFrame, text="Optical modulaton simulation application")
         self.titleLabel.pack(padx=10, pady=10)
 
@@ -45,22 +46,35 @@ class Gui:
         self.mOrderCombobox.set("2")
         self.mOrderCombobox.pack(padx=10, pady=10)
 
+        # Ideal / not ideal transmission
+        self.tCheckbuttonState = tk.BooleanVar(value=True)
+        self.transmissionCheckbutton = tk.Checkbutton(self.optionsFrame, text="Ideal transmission", variable=self.tCheckbuttonState)
+        self.transmissionCheckbutton.pack(padx=10, pady=10)
+
+        # Simulate button
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.simulate)
         self.simulateButton.pack(padx=10, pady=10)
 
         self.root.mainloop()
 
+    # FUNCTIONS
 
     def simulate(self):
-        # OptiCommPy takes lowercase modulation formats
-        # get( ) return uppercase because of uppercase options
+        # Need to pass lowercase modulation formats
         modulationFormat = self.mFormatComboBox.get().lower()
-        # need to pass int
-        # get() returns string
+        # Need to pass int
         modulationOrder = int(self.mOrderCombobox.get())
+        transmissionConditions = self.tCheckbuttonState.get()
+
+        # Showing one figure at the time
+        cFrameWidgets = self.constellationFrame.winfo_children()
+        if cFrameWidgets != []:
+            # Hiding last shown canvas
+            lastCanvas = cFrameWidgets[-1]
+            lastCanvas.pack_forget()
 
         # Show figure in app tab
-        constelattionFigure = md.simulateConstellation(modulationFormat, modulationOrder)
+        constelattionFigure = md.simulateConstellation(modulationFormat, modulationOrder, transmissionConditions)
         canvas = FigureCanvasTkAgg(constelattionFigure[0], master=self.constellationFrame)
         canvas.draw()
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -68,26 +82,19 @@ class Gui:
 
     def modulationFormatChange(self, event):
         selectedOption = self.mFormatComboBox.get()
-        orderOptions = self.getModulationOrderOptions(selectedOption)
 
-        # sets new options to modulation order combobox
+        # Setting order options for selected modulation format
+        if selectedOption == "OOK":
+            orderOptions = ["2"]
+        elif selectedOption == "PAM":
+            orderOptions = ["2", "4"]
+        elif selectedOption == "PSK":
+            orderOptions = ["2", "4", "8", "16"]
+        elif selectedOption == "QAM":
+            orderOptions = ["4", "16", "64"]
+        else: print("Unexpected error of modulation choice")
+
+        # Sets new options to modulation order combobox
         self.mOrderCombobox['values'] = orderOptions
         self.mOrderCombobox.set(orderOptions[0])
-
-
-    def getModulationOrderOptions(self, modulationFormat):
-        # replacement of switch statement
-        orderOptions = []
-        if modulationFormat == "OOK":
-            orderOptions = ["2"]
-        elif modulationFormat == "PAM":
-            orderOptions = ["2", "4"]
-        elif modulationFormat == "PSK":
-            orderOptions = ["2", "4", "8", "16"]
-        elif modulationFormat == "QAM":
-            orderOptions = ["4", "16", "64"]
-        else:
-            print("Unexpected error of modulation choice")
-
-        return orderOptions
         

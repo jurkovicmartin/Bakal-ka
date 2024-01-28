@@ -1,4 +1,3 @@
-
 from optic.comm.modulation import modulateGray
 from optic.comm.metrics import fastBERcalc, theoryBER
 from optic.models.channels import awgn
@@ -8,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def simulateConstellation(modulationFormat, modulationOrder):
+def simulateConstellation(modulationFormat, modulationOrder, transmissionConditions):
     # ## Define modulation, modulate and demodulate data
     # Run AWGN simulation 
     SNRdB = 25 # SNR 
@@ -34,5 +33,7 @@ def simulateConstellation(modulationFormat, modulationOrder):
     # print('SNR = %.2f dB'%SNRdB)
     # print('SNR(est) = %.2f dB'%SNRest)
     # print('BER(theory) = %.2e'%theoryBER(M, EbN0dB, constType))
-
-    return pconst(symbRx, whiteb=False)
+    if transmissionConditions:
+        return pconst(symbTx, whiteb=False)
+    else:
+        return pconst(symbRx, whiteb=False)

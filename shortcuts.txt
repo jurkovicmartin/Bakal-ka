@@ -1,0 +1,4 @@
+ctr + L = line
+ctr + shift + P => run python file
+alt + arrows = move line
+ctr + P = command line (: - line, @ - symbol)
