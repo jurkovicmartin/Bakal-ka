@@ -1,9 +1,9 @@
 
-# PSK TRY
+# Try modulations
 
 import numpy as np
 from commpy.utilities  import upsample
-from optic.models.devices import mzm, photodiode, edfa, iqm
+from optic.models.devices import mzm, photodiode, edfa, iqm, hybrid_2x4_90deg
 from optic.models.channels import linearFiberChannel
 from optic.comm.modulation import GrayMapping, modulateGray
 from optic.dsp.core import pulseShape, lowPassFIR, pnorm, signal_power
@@ -30,7 +30,7 @@ M = 4        # order of the modulation format
 Rs = 5e9    # Symbol rate (for OOK case Rs = Rb)
 Fs = Rs*SpS  # Sampling frequency
 Ts = 1/Fs    # Sampling period
-constType = 'pam'
+constType = 'qam'
 
 # Laser power
 Pi_dBm = 0         # laser optical power at the input of the MZM in dBm
@@ -121,21 +121,23 @@ sigCh = edfa(sigCh, paramEDFA)
 
 # ### Direct-detection (DD) pin receiver model
 
-# ideal photodiode (noiseless, no bandwidth limitation)
-paramPD = parameters()
-paramPD.ideal = True
-paramPD.Fs = Fs
+# # ideal photodiode (noiseless, no bandwidth limitation)
+# paramPD = parameters()
+# paramPD.ideal = True
+# paramPD.Fs = Fs
 
-I_Tx = photodiode(sigTxo.real, paramPD) # transmitted signal
+# I_Tx = photodiode(sigTxo.real, paramPD) # transmitted signal
 
-# noisy photodiode (thermal noise + shot noise + bandwidth limitation)
-paramPD = parameters()
-paramPD.ideal = False
-paramPD.B = Rs
-paramPD.Fs = Fs
+# # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
+# paramPD = parameters()
+# paramPD.ideal = False
+# paramPD.B = Rs
+# paramPD.Fs = Fs
 
-I_Rx = photodiode(sigCh, paramPD) # received signal after fiber channel and non-ideal PD
+# I_Rx = photodiode(sigCh, paramPD) # received signal after fiber channel and non-ideal PD
+
+I_Rx = hybrid_2x4_90deg(sigCh, sigTx)
 
 discard = 100
-eyediagram(I_Tx[discard:-discard], I_Tx.size-2*discard, SpS, plotlabel='signal at Tx', ptype='fancy')
+# eyediagram(I_Tx[discard:-discard], I_Tx.size-2*discard, SpS, plotlabel='signal at Tx', ptype='fancy')
 eyediagram(I_Rx[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel='signal at Rx', ptype='fancy')

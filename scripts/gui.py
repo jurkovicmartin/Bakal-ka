@@ -8,7 +8,7 @@ class Gui:
     def __init__(self):
         self.root = tk.Tk()
 
-        self.root.geometry('1000x600')
+        self.root.geometry("1000x600")
         self.root.title("Optical modulaton simulation application")
 
         self.root.columnconfigure(0, weight=1)
@@ -16,7 +16,7 @@ class Gui:
 
         # Frames
         self.notebookFrame = ttk.Notebook(self.root)
-        self.notebookFrame.grid(row=0, column=0, sticky='nsew')
+        self.notebookFrame.grid(row=0, column=0, sticky="nsew")
 
         self.optionsFrame = ttk.Frame(self.notebookFrame)
         self.constellationFrame = ttk.Frame(self.notebookFrame)
@@ -34,7 +34,7 @@ class Gui:
         # Choosing modulation format
         self.mFormatLabel = tk.Label(self.optionsFrame, text="Modulation formats")
         self.mFormatLabel.pack()
-        self.mFormatComboBox = ttk.Combobox(self.optionsFrame, values=["OOK", "PAM", "PSK", "QAM"], state='readonly')
+        self.mFormatComboBox = ttk.Combobox(self.optionsFrame, values=["OOK", "PAM", "PSK", "QAM"], state="readonly")
         self.mFormatComboBox.set("OOK")
         self.mFormatComboBox.pack(padx=10, pady=10)
         self.mFormatComboBox.bind("<<ComboboxSelected>>", self.modulationFormatChange)
@@ -42,7 +42,7 @@ class Gui:
         # Choosing modulation order
         self.mOrderLabel = tk.Label(self.optionsFrame, text="Order of modulation")
         self.mOrderLabel.pack()
-        self.mOrderCombobox = ttk.Combobox(self.optionsFrame, values=["2"], state='readonly')
+        self.mOrderCombobox = ttk.Combobox(self.optionsFrame, values=["2"], state="readonly")
         self.mOrderCombobox.set("2")
         self.mOrderCombobox.pack(padx=10, pady=10)
 
@@ -70,8 +70,9 @@ class Gui:
         cFrameWidgets = self.constellationFrame.winfo_children()
         if cFrameWidgets != []:
             # Hiding last shown canvas
-            lastCanvas = cFrameWidgets[-1]
+            lastCanvas = cFrameWidgets[0]
             lastCanvas.pack_forget()
+            cFrameWidgets.clear()
 
         # Show figure in app tab
         constelattionFigure = md.simulateConstellation(modulationFormat, modulationOrder, transmissionConditions)
@@ -95,6 +96,6 @@ class Gui:
         else: print("Unexpected error of modulation choice")
 
         # Sets new options to modulation order combobox
-        self.mOrderCombobox['values'] = orderOptions
+        self.mOrderCombobox["values"] = orderOptions
         self.mOrderCombobox.set(orderOptions[0])
         
