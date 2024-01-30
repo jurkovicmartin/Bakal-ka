@@ -13,7 +13,7 @@ try:
 except ImportError:
     from optic.dsp.core import firFilter
 
-from utils import parameters, dBm2W
+from optic.utils import parameters, dBm2W
 from optic.plot import eyediagram, pconst
 import matplotlib.pyplot as plt
 from scipy.special import erfc

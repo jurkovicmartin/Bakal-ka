@@ -20,12 +20,23 @@ class Gui:
 
         self.optionsFrame = ttk.Frame(self.notebookFrame)
         self.constellationFrame = ttk.Frame(self.notebookFrame)
+        self.psdFrame = ttk.Frame(self.notebookFrame)
+        self.tSignalFrame = ttk.Frame(self.notebookFrame)
+        self.eyeDiagramFrame = ttk.Frame(self.notebookFrame)
+
 
         self.optionsFrame.pack()
         self.constellationFrame.pack()
+        self.psdFrame.pack()
+        self.tSignalFrame.pack()
+        self.eyeDiagramFrame.pack()
 
         self.notebookFrame.add(self.optionsFrame, text="Options")
         self.notebookFrame.add(self.constellationFrame, text="Constelattion diagram")
+        self.notebookFrame.add(self.psdFrame, text="Power spectral density")
+        self.notebookFrame.add(self.tSignalFrame, text="Signal in time")
+        self.notebookFrame.add(self.eyeDiagramFrame, text="Eye diagram")
+
 
         # Options tab widgets
         self.titleLabel = tk.Label(self.optionsFrame, text="Optical modulaton simulation application")
