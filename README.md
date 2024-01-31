@@ -4,6 +4,7 @@
 - possible constellation history via cFrameWidgets list
 - Seperate: modulated (each), then add channel
 - pop up OK window when is simulation complete
+- adding editing fields for transfer channel (lenght, ...)
 ## Display
 - karts
 - bit sequence
