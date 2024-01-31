@@ -3,7 +3,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-import constelattions as cn
+import constellations as cn
 import modulations as md
 
 class Gui:
@@ -78,6 +78,9 @@ class Gui:
     def test(self):
         # psd, Tx t, Tx eye, Rx eye, Rx t, Tx con, Rx con
         figures = md.testSimulate()
+
+        figures[5][1].set_title("Tx constellation diagram")
+        figures[6][1].set_title("Rx constellation diagram")
 
         # psd
         psdCanvas = FigureCanvasTkAgg(figures[0][0], master=self.psdFrame)
