@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import constelattions as cn
@@ -93,6 +94,9 @@ class Gui:
         conCanvas = FigureCanvasTkAgg(figures[6][0], master=self.constellationFrame)
         conCanvas.draw()
         conCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        messagebox.showinfo("Status of simulation", "Simulation is completed")
+        
 
     def simulate(self):
         # Need to pass lowercase modulation formats
