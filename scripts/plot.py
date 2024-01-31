@@ -4,8 +4,8 @@ OptiCommPY edited script - functions pconst, eyediagram
 Edits done because of more suiting ploting for my application
 I want plot functions only to return objects to plot them in application window, not to pop new window and display it
 Changes:
-pconst - not show figure
-eyediagram - not show figure, return objects to plot
+pconst - not show figure, size of figure
+eyediagram - not show figure, return objects to plot, size of figure
 """
 
 import matplotlib.pyplot as plt
@@ -90,7 +90,7 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True):
         # Create a Position index
         Position = range(1, nSubPts + 1)
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(6,6))
 
         if type(x) == list:
             for k in range(nSubPts):           
@@ -136,7 +136,7 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True):
         fig.tight_layout()
 
     elif nSubPts == 1:
-        fig = plt.figure()
+        fig = plt.figure(figsize=(6,6))
         #ax = plt.gca()
         if pType == "fancy":
             ax = fig.add_subplot(1, 1, 1, projection='scatter_density')
@@ -317,7 +317,7 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None):
         d = 0
         plotlabel_ = plotlabel
 
-    fig, axes = plt.subplots()
+    fig, axes = plt.subplots(figsize=(16,4))
 
     for ind in range(d + 1):
         if ind == 0:

@@ -5,6 +5,9 @@
 - Seperate: modulated (each), then add channel
 - pop up OK window when is simulation complete
 - adding editing fields for transfer channel (lenght, ...)
+- Resizing
+- constellations titles
+- export to image
 ## Display
 - karts
 - bit sequence

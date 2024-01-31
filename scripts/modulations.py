@@ -163,7 +163,7 @@ def testSimulate():
     outFigures.append(pconst(symbTx, whiteb=False))
     outFigures.append(pconst(symbRx, whiteb=False))
 
-    # for index, item in enumerate(outFigures):
-    #     print(f"Index: {index}, Item: {item}, Type: {type(item)}")
+    for index, item in enumerate(outFigures):
+        print(f"Index: {index}, Item: {item}, Type: {type(item)}")
 
     return outFigures

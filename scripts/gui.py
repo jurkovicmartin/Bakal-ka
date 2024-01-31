@@ -79,21 +79,40 @@ class Gui:
         # psd, Tx t, Tx eye, Rx eye, Rx t, Tx con, Rx con
         figures = md.testSimulate()
 
+        # psd
         psdCanvas = FigureCanvasTkAgg(figures[0][0], master=self.psdFrame)
         psdCanvas.draw()
         psdCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
+        # Tx eye
         eyeCanvas = FigureCanvasTkAgg(figures[2][0], master=self.eyeDiagramFrame)
         eyeCanvas.draw()
         eyeCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
+        # Rx eye
+        eyeCanvas = FigureCanvasTkAgg(figures[3][0], master=self.eyeDiagramFrame)
+        eyeCanvas.draw()
+        eyeCanvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
+
+        # Tx t
         tCanvas = FigureCanvasTkAgg(figures[1][0], master=self.tSignalFrame)
         tCanvas.draw()
         tCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
+        # Rx T
+        tCanvas = FigureCanvasTkAgg(figures[4][0], master=self.tSignalFrame)
+        tCanvas.draw()
+        tCanvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
+
+        # Tx con
+        conCanvas = FigureCanvasTkAgg(figures[5][0], master=self.constellationFrame)
+        conCanvas.draw()
+        conCanvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        
+        # Rx con
         conCanvas = FigureCanvasTkAgg(figures[6][0], master=self.constellationFrame)
         conCanvas.draw()
-        conCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        conCanvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
 
         messagebox.showinfo("Status of simulation", "Simulation is completed")
         
