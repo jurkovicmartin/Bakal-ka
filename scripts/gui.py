@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+import constelattions as cn
 import modulations as md
 
 class Gui:
@@ -66,9 +67,32 @@ class Gui:
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.simulate)
         self.simulateButton.pack(padx=10, pady=10)
 
+        self.testButton = tk.Button(self.optionsFrame, text="Test", command=self.test)
+        self.testButton.pack(padx=10, pady=10)
+
         self.root.mainloop()
 
     # FUNCTIONS
+        
+    def test(self):
+        # psd, Tx t, Tx eye, Rx eye, Rx t, Tx con, Rx con
+        figures = md.testSimulate()
+
+        psdCanvas = FigureCanvasTkAgg(figures[0][0], master=self.psdFrame)
+        psdCanvas.draw()
+        psdCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        eyeCanvas = FigureCanvasTkAgg(figures[2][0], master=self.eyeDiagramFrame)
+        eyeCanvas.draw()
+        eyeCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        tCanvas = FigureCanvasTkAgg(figures[1][0], master=self.tSignalFrame)
+        tCanvas.draw()
+        tCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        conCanvas = FigureCanvasTkAgg(figures[6][0], master=self.constellationFrame)
+        conCanvas.draw()
+        conCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
     def simulate(self):
         # Need to pass lowercase modulation formats
@@ -86,7 +110,7 @@ class Gui:
             cFrameWidgets.clear()
 
         # Show figure in app tab
-        constelattionFigure = md.simulateConstellation(modulationFormat, modulationOrder, transmissionConditions)
+        constelattionFigure = cn.simulateConstellation(modulationFormat, modulationOrder, transmissionConditions)
         canvas = FigureCanvasTkAgg(constelattionFigure[0], master=self.constellationFrame)
         canvas.draw()
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
