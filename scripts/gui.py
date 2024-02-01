@@ -10,22 +10,23 @@ class Gui:
     def __init__(self):
         self.root = tk.Tk()
 
+        # self.root.wm_state("zoomed")
         self.root.geometry("1000x600")
         self.root.title("Optical modulaton simulation application")
-
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
 
-        # Frames
+        # FRAMES
+        # Main frame
         self.notebookFrame = ttk.Notebook(self.root)
         self.notebookFrame.grid(row=0, column=0, sticky="nsew")
 
+        # Tabs
         self.optionsFrame = ttk.Frame(self.notebookFrame)
         self.constellationFrame = ttk.Frame(self.notebookFrame)
         self.psdFrame = ttk.Frame(self.notebookFrame)
         self.tSignalFrame = ttk.Frame(self.notebookFrame)
         self.eyeDiagramFrame = ttk.Frame(self.notebookFrame)
-
 
         self.optionsFrame.pack()
         self.constellationFrame.pack()
@@ -76,46 +77,57 @@ class Gui:
     # FUNCTIONS
         
     def test(self):
-        # psd, Tx t, Tx eye, Rx eye, Rx t, Tx con, Rx con
-        figures = md.testSimulate()
+        
+        # Clearing tabs content
+        frames = [self.psdFrame, self.eyeDiagramFrame, self.tSignalFrame, self.constellationFrame]
 
+        for f in frames:
+            widgets = f.winfo_children()
+            if widgets != []:
+                for w in widgets:
+                    w.pack_forget()
+                widgets.clear()
+
+        #  Plotting simulated figures 
+        figures = md.testSimulate()
+        # [psd, Tx t, Tx eye, Rx eye, Rx t, Tx con, Rx con]
         figures[5][1].set_title("Tx constellation diagram")
         figures[6][1].set_title("Rx constellation diagram")
 
         # psd
-        psdCanvas = FigureCanvasTkAgg(figures[0][0], master=self.psdFrame)
-        psdCanvas.draw()
-        psdCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        canvas = FigureCanvasTkAgg(figures[0][0], master=self.psdFrame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         # Tx eye
-        eyeCanvas = FigureCanvasTkAgg(figures[2][0], master=self.eyeDiagramFrame)
-        eyeCanvas.draw()
-        eyeCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        canvas = FigureCanvasTkAgg(figures[2][0], master=self.eyeDiagramFrame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         # Rx eye
-        eyeCanvas = FigureCanvasTkAgg(figures[3][0], master=self.eyeDiagramFrame)
-        eyeCanvas.draw()
-        eyeCanvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
+        canvas = FigureCanvasTkAgg(figures[3][0], master=self.eyeDiagramFrame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
 
         # Tx t
-        tCanvas = FigureCanvasTkAgg(figures[1][0], master=self.tSignalFrame)
-        tCanvas.draw()
-        tCanvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        canvas = FigureCanvasTkAgg(figures[1][0], master=self.tSignalFrame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         # Rx T
-        tCanvas = FigureCanvasTkAgg(figures[4][0], master=self.tSignalFrame)
-        tCanvas.draw()
-        tCanvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
+        canvas = FigureCanvasTkAgg(figures[4][0], master=self.tSignalFrame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
 
         # Tx con
-        conCanvas = FigureCanvasTkAgg(figures[5][0], master=self.constellationFrame)
-        conCanvas.draw()
-        conCanvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        canvas = FigureCanvasTkAgg(figures[5][0], master=self.constellationFrame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
         
         # Rx con
-        conCanvas = FigureCanvasTkAgg(figures[6][0], master=self.constellationFrame)
-        conCanvas.draw()
-        conCanvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
+        canvas = FigureCanvasTkAgg(figures[6][0], master=self.constellationFrame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
 
         messagebox.showinfo("Status of simulation", "Simulation is completed")
         
