@@ -22,7 +22,13 @@ from tqdm.notebook import tqdm
 import scipy as sp
 
 
-def testSimulate():
+def PAM(order, length, dispersion=16, power=0):
+    """
+    order of modulation
+    length of fiber
+    fiber dispersion
+    power of laser
+    """
     np.random.seed(seed=123) # fixing the seed to get reproducible results
 
     # ### Intensity modulation (IM) with Pulse Amplitude Modulation (PAM)
@@ -33,13 +39,13 @@ def testSimulate():
 
     # simulation parameters
     SpS = 16            # samples per symbol
-    M = 4              # order of the modulation format
+    M = order              # order of the modulation format
     Rs = 10e9          # Symbol rate (for OOK case Rs = Rb)
     Fs = SpS*Rs        # Sampling frequency in samples/second
     Ts = 1/Fs          # Sampling period
 
     # Laser power
-    Pi_dBm = 0         # laser optical power at the input of the MZM in dBm
+    Pi_dBm = power         # laser optical power at the input of the MZM in dBm
     Pi = dBm2W(Pi_dBm) # convert from dBm to W
 
     # MZM parameters
@@ -52,14 +58,14 @@ def testSimulate():
     print(bitsTx)
 
     # generate ook modulated symbol sequence
-    symbTx = modulateGray(bitsTx, M, 'pam')    
+    symbTx = modulateGray(bitsTx, M, "pam")    
     symbTx = pnorm(symbTx) # power normalization
 
     # upsampling
     symbolsUp = upsample(symbTx, SpS)
 
     # typical NRZ pulse
-    pulse = pulseShape('nrz', SpS)
+    pulse = pulseShape("nrz", SpS)
     pulse = pulse/max(abs(pulse))
 
     # pulse shaping
@@ -69,8 +75,8 @@ def testSimulate():
     Ai = np.sqrt(Pi)
     sigTxo = mzm(Ai, 0.25*sigTx, paramMZM)
 
-    print('Average power of the modulated optical signal [mW]: %.3f mW'%(signal_power(sigTxo)/1e-3))
-    print('Average power of the modulated optical signal [dBm]: %.3f dBm'%(10*np.log10(signal_power(sigTxo)/1e-3)))
+    print("Average power of the modulated optical signal [mW]: %.3f mW"%(signal_power(sigTxo)/1e-3))
+    print("Average power of the modulated optical signal [dBm]: %.3f dBm"%(10*np.log10(signal_power(sigTxo)/1e-3)))
 
     # interval for plots
     interval = np.arange(16*20,16*50)
@@ -80,19 +86,21 @@ def testSimulate():
     # plot psd
     axs.set_xlim(-3*Rs,3*Rs)
     axs.set_ylim(-255,-155)
-    axs.psd(np.abs(sigTxo)**2, Fs=Fs, NFFT = 16*1024, sides='twosided', label = 'Optical signal spectrum')
-    axs.legend(loc='upper left')
+    axs.psd(np.abs(sigTxo)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
+    axs.legend(loc="upper left")
+    axs.set_title("Tx power spectral density")
 
     plt.close()
     outFigures.append((fig, axs))
 
     fig, axs = plt.subplots(figsize=(16,3))
     # plot signal in t
-    axs.plot(t, np.abs(sigTxo[interval])**2, label = 'Optical modulated signal', linewidth=2)
-    axs.set_ylabel('Power (p.u.)')
-    axs.set_xlabel('Time (ns)')
+    axs.plot(t, np.abs(sigTxo[interval])**2, label = "Optical modulated signal", linewidth=2)
+    axs.set_ylabel("Power (p.u.)")
+    axs.set_xlabel("Time (ns)")
     axs.set_xlim(min(t),max(t))
-    axs.legend(loc='upper left')
+    axs.legend(loc="upper left")
+    axs.set_title("Tx signal in time")
     # axs.grid()
 
     plt.close()
@@ -102,9 +110,9 @@ def testSimulate():
 
     # linear optical channel
     paramCh = parameters()
-    paramCh.L = 40         # total link distance [km]
+    paramCh.L = length         # total link distance [km]
     paramCh.α = 0.2        # fiber loss parameter [dB/km]
-    paramCh.D = 16         # fiber dispersion parameter [ps/nm/km]
+    paramCh.D = dispersion         # fiber dispersion parameter [ps/nm/km]
     paramCh.Fc = 193.1e12  # central optical frequency [Hz]
     paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
 
@@ -137,16 +145,17 @@ def testSimulate():
 
     discard = 100
 
-    outFigures.append(eyediagram(I_Rx_ideal[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel='signal at Tx', ptype='fancy'))
-    outFigures.append(eyediagram(I_Rx[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel='signal at Rx', ptype='fancy'))
+    outFigures.append(eyediagram(I_Rx_ideal[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy"))
+    outFigures.append(eyediagram(I_Rx[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy"))
 
     # Rx t
     fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(I_Rx[interval])**2, label = 'Optical modulated signal', linewidth=2)
-    axs.set_ylabel('Power (p.u.)')
-    axs.set_xlabel('Time (ns)')
+    axs.plot(t, np.abs(I_Rx[interval])**2, label = "Optical modulated signal", linewidth=2)
+    axs.set_ylabel("Power (p.u.)")
+    axs.set_xlabel("Time (ns)")
     axs.set_xlim(min(t),max(t))
-    axs.legend(loc='upper left')
+    axs.legend(loc="upper left")
+    axs.set_title("Rx signal in time")
     # axs.grid()
     plt.close()
     outFigures.append((fig, axs))

@@ -5,6 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import constellations as cn
 import modulations as md
+import functions as fn
 
 class Gui:
     def __init__(self):
@@ -69,15 +70,43 @@ class Gui:
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.simulate)
         self.simulateButton.pack(padx=10, pady=10)
 
-        self.testButton = tk.Button(self.optionsFrame, text="Test", command=self.test)
-        self.testButton.pack(padx=10, pady=10)
+        self.pamButton = tk.Button(self.optionsFrame, text="Simulate PAM", command=self.simulatePAM)
+        self.pamButton.pack(padx=10, pady=10)
+
+        # Parameters
+        # Length
+        self.lengthLabel = tk.Label(self.optionsFrame, text="Length of fiber [km]")
+        self.lengthLabel.pack(pady=10)
+        self.lengthEntry = tk.Entry(self.optionsFrame)
+        self.lengthEntry.insert(0, "0")
+        self.lengthEntry.pack()
 
         self.root.mainloop()
 
     # FUNCTIONS
         
-    def test(self):
+    def simulatePAM(self):
         
+        # Getting simulation parameters        
+        fiberLength = fn.checkLength(self.lengthEntry.get())
+
+        if fiberLength == 0:
+            messagebox.showerror("Length input error", "Zero is not valid length!")
+            return
+        elif fiberLength == -1:
+            messagebox.showerror("Length input error", "Length cannot be negative!")
+            return
+        elif fiberLength == -2:
+            messagebox.showerror("Length input error", "Lentgh must be a number!")
+            return
+        elif fiberLength == -3:
+            messagebox.showerror("Length input error", "You must input length!")
+            return
+        else:
+            pass
+
+        modulationOrder = int(self.mOrderCombobox.get())
+
         # Clearing tabs content
         frames = [self.psdFrame, self.eyeDiagramFrame, self.tSignalFrame, self.constellationFrame]
 
@@ -89,7 +118,7 @@ class Gui:
                 widgets.clear()
 
         #  Plotting simulated figures 
-        figures = md.testSimulate()
+        figures = md.PAM(modulationOrder, fiberLength)
         # [psd, Tx t, Tx eye, Rx eye, Rx t, Tx con, Rx con]
         figures[5][1].set_title("Tx constellation diagram")
         figures[6][1].set_title("Rx constellation diagram")
@@ -129,7 +158,7 @@ class Gui:
         canvas.draw()
         canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
 
-        messagebox.showinfo("Status of simulation", "Simulation is completed")
+        messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
         
 
     def simulate(self):
@@ -166,9 +195,8 @@ class Gui:
             orderOptions = ["2", "4", "8", "16"]
         elif selectedOption == "QAM":
             orderOptions = ["4", "16", "64"]
-        else: print("Unexpected error of modulation choice")
+        else: print("Unexpected modulation choice error")
 
         # Sets new options to modulation order combobox
         self.mOrderCombobox["values"] = orderOptions
         self.mOrderCombobox.set(orderOptions[0])
-        
