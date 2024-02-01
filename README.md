@@ -6,7 +6,7 @@
 ## Implement
 - history
 - editing fields for channel properties
-- exporting to img
+- exporting to img (Pillow package)
 ## Display
 - karts
 - bit sequence
