@@ -16,7 +16,7 @@ import numpy as np
 
 # Run AWGN simulation 
 SNRdB = 25 # SNR 
-M      = 16  # order of the modulation format
+M      = 4  # order of the modulation format
 constType = 'qam' # 'qam', 'psk', 'pam' or 'ook'
 
 # generate random bits

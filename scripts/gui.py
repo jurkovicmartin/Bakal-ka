@@ -4,8 +4,8 @@ from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import constellations as cn
-import modulations as md
-import functions as fn
+from modulations import PAM
+from functions import checkLength
 
 class Gui:
     def __init__(self):
@@ -88,7 +88,7 @@ class Gui:
     def simulatePAM(self):
         
         # Getting simulation parameters        
-        fiberLength = fn.checkLength(self.lengthEntry.get())
+        fiberLength = checkLength(self.lengthEntry.get())
 
         if fiberLength == 0:
             messagebox.showerror("Length input error", "Zero is not valid length!")
@@ -118,7 +118,7 @@ class Gui:
                 widgets.clear()
 
         #  Plotting simulated figures 
-        figures = md.PAM(modulationOrder, fiberLength)
+        figures = PAM(modulationOrder, fiberLength)
         # [psd, Tx t, Tx eye, Rx eye, Rx t, Tx con, Rx con]
         figures[5][1].set_title("Tx constellation diagram")
         figures[6][1].set_title("Rx constellation diagram")
