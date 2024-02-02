@@ -1,4 +1,4 @@
-from gui import Gui
+from scripts.gui import Gui
 
 def main():
     mainWindow = Gui()

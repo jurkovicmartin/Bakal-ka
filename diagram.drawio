@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-01-30T16:42:17.652Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" etag="KvzJK5vS8H-RnRj3x5us" version="23.0.2" type="device" pages="2">
+<mxfile host="app.diagrams.net" modified="2024-02-02T14:25:06.595Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" etag="E6_rBe4wG-vSHLN-gZF0" version="23.1.0" type="device" pages="2">
   <diagram name="Stránka-1" id="-ATShc4YuVJOPB07bB1N">
     <mxGraphModel dx="1050" dy="565" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -87,29 +87,44 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="mCFRAMnWCDapw7189gOU-1" value="Tx cons" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="mCFRAMnWCDapw7189gOU-1" value="Tx cons" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="80" y="240" width="80" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="mCFRAMnWCDapw7189gOU-2" value="Rx cons" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="mCFRAMnWCDapw7189gOU-2" value="Rx cons" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="80" y="320" width="80" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="mCFRAMnWCDapw7189gOU-3" value="Tx psd" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="mCFRAMnWCDapw7189gOU-3" value="Tx psd" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="200" y="240" width="80" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="mCFRAMnWCDapw7189gOU-4" value="Tx t signal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="mCFRAMnWCDapw7189gOU-4" value="Tx t signal" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="320" y="240" width="80" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="mCFRAMnWCDapw7189gOU-5" value="Rx t signal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="mCFRAMnWCDapw7189gOU-5" value="Rx t signal" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="320" y="320" width="80" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="mCFRAMnWCDapw7189gOU-6" value="Tx eye" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="mCFRAMnWCDapw7189gOU-6" value="Tx eye" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="440" y="240" width="80" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="mCFRAMnWCDapw7189gOU-7" value="Rx eye" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="mCFRAMnWCDapw7189gOU-7" value="Rx eye" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="440" y="320" width="80" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="mCFRAMnWCDapw7189gOU-9" value="(bits)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="mCFRAMnWCDapw7189gOU-9" value="(bits)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="550" y="240" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="NLPp7dk4BwwFDe2StZCh-1" value="Laser" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="80" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="NLPp7dk4BwwFDe2StZCh-2" value="bits&lt;br&gt;=&amp;gt; u signal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="80" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="NLPp7dk4BwwFDe2StZCh-3" value="modulator" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="200" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="NLPp7dk4BwwFDe2StZCh-4" value="channel" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="280" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="NLPp7dk4BwwFDe2StZCh-5" value="detection" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="360" width="80" height="40" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

@@ -1,21 +1,29 @@
 import re
 
-def checkLength(input_str):
+def checkLength(input):
     """
-    Inputs string returns float, 
-    checks for numbers and their range,
-    returns:
-    input number (also returns 0),
-    -1 = input is negative number,
-    -2 = input is not number,
-    -3 = input is empty string,
+    Checks for numbers and their range.
+
+    Parameters
+    ----
+    input: string
+
+    Returns
+    ----
+    converted number: float (also returns 0)
+
+        -1 = input is negative number
+
+        -2 = input is not number
+
+        -3 = input is empty string
     """
-    if input_str:
+    if input:
         # Regular expression to match valid numbers, including negative and decimal numbers
         number_pattern = re.compile(r'^[-+]?\d*\.?\d+$')
 
-        if number_pattern.match(input_str):
-            out = float(input_str)
+        if number_pattern.match(input):
+            out = float(input)
             return -1 if out < 0 else out
         else: return -2
     else: return -3

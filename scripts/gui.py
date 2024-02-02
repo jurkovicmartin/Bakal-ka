@@ -3,9 +3,8 @@ from tkinter import ttk
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-import constellations as cn
-from modulations import PAM
-from functions import checkLength
+from scripts.simulations import simulatePAM, simulatePSK
+from scripts.functions import checkLength
 
 class Gui:
     def __init__(self):
@@ -17,7 +16,7 @@ class Gui:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
 
-        # FRAMES
+        ### FRAMES
         # Main frame
         self.notebookFrame = ttk.Notebook(self.root)
         self.notebookFrame.grid(row=0, column=0, sticky="nsew")
@@ -41,39 +40,31 @@ class Gui:
         self.notebookFrame.add(self.tSignalFrame, text="Signal in time")
         self.notebookFrame.add(self.eyeDiagramFrame, text="Eye diagram")
 
-
-        # Options tab widgets
+        ### OPTIONS
         self.titleLabel = tk.Label(self.optionsFrame, text="Optical modulaton simulation application")
         self.titleLabel.pack(padx=10, pady=10)
 
         # Choosing modulation format
         self.mFormatLabel = tk.Label(self.optionsFrame, text="Modulation formats")
         self.mFormatLabel.pack()
-        self.mFormatComboBox = ttk.Combobox(self.optionsFrame, values=["OOK", "PAM", "PSK", "QAM"], state="readonly")
-        self.mFormatComboBox.set("OOK")
+        self.mFormatComboBox = ttk.Combobox(self.optionsFrame, values=["PAM", "PSK", "QAM"], state="readonly")
+        self.mFormatComboBox.set("PAM")
         self.mFormatComboBox.pack(padx=10, pady=10)
         self.mFormatComboBox.bind("<<ComboboxSelected>>", self.modulationFormatChange)
 
         # Choosing modulation order
         self.mOrderLabel = tk.Label(self.optionsFrame, text="Order of modulation")
         self.mOrderLabel.pack()
-        self.mOrderCombobox = ttk.Combobox(self.optionsFrame, values=["2"], state="readonly")
+        self.mOrderCombobox = ttk.Combobox(self.optionsFrame, values=["2", "4"], state="readonly")
         self.mOrderCombobox.set("2")
         self.mOrderCombobox.pack(padx=10, pady=10)
-
-        # Ideal / not ideal transmission
-        self.tCheckbuttonState = tk.BooleanVar(value=True)
-        self.transmissionCheckbutton = tk.Checkbutton(self.optionsFrame, text="Ideal transmission", variable=self.tCheckbuttonState)
-        self.transmissionCheckbutton.pack(padx=10, pady=10)
 
         # Simulate button
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.simulate)
         self.simulateButton.pack(padx=10, pady=10)
 
-        self.pamButton = tk.Button(self.optionsFrame, text="Simulate PAM", command=self.simulatePAM)
-        self.pamButton.pack(padx=10, pady=10)
+        ### PARAMETERS
 
-        # Parameters
         # Length
         self.lengthLabel = tk.Label(self.optionsFrame, text="Length of fiber [km]")
         self.lengthLabel.pack(pady=10)
@@ -83,10 +74,12 @@ class Gui:
 
         self.root.mainloop()
 
-    # FUNCTIONS
+    ### FUNCTIONS
         
-    def simulatePAM(self):
-        
+    def simulate(self):
+        """
+        Start simulation
+        """
         # Getting simulation parameters        
         fiberLength = checkLength(self.lengthEntry.get())
 
@@ -105,8 +98,56 @@ class Gui:
         else:
             pass
 
+        modulationFormat = self.mFormatComboBox.get()
         modulationOrder = int(self.mOrderCombobox.get())
 
+        if modulationFormat == "PAM":
+
+            figuresList = simulatePAM(modulationOrder, fiberLength)
+            self.displayPlots(figuresList)
+            messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
+
+        elif modulationFormat == "PSK":
+            
+            figuresList = simulatePSK(modulationOrder, fiberLength)
+            self.displayPlots(figuresList)
+            messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
+            
+        elif modulationFormat == "QAM":
+            pass
+        else: print("Unexpected modulation format error")
+
+
+    def modulationFormatChange(self, event):
+        """
+        Change modulation order options when modulation format is changed
+        """
+        selectedOption = self.mFormatComboBox.get()
+
+        # Setting order options for selected modulation format
+        if selectedOption == "PAM":
+            orderOptions = ["2", "4"]
+        elif selectedOption == "PSK":
+            orderOptions = ["2", "4", "8", "16"]
+        elif selectedOption == "QAM":
+            orderOptions = ["4", "16", "64"]
+        else: print("Unexpected modulation choice error")
+
+        # Sets new options to modulation order combobox
+        self.mOrderCombobox["values"] = orderOptions
+        self.mOrderCombobox.set(orderOptions[0])
+
+    def displayPlots(self, figures):
+        """
+        Display figures in application.
+
+        Parameters
+        -----
+        figures: list
+            list should contain tuples (Figure, Axes)
+
+            expected order - [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
+        """
         # Clearing tabs content
         frames = [self.psdFrame, self.eyeDiagramFrame, self.tSignalFrame, self.constellationFrame]
 
@@ -117,9 +158,6 @@ class Gui:
                     w.pack_forget()
                 widgets.clear()
 
-        #  Plotting simulated figures 
-        figures = PAM(modulationOrder, fiberLength)
-        # [psd, Tx t, Tx eye, Rx eye, Rx t, Tx con, Rx con]
         figures[5][1].set_title("Tx constellation diagram")
         figures[6][1].set_title("Rx constellation diagram")
 
@@ -128,23 +166,23 @@ class Gui:
         canvas.draw()
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-        # Tx eye
-        canvas = FigureCanvasTkAgg(figures[2][0], master=self.eyeDiagramFrame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
-        # Rx eye
-        canvas = FigureCanvasTkAgg(figures[3][0], master=self.eyeDiagramFrame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
-
         # Tx t
         canvas = FigureCanvasTkAgg(figures[1][0], master=self.tSignalFrame)
         canvas.draw()
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
         # Rx T
-        canvas = FigureCanvasTkAgg(figures[4][0], master=self.tSignalFrame)
+        canvas = FigureCanvasTkAgg(figures[2][0], master=self.tSignalFrame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
+
+        # Tx eye
+        canvas = FigureCanvasTkAgg(figures[3][0], master=self.eyeDiagramFrame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        # Rx eye
+        canvas = FigureCanvasTkAgg(figures[4][0], master=self.eyeDiagramFrame)
         canvas.draw()
         canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
 
@@ -157,46 +195,3 @@ class Gui:
         canvas = FigureCanvasTkAgg(figures[6][0], master=self.constellationFrame)
         canvas.draw()
         canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
-
-        messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
-        
-
-    def simulate(self):
-        # Need to pass lowercase modulation formats
-        modulationFormat = self.mFormatComboBox.get().lower()
-        # Need to pass int
-        modulationOrder = int(self.mOrderCombobox.get())
-        transmissionConditions = self.tCheckbuttonState.get()
-
-        # Showing one figure at the time
-        cFrameWidgets = self.constellationFrame.winfo_children()
-        if cFrameWidgets != []:
-            # Hiding last shown canvas
-            lastCanvas = cFrameWidgets[0]
-            lastCanvas.pack_forget()
-            cFrameWidgets.clear()
-
-        # Show figure in app tab
-        constelattionFigure = cn.simulateConstellation(modulationFormat, modulationOrder, transmissionConditions)
-        canvas = FigureCanvasTkAgg(constelattionFigure[0], master=self.constellationFrame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
-
-    def modulationFormatChange(self, event):
-        selectedOption = self.mFormatComboBox.get()
-
-        # Setting order options for selected modulation format
-        if selectedOption == "OOK":
-            orderOptions = ["2"]
-        elif selectedOption == "PAM":
-            orderOptions = ["2", "4"]
-        elif selectedOption == "PSK":
-            orderOptions = ["2", "4", "8", "16"]
-        elif selectedOption == "QAM":
-            orderOptions = ["4", "16", "64"]
-        else: print("Unexpected modulation choice error")
-
-        # Sets new options to modulation order combobox
-        self.mOrderCombobox["values"] = orderOptions
-        self.mOrderCombobox.set(orderOptions[0])
