@@ -4,7 +4,7 @@ from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from scripts.simulations import simulatePAM, simulatePSK
-from scripts.functions import checkLength
+from scripts.functions import checkNumber
 
 class Gui:
     def __init__(self):
@@ -72,45 +72,57 @@ class Gui:
         self.lengthEntry.insert(0, "0")
         self.lengthEntry.pack()
 
+        # Power
+        self.powerLabel = tk.Label(self.optionsFrame, text="Power of laser [W]")
+        self.powerLabel.pack(pady=10)
+        self.powerEntry = tk.Entry(self.optionsFrame)
+        self.powerEntry.insert(0, "0")
+        self.powerEntry.pack()
+
+        ### OUTPUTS
+        
+        self.berLabel = tk.Label(self.optionsFrame, text="Bit error rate (BER):")
+        self.berLabel.pack(pady=10)
+        self.serLabel = tk.Label(self.optionsFrame, text="Symbol error rate (SER):")
+        self.serLabel.pack(pady=10)
+        self.snrLabel = tk.Label(self.optionsFrame, text="Estimated signal-to-noise ratio (SNR):")
+        self.snrLabel.pack(pady=10)
+
         self.root.mainloop()
 
-    ### FUNCTIONS
+    ### METHODS
         
     def simulate(self):
         """
         Start simulation
         """
         # Getting simulation parameters        
-        fiberLength = checkLength(self.lengthEntry.get())
+        fiberLength = self.lengthEntry.get()
+        laserPower = self.powerEntry.get()
+        
+        # Validating parameters
+        parameters = self.checkParameters(fiberLength, laserPower)
+        if parameters:
+            fiberLength = parameters[0]
+            laserPower = parameters[1]
+        else: return
 
-        if fiberLength == 0:
-            messagebox.showerror("Length input error", "Zero is not valid length!")
-            return
-        elif fiberLength == -1:
-            messagebox.showerror("Length input error", "Length cannot be negative!")
-            return
-        elif fiberLength == -2:
-            messagebox.showerror("Length input error", "Lentgh must be a number!")
-            return
-        elif fiberLength == -3:
-            messagebox.showerror("Length input error", "You must input length!")
-            return
-        else:
-            pass
-
+        # Getting remaining parameters
         modulationFormat = self.mFormatComboBox.get()
         modulationOrder = int(self.mOrderCombobox.get())
 
         if modulationFormat == "PAM":
 
-            figuresList = simulatePAM(modulationOrder, fiberLength)
-            self.displayPlots(figuresList)
+            simulation = simulatePAM(modulationOrder, fiberLength, laserPower)
+            self.displayPlots(simulation[0])
+            self.displayValues(simulation[1])
             messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
 
         elif modulationFormat == "PSK":
             
-            figuresList = simulatePSK(modulationOrder, fiberLength)
-            self.displayPlots(figuresList)
+            simulation = simulatePSK(modulationOrder, fiberLength, laserPower)
+            self.displayPlots(simulation[0])
+            self.displayValues(simulation[1])
             messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
             
         elif modulationFormat == "QAM":
@@ -144,7 +156,7 @@ class Gui:
         Parameters
         -----
         figures: list
-            list should contain tuples (Figure, Axes)
+            list contains tuples (Figure, Axes)
 
             expected order - [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
         """
@@ -195,3 +207,79 @@ class Gui:
         canvas = FigureCanvasTkAgg(figures[6][0], master=self.constellationFrame)
         canvas.draw()
         canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
+
+    
+    def displayValues(self, values):
+        """
+        Display number values in application.
+
+        Parameters
+        -----
+        values: list
+            list contains values
+
+            expected order - [BER, SER, SNR]
+        """
+        self.berLabel["text"] = f"Bit error rate (BER): {values[0]}"
+        self.serLabel["text"] = f"Symbol error rate (SER): {values[1]}"
+        self.snrLabel["text"] = f"Estimated signal-to-noise ratio (SNR): {values[2]}"
+
+    def checkParameters(self, length, power):
+        """
+        Checks if the parameters has valid values.
+
+        Parameters
+        ----
+        length: string
+            length of fiber
+        
+        power: string
+            power of laser
+
+        Returns
+        -----
+        parameters: list: float
+            [length, power]
+            
+            None if parameters are not ok
+        """
+        parameters = []
+
+        # Check length of fiber
+        length = checkNumber(length)
+
+        if length == 0:
+            messagebox.showerror("Length input error", "Zero is not valid length!")
+            return None
+        elif length == -1:
+            messagebox.showerror("Length input error", "Length cannot be negative!")
+            return None
+        elif length == -2:
+            messagebox.showerror("Length input error", "Lentgh must be a number!")
+            return None
+        elif length == -3:
+            messagebox.showerror("Length input error", "You must input length!")
+            return None
+        else:
+            parameters.append(length)
+
+        # Check power of laser
+        power = checkNumber(power)
+
+        if power == 0:
+            messagebox.showerror("Power input error", "Zero is not valid power!")
+            return None
+        elif power == -1:
+            messagebox.showerror("Power input error", "Power cannot be negative!")
+            return None
+        elif power == -2:
+            messagebox.showerror("Power input error", "Power must be a number!")
+            return None
+        elif power == -3:
+            messagebox.showerror("Power input error", "You must input power!")
+            return None
+        else:
+            parameters.append(power)
+
+        return parameters
+

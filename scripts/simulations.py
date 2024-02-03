@@ -2,8 +2,9 @@ import numpy as np
 from commpy.utilities  import upsample
 from optic.models.devices import mzm, photodiode, edfa, basicLaserModel, iqm, coherentReceiver
 from optic.models.channels import linearFiberChannel
-from optic.comm.modulation import modulateGray
+from optic.comm.modulation import modulateGray, GrayMapping, demodulateGray
 from optic.dsp.core import pulseShape, pnorm, signal_power
+from optic.comm.metrics import fastBERcalc
 
 try:
     from optic.dsp.coreGPU import firFilter    
@@ -16,7 +17,7 @@ import matplotlib.pyplot as plt
 from scripts.plot import eyediagram, pconst
 
 
-def simulatePAM(order, length, dispersion=16, power=0.01):
+def simulatePAM(order, length, power=0.01, dispersion=16):
     """
     Simulation of PAM signal.
 
@@ -36,8 +37,12 @@ def simulatePAM(order, length, dispersion=16, power=0.01):
 
     Returns
     -----
-    list: with (Figure, Axes) tuples
-        order of figures: [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
+    list: list with (Figure, Axes) tuples
+        [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
+
+        list with other values
+
+        [BER, SER, SNR]
     """
     np.random.seed(seed=123) # fixing the seed to get reproducible results
 
@@ -172,9 +177,22 @@ def simulatePAM(order, length, dispersion=16, power=0.01):
     outFigures.append(pconst(symbTx, whiteb=False))
     outFigures.append(pconst(symbRx, whiteb=False))
 
-    return outFigures
+    ### DEMODULATION
 
-def simulatePSK(order, length, dispersion=16, power=0.01):
+    # demodulate symbols to bits with minimum Euclidean distance 
+    const = GrayMapping(M,"pam") # get constellation
+    Es = signal_power(const) # calculate the average energy per symbol of the constellation
+
+    # demodulated bits
+    bitsRx = demodulateGray(np.sqrt(Es)*symbRx, M, "pam")
+
+    BER = fastBERcalc(bitsRx, bitsTx, M, "pam")
+    # extract the values from arrays
+    BER = [array[0] for array in BER]
+
+    return outFigures, BER
+
+def simulatePSK(order, length, power=0.01, dispersion=16):
     """
     Simulation of PSK signal.
 
@@ -194,8 +212,12 @@ def simulatePSK(order, length, dispersion=16, power=0.01):
 
     Returns
     -----
-    list: with (Figure, Axes) tuples
-        order of figures: [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
+    list: list with (Figure, Axes) tuples
+        [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
+
+        list with other values
+
+        [BER, SER, SNR]
     """
     np.random.seed(seed=123) # fixing the seed to get reproducible results
 
@@ -219,7 +241,7 @@ def simulatePSK(order, length, dispersion=16, power=0.01):
     symbolsUp = upsample(symbTx, SpS)
 
     # typical NRZ pulse
-    pulse = pulseShape('nrz', SpS)
+    pulse = pulseShape("nrz", SpS)
     pulse = pulse/max(abs(pulse))
 
     # pulse shaping
@@ -245,8 +267,8 @@ def simulatePSK(order, length, dispersion=16, power=0.01):
     # optical modulation
     sigTxo = iqm(optical_signal, 0.25*sigTx, paramIQM)
 
-    # print('Average power of the modulated optical signal [mW]: %.3f mW'%(signal_power(sigTxo)/1e-3))
-    # print('Average power of the modulated optical signal [dBm]: %.3f dBm'%(10*np.log10(signal_power(sigTxo)/1e-3)))
+    # print("Average power of the modulated optical signal [mW]: %.3f mW"%(signal_power(sigTxo)/1e-3))
+    # print("Average power of the modulated optical signal [dBm]: %.3f dBm"%(10*np.log10(signal_power(sigTxo)/1e-3)))
 
     interval = np.arange(16*20,16*50)
     t = interval*Ts/1e-9
@@ -255,19 +277,19 @@ def simulatePSK(order, length, dispersion=16, power=0.01):
     fig, axs = plt.subplots(figsize=(16,3))
     axs.set_xlim(-3*Rs,3*Rs)
     axs.set_ylim(-230,-130)
-    axs.psd(np.abs(sigTxo)**2, Fs=Fs, NFFT = 16*1024, sides='twosided', label = 'Optical signal spectrum')
-    axs.legend(loc='upper left')
+    axs.psd(np.abs(sigTxo)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
+    axs.legend(loc="upper left")
     plt.close()
 
     outFigures.append((fig, axs))
 
     # plot signal in time
     fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(sigTxo[interval])**2, label = 'Optical modulated signal', linewidth=2)
-    axs.set_ylabel('Power (p.u.)')
-    axs.set_xlabel('Time (ns)')
+    axs.plot(t, np.abs(sigTxo[interval])**2, label = "Optical modulated signal", linewidth=2)
+    axs.set_ylabel("Power (p.u.)")
+    axs.set_xlabel("Time (ns)")
     axs.set_xlim(min(t),max(t))
-    axs.legend(loc='upper left')
+    axs.legend(loc="upper left")
     plt.close()
 
     outFigures.append((fig, axs))
@@ -305,11 +327,11 @@ def simulatePSK(order, length, dispersion=16, power=0.01):
 
     # Rx t
     fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(I_Rx[interval])**2, label = 'Optical modulated signal', linewidth=2)
-    axs.set_ylabel('Power (p.u.)')
-    axs.set_xlabel('Time (ns)')
+    axs.plot(t, np.abs(I_Rx[interval])**2, label = "Optical modulated signal", linewidth=2)
+    axs.set_ylabel("Power (p.u.)")
+    axs.set_xlabel("Time (ns)")
     axs.set_xlim(min(t),max(t))
-    axs.legend(loc='upper left')
+    axs.legend(loc="upper left")
     plt.close()
 
     outFigures.append((fig, axs))
@@ -332,4 +354,17 @@ def simulatePSK(order, length, dispersion=16, power=0.01):
     outFigures.append(pconst(symbTx, whiteb=False))
     outFigures.append(pconst(symbRx, whiteb=False))
 
-    return outFigures
+    ### DEMODULATION
+
+    # demodulate symbols to bits with minimum Euclidean distance 
+    const = GrayMapping(M,"psk") # get constellation
+    Es = signal_power(const) # calculate the average energy per symbol of the constellation
+
+    # demodulated bits
+    bitsRx = demodulateGray(np.sqrt(Es)*symbRx, M, "psk")
+
+    BER = fastBERcalc(bitsRx, bitsTx, M, "psk")
+    # extract the values from arrays
+    BER = [array[0] for array in BER]
+
+    return outFigures, BER

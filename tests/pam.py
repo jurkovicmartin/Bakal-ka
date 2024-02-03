@@ -6,7 +6,7 @@ from commpy.utilities  import upsample
 from optic.models.devices import mzm, photodiode, edfa
 from optic.models.channels import linearFiberChannel
 from optic.comm.modulation import GrayMapping, modulateGray, demodulateGray
-from optic.comm.metrics import  theoryBER
+from optic.comm.metrics import  theoryBER, fastBERcalc
 from optic.dsp.core import pulseShape, lowPassFIR, pnorm, signal_power
 
 try:
@@ -106,7 +106,7 @@ axs.legend(loc='upper left')
 
 # linear optical channel
 paramCh = parameters()
-paramCh.L = 40         # total link distance [km]
+paramCh.L = 80         # total link distance [km]
 paramCh.α = 0.2        # fiber loss parameter [dB/km]
 paramCh.D = 16         # fiber dispersion parameter [ps/nm/km]
 paramCh.Fc = 193.1e12  # central optical frequency [Hz]
@@ -171,14 +171,21 @@ pconst(symbTx, whiteb=False)
 pconst(symbRx, whiteb=False)
 
 # # demodulate symbols to bits with minimum Euclidean distance 
-# const = GrayMapping(M,'pam') # get PAM constellation
-# Es = signal_power(const) # calculate the average energy per symbol of the PAM constellation
+const = GrayMapping(M,'pam') # get PAM constellation
+Es = signal_power(const) # calculate the average energy per symbol of the PAM constellation
 
-# bitsRx = demodulateGray(np.sqrt(Es)*symbRx, M, 'pam')
+bitsRx = demodulateGray(np.sqrt(Es)*symbRx, M, 'pam')
 
-# discard = 100
-# err = np.logical_xor(bitsRx[discard:bitsRx.size-discard], bitsTx[discard:bitsTx.size-discard])
-# BER = np.mean(err)
+discard = 100
+err = np.logical_xor(bitsRx[discard:bitsRx.size-discard], bitsTx[discard:bitsTx.size-discard])
+BER = np.mean(err)
+
+print(bitsTx[200:221])
+print(bitsRx[200:221])
+print(BER)
+
+secBER = fastBERcalc(bitsRx, bitsTx, M, 'pam')
+print(secBER[0])
 
 # #Pb = 0.5*erfc(Q/np.sqrt(2)) # theoretical error probability
 # print('Number of counted errors = %d '%(err.sum()))

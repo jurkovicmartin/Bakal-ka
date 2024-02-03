@@ -1,6 +1,6 @@
 import re
 
-def checkLength(input):
+def checkNumber(input):
     """
     Checks for numbers and their range.
 
