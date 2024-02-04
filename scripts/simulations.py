@@ -137,6 +137,18 @@ def simulatePAM(order, length, power=0.01, dispersion=16):
 
     sigCh = edfa(sigCh, paramEDFA)
 
+    # Rx t
+    fig, axs = plt.subplots(figsize=(16,3))
+    axs.plot(t, np.abs(sigCh[interval])**2, label = "Optical modulated signal", linewidth=2)
+    axs.set_ylabel("Power (p.u.)")
+    axs.set_xlabel("Time (ns)")
+    axs.set_xlim(min(t),max(t))
+    axs.legend(loc="upper left")
+    axs.set_title("Rx signal in time")
+    plt.close()
+
+    outFigures.append((fig, axs))
+
     ### DETECTION
 
     # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
@@ -147,21 +159,9 @@ def simulatePAM(order, length, power=0.01, dispersion=16):
 
     I_Rx = photodiode(sigCh, paramPD)
 
-    # Rx t
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(I_Rx[interval])**2, label = "Optical modulated signal", linewidth=2)
-    axs.set_ylabel("Power (p.u.)")
-    axs.set_xlabel("Time (ns)")
-    axs.set_xlim(min(t),max(t))
-    axs.legend(loc="upper left")
-    axs.set_title("Rx signal in time")
-    plt.close()
-
-    outFigures.append((fig, axs))
-
     # eyediagrams
     discard = 100
-    outFigures.append(eyediagram(sigTxo[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy"))
+    outFigures.append(eyediagram(sigTx[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy"))
     outFigures.append(eyediagram(I_Rx[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy"))
 
     I_Rx = I_Rx/np.std(I_Rx)
@@ -315,6 +315,17 @@ def simulatePSK(order, length, power=0.01, dispersion=16):
 
     sigCh = edfa(sigCh, paramEDFA)
 
+    # Rx t
+    fig, axs = plt.subplots(figsize=(16,3))
+    axs.plot(t, np.abs(sigCh[interval])**2, label = "Optical modulated signal", linewidth=2)
+    axs.set_ylabel("Power (p.u.)")
+    axs.set_xlabel("Time (ns)")
+    axs.set_xlim(min(t),max(t))
+    axs.legend(loc="upper left")
+    plt.close()
+
+    outFigures.append((fig, axs))
+
     ### DETECTION
 
     # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
@@ -325,20 +336,10 @@ def simulatePSK(order, length, power=0.01, dispersion=16):
 
     I_Rx = coherentReceiver(sigCh, optical_signal, paramPD)
 
-    # Rx t
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(I_Rx[interval])**2, label = "Optical modulated signal", linewidth=2)
-    axs.set_ylabel("Power (p.u.)")
-    axs.set_xlabel("Time (ns)")
-    axs.set_xlim(min(t),max(t))
-    axs.legend(loc="upper left")
-    plt.close()
-
-    outFigures.append((fig, axs))
 
     # eyediagrams
     discard = 100
-    outFigures.append(eyediagram(sigTxo[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy"))
+    outFigures.append(eyediagram(sigTx[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy"))
     outFigures.append(eyediagram(I_Rx[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy"))
 
     I_Rx = I_Rx/np.std(I_Rx)

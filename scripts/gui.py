@@ -28,6 +28,12 @@ class Gui:
         self.tSignalFrame = ttk.Frame(self.notebookFrame)
         self.eyeDiagramFrame = ttk.Frame(self.notebookFrame)
 
+        # Configuration to even sizing
+        self.optionsFrame.columnconfigure(0, weight=1)
+        self.optionsFrame.columnconfigure(1, weight=1)
+        self.optionsFrame.rowconfigure(0, weight=1)
+        self.optionsFrame.rowconfigure(1, weight=1)
+
         self.optionsFrame.pack()
         self.constellationFrame.pack()
         self.psdFrame.pack()
@@ -41,53 +47,65 @@ class Gui:
         self.notebookFrame.add(self.eyeDiagramFrame, text="Eye diagram")
 
         ### OPTIONS
-        self.titleLabel = tk.Label(self.optionsFrame, text="Optical modulaton simulation application")
-        self.titleLabel.pack(padx=10, pady=10)
+        
+        # Frames
+        self.modulationFrame = tk.Frame(self.optionsFrame)
+        self.parametersFrame = tk.Frame(self.optionsFrame)
+        self.outputsFrame = tk.Frame(self.optionsFrame)
+
+        self.modulationFrame.grid(row=0, column=0, sticky="nsew")
+        self.parametersFrame.grid(row=1, column=0, sticky="nsew")
+        self.outputsFrame.grid(row=0, column=1, sticky="nsew")
+
+        ### Modulation
+        self.titleLabel = tk.Label(self.modulationFrame, text="Optical modulaton simulation application")
+        self.titleLabel.pack(pady=10)
 
         # Choosing modulation format
-        self.mFormatLabel = tk.Label(self.optionsFrame, text="Modulation formats")
-        self.mFormatLabel.pack()
-        self.mFormatComboBox = ttk.Combobox(self.optionsFrame, values=["PAM", "PSK", "QAM"], state="readonly")
+        self.mFormatLabel = tk.Label(self.modulationFrame, text="Modulation formats")
+        self.mFormatLabel.pack(pady=10)
+        self.mFormatComboBox = ttk.Combobox(self.modulationFrame, values=["PAM", "PSK", "QAM"], state="readonly")
         self.mFormatComboBox.set("PAM")
-        self.mFormatComboBox.pack(padx=10, pady=10)
+        self.mFormatComboBox.pack()
         self.mFormatComboBox.bind("<<ComboboxSelected>>", self.modulationFormatChange)
 
         # Choosing modulation order
-        self.mOrderLabel = tk.Label(self.optionsFrame, text="Order of modulation")
-        self.mOrderLabel.pack()
-        self.mOrderCombobox = ttk.Combobox(self.optionsFrame, values=["2", "4"], state="readonly")
+        self.mOrderLabel = tk.Label(self.modulationFrame, text="Order of modulation")
+        self.mOrderLabel.pack(pady=10)
+        self.mOrderCombobox = ttk.Combobox(self.modulationFrame, values=["2", "4"], state="readonly")
         self.mOrderCombobox.set("2")
-        self.mOrderCombobox.pack(padx=10, pady=10)
+        self.mOrderCombobox.pack()
 
-        # Simulate button
-        self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.simulate)
-        self.simulateButton.pack(padx=10, pady=10)
 
-        ### PARAMETERS
+        ### Parameters
 
         # Length
-        self.lengthLabel = tk.Label(self.optionsFrame, text="Length of fiber [km]")
+        self.lengthLabel = tk.Label(self.parametersFrame, text="Length of fiber [km]")
         self.lengthLabel.pack(pady=10)
-        self.lengthEntry = tk.Entry(self.optionsFrame)
+        self.lengthEntry = tk.Entry(self.parametersFrame)
         self.lengthEntry.insert(0, "0")
         self.lengthEntry.pack()
 
         # Power
-        self.powerLabel = tk.Label(self.optionsFrame, text="Power of laser [W]")
+        self.powerLabel = tk.Label(self.parametersFrame, text="Power of laser [W]")
         self.powerLabel.pack(pady=10)
-        self.powerEntry = tk.Entry(self.optionsFrame)
+        self.powerEntry = tk.Entry(self.parametersFrame)
         self.powerEntry.insert(0, "0")
         self.powerEntry.pack()
 
-        ### OUTPUTS
+        ### Outputs
         
-        self.berLabel = tk.Label(self.optionsFrame, text="Bit error rate (BER):")
+        self.berLabel = tk.Label(self.outputsFrame, text="Bit error rate (BER):")
         self.berLabel.pack(pady=10)
-        self.serLabel = tk.Label(self.optionsFrame, text="Symbol error rate (SER):")
+        self.serLabel = tk.Label(self.outputsFrame, text="Symbol error rate (SER):")
         self.serLabel.pack(pady=10)
-        self.snrLabel = tk.Label(self.optionsFrame, text="Estimated signal-to-noise ratio (SNR):")
+        self.snrLabel = tk.Label(self.outputsFrame, text="Estimated signal-to-noise ratio (SNR):")
         self.snrLabel.pack(pady=10)
 
+        ### Simulate button
+        self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.simulate)
+        self.simulateButton.grid(row=1, column=1)
+        
         self.root.mainloop()
 
     ### METHODS
