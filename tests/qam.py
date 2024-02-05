@@ -23,20 +23,16 @@ np.random.seed(seed=123) # fixing the seed to get reproducible results
 
 # simulation parameters
 SpS = 16     # samples per symbol
-M = 4        # order of the modulation format
+M = 16        # order of the modulation format
 Rs = 5e9    # Symbol rate (for OOK case Rs = Rb)
 Fs = Rs*SpS  # Sampling frequency
 Ts = 1/Fs    # Sampling period
-constType = 'psk'
-
-# Laser power
-Pi_dBm = 0         # laser optical power at the input of the MZM in dBm
-Pi = dBm2W(Pi_dBm) # convert from dBm to W
+constType = 'qam'
 
 # generate pseudo-random bit sequence
 bitsTx = np.random.randint(2, size=int(np.log2(M)*1e6))
 
-# generate 2-PAM modulated symbol sequence
+# generate modulated symbol sequence
 symbTx = modulateGray(bitsTx, M, constType)
 symbTx = pnorm(symbTx) # power normalization
 
@@ -68,9 +64,7 @@ paramIQM.VbQ = -2
 paramIQM.Vphi = 1
 
 # optical modulation
-Ai = np.sqrt(Pi)
 sigTxo = iqm(optical_signal, sigTx, paramIQM)
-# sigTxo = pm(optical_signal, sigTx, 4)
 
 print('Average power of the modulated optical signal [mW]: %.3f mW'%(signal_power(sigTxo)/1e-3))
 print('Average power of the modulated optical signal [dBm]: %.3f dBm'%(10*np.log10(signal_power(sigTxo)/1e-3)))
@@ -113,27 +107,28 @@ paramEDFA.Fs = Fs
 
 sigCh = edfa(sigCh, paramEDFA)
 
-# I_Rx = hybrid_2x4_90deg(sigCh, optical_signal)
-# print(I_Rx)
-# print(type(I_Rx))
-
-# noisy photodiode (thermal noise + shot noise + bandwidth limitation)
-paramPD = parameters()
-paramPD.ideal = False
-paramPD.B = Rs
-paramPD.Fs = Fs
-
-I_Rx = coherentReceiver(sigCh, optical_signal, paramPD)
-
 fig, axs = plt.subplots(figsize=(16,3))
 axs.plot(t, np.abs(sigCh[interval])**2, label = 'Optical modulated signal', linewidth=2)
 axs.set_ylabel('Power (p.u.)')
 axs.set_xlabel('Time (ns)')
 axs.set_xlim(min(t),max(t))
 axs.legend(loc='upper left')
-axs.grid()
 
 plt.show()
+
+O_Rx = hybrid_2x4_90deg(sigCh, optical_signal)
+
+paramPD = parameters()
+paramPD.ideal = False
+paramPD.B = Rs
+paramPD.Fs = Fs
+
+I_Rx_1 = photodiode(O_Rx[0], paramPD)
+I_Rx_2 = photodiode(O_Rx[1], paramPD)
+I_Rx_3 = photodiode(O_Rx[2], paramPD)
+I_Rx_4 = photodiode(O_Rx[3], paramPD)
+
+I_Rx = I_Rx_1 + I_Rx_2 + I_Rx_3 + I_Rx_4
 
 I_Rx = I_Rx/np.std(I_Rx)
 
@@ -144,9 +139,6 @@ symbRx = I_Rx[0::SpS]
 symbRx = symbRx - symbRx.mean()
 symbRx = pnorm(symbRx)
 
-pconst(symbTx)
-pconst(symbRx)
+pconst(symbTx, whiteb=False)
+pconst(symbRx, whiteb=False)
 
-print("ok")
-
-# print(I_Rx)
