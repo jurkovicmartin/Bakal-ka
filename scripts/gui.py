@@ -4,7 +4,7 @@ from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from scripts.simulations import simulatePAM, simulatePSK
-from scripts.functions import checkNumber
+from scripts.functions import convertNumber
 
 class Gui:
     def __init__(self):
@@ -76,6 +76,13 @@ class Gui:
         self.mOrderCombobox.set("2")
         self.mOrderCombobox.pack()
 
+        # Power
+        self.powerLabel = tk.Label(self.modulationFrame, text="Power of laser [W]")
+        self.powerLabel.pack(pady=10)
+        self.powerEntry = tk.Entry(self.modulationFrame)
+        self.powerEntry.insert(0, "0")
+        self.powerEntry.pack()
+
 
         ### Parameters
 
@@ -86,12 +93,10 @@ class Gui:
         self.lengthEntry.insert(0, "0")
         self.lengthEntry.pack()
 
-        # Power
-        self.powerLabel = tk.Label(self.parametersFrame, text="Power of laser [W]")
-        self.powerLabel.pack(pady=10)
-        self.powerEntry = tk.Entry(self.parametersFrame)
-        self.powerEntry.insert(0, "0")
-        self.powerEntry.pack()
+        # Include channel amplifier
+        self.checkButtonVar = tk.BooleanVar()
+        self.amplifierCheckbutton = tk.Checkbutton(self.parametersFrame, text="Include EDFA pre amplifier", variable=self.checkButtonVar)
+        self.amplifierCheckbutton.pack(pady=10)
 
         ### Outputs
         
@@ -128,17 +133,18 @@ class Gui:
         # Getting remaining parameters
         modulationFormat = self.mFormatComboBox.get()
         modulationOrder = int(self.mOrderCombobox.get())
+        amplifierBool = self.checkButtonVar.get()
 
         if modulationFormat == "PAM":
 
-            simulation = simulatePAM(modulationOrder, fiberLength, laserPower)
+            simulation = simulatePAM(modulationOrder, fiberLength, amplifierBool, laserPower)
             self.displayPlots(simulation[0])
             self.displayValues(simulation[1])
             messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
 
         elif modulationFormat == "PSK":
             
-            simulation = simulatePSK(modulationOrder, fiberLength, laserPower)
+            simulation = simulatePSK(modulationOrder, fiberLength, amplifierBool, laserPower)
             self.displayPlots(simulation[0])
             self.displayValues(simulation[1])
             messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
@@ -264,7 +270,7 @@ class Gui:
         parameters = []
 
         # Check length of fiber
-        length = checkNumber(length)
+        length = convertNumber(length)
 
         if length == 0:
             messagebox.showerror("Length input error", "Zero is not valid length!")
@@ -282,7 +288,7 @@ class Gui:
             parameters.append(length)
 
         # Check power of laser
-        power = checkNumber(power)
+        power = convertNumber(power)
 
         if power == 0:
             messagebox.showerror("Power input error", "Zero is not valid power!")

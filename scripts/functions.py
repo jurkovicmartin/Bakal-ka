@@ -1,6 +1,6 @@
 import re
 
-def checkNumber(input):
+def convertNumber(input):
     """
     Checks for numbers and their range.
 

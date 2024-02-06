@@ -3,7 +3,7 @@
 
 import numpy as np
 from commpy.utilities  import upsample
-from optic.models.devices import mzm, photodiode, edfa
+from optic.models.devices import mzm, photodiode, edfa, basicLaserModel
 from optic.models.channels import linearFiberChannel
 from optic.comm.modulation import GrayMapping, modulateGray, demodulateGray
 from optic.comm.metrics import  theoryBER, fastBERcalc
@@ -61,9 +61,19 @@ pulse = pulse/max(abs(pulse))
 # pulse shaping
 sigTx = firFilter(pulse, symbolsUp)
 
+# Laser parameters
+paramLaser = parameters()
+paramLaser.P = 1   # laser power [W] [default: 10 dBm]
+paramLaser.lw = 1000    # laser linewidth [Hz] [default: 1 kHz]
+paramLaser.RIN_var = 1e-20  # variance of the RIN noise [default: 1e-20]
+paramLaser.Fs = Fs  # sampling rate [samples/s]
+paramLaser.Ns = len(sigTx)   # number of signal samples [default: 1e3]
+
+optical_signal = basicLaserModel(paramLaser)
+
 # optical modulation
 Ai = np.sqrt(Pi)
-sigTxo = mzm(Ai, 0.25*sigTx, paramMZM)
+sigTxo = mzm(optical_signal, sigTx, paramMZM)
 
 print('Average power of the modulated optical signal [mW]: %.3f mW'%(signal_power(sigTxo)/1e-3))
 print('Average power of the modulated optical signal [dBm]: %.3f dBm'%(10*np.log10(signal_power(sigTxo)/1e-3)))
@@ -106,7 +116,7 @@ axs.legend(loc='upper left')
 
 # linear optical channel
 paramCh = parameters()
-paramCh.L = 80         # total link distance [km]
+paramCh.L = 40         # total link distance [km]
 paramCh.α = 0.2        # fiber loss parameter [dB/km]
 paramCh.D = 16         # fiber dispersion parameter [ps/nm/km]
 paramCh.Fc = 193.1e12  # central optical frequency [Hz]
@@ -141,10 +151,10 @@ I_Rx = photodiode(sigCh, paramPD)
 
 discard = 100
 
-eyediagram(I_Rx_ideal[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel='signal at Tx', ptype='fancy')
+eyediagram(sigTx[discard:-discard], sigTx.size-2*discard, SpS, plotlabel='signal at Tx', ptype='fancy')
 eyediagram(I_Rx[discard:-discard], I_Rx.size-2*discard, SpS, plotlabel='signal at Rx', ptype='fancy')
 
-fig, axs = plt.subplots(figsize=(16,3))
+# fig, axs = plt.subplots(figsize=(16,3))
 # # plot psd
 # axs[0].set_xlim(-3*Rs,3*Rs)
 # axs[0].set_ylim(-355,-155)
