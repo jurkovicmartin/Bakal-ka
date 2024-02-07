@@ -12,8 +12,9 @@
 - exporting to img (Pillow package)
 - throwing exceptions instead of prints
 - showing Tx a Rx bits
-- options tab layout
 - limits for parameters (power)
+- displaying power
+- include units (SNR)
 ## Display
 - karts
 - bit sequence
