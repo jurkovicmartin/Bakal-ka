@@ -13,8 +13,6 @@
 - throwing exceptions instead of prints
 - showing Tx a Rx bits
 - limits for parameters (power)
-- displaying power
-- include units (SNR)
 ## Display
 - karts
 - bit sequence

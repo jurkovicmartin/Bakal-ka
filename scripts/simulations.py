@@ -44,9 +44,10 @@ def simulatePAM(order, length, amplifier, power=0.01, dispersion=16):
     list: list with (Figure, Axes) tuples
         [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
 
-        list with other values
+        tuple with other values
+            list: [BER, SER, SNR]
 
-        [BER, SER, SNR]
+            list: [transmition power [W], transmition power [dB], recieved power [W], recieved power [dB]]
     """
     np.random.seed(seed=123) # fixing the seed to get reproducible results
 
@@ -153,7 +154,19 @@ def simulatePAM(order, length, amplifier, power=0.01, dispersion=16):
     # extract the values from arrays
     BER = [array[0] for array in BER]
 
-    return outFigures, BER
+    # Signals power
+    signalsPower = []
+
+    # Transmition signal [W]
+    signalsPower.append(signal_power(modulatedSignal)/1e-3)
+    # Transmition signal [dB]
+    signalsPower.append(10*np.log10(signal_power(modulatedSignal)/1e-3))
+    # Recieved signal [W]
+    signalsPower.append(signal_power(recievedSignal)/1e-3)
+    # Recieved signal [dB]
+    signalsPower.append(10*np.log10(signal_power(recievedSignal)/1e-3))
+
+    return outFigures, BER, signalsPower
 
 def simulatePSK(order, length, amplifier, power=0.01, dispersion=16):
     """
@@ -181,9 +194,10 @@ def simulatePSK(order, length, amplifier, power=0.01, dispersion=16):
     list: list with (Figure, Axes) tuples
         [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
 
-        list with other values
+        tuple with other values
+            list: [BER, SER, SNR]
 
-        [BER, SER, SNR]
+            list: [transmition power [W], transmition power [dB], recieved power [W], recieved power [dB]]
     """
     np.random.seed(seed=123) # fixing the seed to get reproducible results
 
@@ -288,9 +302,19 @@ def simulatePSK(order, length, amplifier, power=0.01, dispersion=16):
     # extract the values from arrays
     BER = [array[0] for array in BER]
 
-    
+    # Signals power
+    signalsPower = []
 
-    return outFigures, BER
+    # Transmition signal [W]
+    signalsPower.append(signal_power(modulatedSignal)/1e-3)
+    # Transmition signal [dB]
+    signalsPower.append(10*np.log10(signal_power(modulatedSignal)/1e-3))
+    # Recieved signal [W]
+    signalsPower.append(signal_power(recievedSignal)/1e-3)
+    # Recieved signal [dB]
+    signalsPower.append(10*np.log10(signal_power(recievedSignal)/1e-3))
+
+    return outFigures, BER, signalsPower
 
 def simulateQAM(order, length, amplifier, power=0.01, dispersion=16):
     """
@@ -318,9 +342,10 @@ def simulateQAM(order, length, amplifier, power=0.01, dispersion=16):
     list: list with (Figure, Axes) tuples
         [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
 
-        list with other values
+        tuple with other values
+            list: [BER, SER, SNR]
 
-        [BER, SER, SNR]
+            list: [transmition power [W], transmition power [dB], recieved power [W], recieved power [dB]]
     """
     np.random.seed(seed=123) # fixing the seed to get reproducible results
 

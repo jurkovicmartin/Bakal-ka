@@ -99,13 +99,22 @@ class Gui:
         self.amplifierCheckbutton.pack(pady=10)
 
         ### Outputs
-        
+    
         self.berLabel = tk.Label(self.outputsFrame, text="Bit error rate (BER):")
         self.berLabel.pack(pady=10)
         self.serLabel = tk.Label(self.outputsFrame, text="Symbol error rate (SER):")
         self.serLabel.pack(pady=10)
         self.snrLabel = tk.Label(self.outputsFrame, text="Estimated signal-to-noise ratio (SNR):")
         self.snrLabel.pack(pady=10)
+
+        self.powerModWLabel = tk.Label(self.outputsFrame, text="Power of modulated signal:")
+        self.powerModWLabel.pack(pady=10)
+        self.powerModdBLabel = tk.Label(self.outputsFrame, text="Power of modulated signal:")
+        self.powerModdBLabel.pack(pady=10)
+        self.powerRecWLabel = tk.Label(self.outputsFrame, text="Power of recieved signal:")
+        self.powerRecWLabel.pack(pady=10)
+        self.powerRecdBLabel = tk.Label(self.outputsFrame, text="Power of recieved signal:")
+        self.powerRecdBLabel.pack(pady=10)
 
         ### Simulate button
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.simulate)
@@ -139,14 +148,14 @@ class Gui:
 
             simulation = simulatePAM(modulationOrder, fiberLength, amplifierBool, laserPower)
             self.displayPlots(simulation[0])
-            self.displayValues(simulation[1])
+            self.displayValues(simulation[1], simulation[2])
             messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
 
         elif modulationFormat == "PSK":
             
             simulation = simulatePSK(modulationOrder, fiberLength, amplifierBool, laserPower)
             self.displayPlots(simulation[0])
-            self.displayValues(simulation[1])
+            self.displayValues(simulation[1], simulation[2])
             messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
             
         elif modulationFormat == "QAM":
@@ -233,20 +242,30 @@ class Gui:
         canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
 
     
-    def displayValues(self, values):
+    def displayValues(self, errorValues, powerValues):
         """
         Display number values in application.
 
         Parameters
         -----
-        values: list
+        errorValues: list
             list contains values
 
             expected order - [BER, SER, SNR]
+
+        powerValues: list
+            list contains values of signals power
+
+            expected order - [Tx W, Tx dB, Rx W, Rx dB]
         """
-        self.berLabel["text"] = f"Bit error rate (BER): {values[0]}"
-        self.serLabel["text"] = f"Symbol error rate (SER): {values[1]}"
-        self.snrLabel["text"] = f"Estimated signal-to-noise ratio (SNR): {values[2]}"
+        self.berLabel["text"] = f"Bit error rate (BER): {errorValues[0]}"
+        self.serLabel["text"] = f"Symbol error rate (SER): {errorValues[1]}"
+        self.snrLabel["text"] = f"Estimated signal-to-noise ratio (SNR): {errorValues[2]} dB"
+
+        self.powerModWLabel["text"] = f"Power of modulated signal: {powerValues[0]} W"
+        self.powerModdBLabel["text"] = f"Power of modulated signal: {powerValues[1]} dB"
+        self.powerRecWLabel["text"] = f"Power of recieved signal: {powerValues[2]} W"
+        self.powerRecdBLabel["text"] = f"Power of recieved signal: {powerValues[3]} dB"
 
     def checkParameters(self, length, power):
         """
