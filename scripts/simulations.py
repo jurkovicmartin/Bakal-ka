@@ -30,7 +30,7 @@ def simulatePAM(order, length, amplifier, power=0.01, dispersion=16):
         length of fiber [km]
     
     amplifier: bool
-        true = included EDFA to match fiber attenuation    
+        true = included pre amplifier EDFA to match fiber attenuation    
 
     power: float
         power of laser [W]
@@ -181,7 +181,7 @@ def simulatePSK(order, length, amplifier, power=0.01, dispersion=16):
         length of fiber [km]
     
     amplifier: bool
-        true = included EDFA to match fiber attenuation    
+        true = included pre amplifier EDFA to match fiber attenuation    
 
     power: float
         power of laser [W]
@@ -329,7 +329,7 @@ def simulateQAM(order, length, amplifier, power=0.01, dispersion=16):
         length of fiber [km]
     
     amplifier: bool
-        true = included EDFA to match fiber attenuation    
+        true = included pre amplifier EDFA to match fiber attenuation    
 
     power: float
         power of laser [W]
@@ -491,7 +491,7 @@ def fiberChannel(length, dispersion, amplifier, Fs, signal):
         fiber dispersion [ps/nm/km]
 
     amplifier: bool
-        True - include EDFA amplifier
+        True - include EDFA pre amplifier
 
     Fs: int
         Sampling frequency
