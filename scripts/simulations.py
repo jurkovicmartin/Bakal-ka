@@ -59,16 +59,6 @@ def simulatePAM(order, length, amplifier, power=0.01, dispersion=16):
     Fs = SpS*Rs        # Sampling frequency in samples/second
     Ts = 1/Fs          # Sampling period
 
-    ### MODULATION
-
-    # Laser power
-    Pi = power
-
-    # MZM parameters
-    paramMZM = parameters()
-    paramMZM.Vpi = 2
-    paramMZM.Vb = -paramMZM.Vpi/2
-
     # generate pseudo-random bit sequence
     bitsTx = np.random.randint(2, size=int(np.log2(M)*1e6))
 
@@ -86,9 +76,25 @@ def simulatePAM(order, length, amplifier, power=0.01, dispersion=16):
     # pulse shaping
     sigTx = firFilter(pulse, symbolsUp)
 
+    # Laser parameters
+    paramLaser = parameters()
+    paramLaser.P = power   # laser power [W] [default: 10 dBm]
+    paramLaser.lw = 1000    # laser linewidth [Hz] [default: 1 kHz]
+    paramLaser.RIN_var = 1e-20  # variance of the RIN noise [default: 1e-20]
+    paramLaser.Fs = Fs  # sampling rate [samples/s]
+    paramLaser.Ns = len(sigTx)   # number of signal samples [default: 1e3]
+
+    optical_signal = basicLaserModel(paramLaser)
+
+    ### MODULATION
+
+    # MZM parameters
+    paramMZM = parameters()
+    paramMZM.Vpi = 2
+    paramMZM.Vb = -paramMZM.Vpi/2
+
     # optical modulation
-    Ai = np.sqrt(Pi)
-    sigTxo = mzm(Ai, 0.25*sigTx, paramMZM)
+    sigTxo = mzm(optical_signal, 0.25*sigTx, paramMZM)
 
     # print("Average power of the modulated optical signal [mW]: %.3f mW"%(signal_power(sigTxo)/1e-3))
     # print("Average power of the modulated optical signal [dBm]: %.3f dBm"%(10*np.log10(signal_power(sigTxo)/1e-3)))
@@ -264,6 +270,8 @@ def simulatePSK(order, length, amplifier, power=0.01, dispersion=16):
     paramLaser.Ns = len(sigTx)   # number of signal samples [default: 1e3]
 
     optical_signal = basicLaserModel(paramLaser)
+
+    ### MODULATION
 
     # IQM parameters
     paramIQM = parameters()
@@ -446,6 +454,8 @@ def simulateQAM(order, length, amplifier, power=0.01, dispersion=16):
     paramLaser.Ns = len(sigTx)   # number of signal samples [default: 1e3]
 
     optical_signal = basicLaserModel(paramLaser)
+
+    ### MODULATION
 
     # IQM parameters
     paramIQM = parameters()

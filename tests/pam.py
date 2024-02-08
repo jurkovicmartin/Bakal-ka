@@ -73,7 +73,7 @@ optical_signal = basicLaserModel(paramLaser)
 
 # optical modulation
 Ai = np.sqrt(Pi)
-sigTxo = mzm(optical_signal, sigTx, paramMZM)
+sigTxo = mzm(optical_signal, 0.25*sigTx, paramMZM)
 
 print('Average power of the modulated optical signal [mW]: %.3f mW'%(signal_power(sigTxo)/1e-3))
 print('Average power of the modulated optical signal [dBm]: %.3f dBm'%(10*np.log10(signal_power(sigTxo)/1e-3)))
@@ -124,14 +124,17 @@ paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
 
 sigCh = linearFiberChannel(sigTxo, paramCh)
 
-# receiver pre-amplifier
-paramEDFA = parameters()
-paramEDFA.G = paramCh.α*paramCh.L    # edfa gain
-paramEDFA.NF = 4.5   # edfa noise figure 
-paramEDFA.Fc = paramCh.Fc
-paramEDFA.Fs = Fs
+# # receiver pre-amplifier
+# paramEDFA = parameters()
+# paramEDFA.G = paramCh.α*paramCh.L    # edfa gain
+# paramEDFA.NF = 4.5   # edfa noise figure 
+# paramEDFA.Fc = paramCh.Fc
+# paramEDFA.Fs = Fs
 
-sigCh = edfa(sigCh, paramEDFA)
+# sigCh = edfa(sigCh, paramEDFA)
+
+print('Average power of the modulated optical signal [mW]: %.3f mW'%(signal_power(sigCh)/1e-3))
+print('Average power of the modulated optical signal [dBm]: %.3f dBm'%(10*np.log10(signal_power(sigCh)/1e-3)))
 
 # ### Direct-detection (DD) pin receiver model
 
