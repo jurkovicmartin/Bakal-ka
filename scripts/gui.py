@@ -1,7 +1,9 @@
+import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from PIL import Image
 
 from scripts.simulations import simulatePAM, simulatePSK
 from scripts.functions import convertNumber
@@ -52,14 +54,16 @@ class Gui:
         self.modulationFrame = tk.Frame(self.optionsFrame)
         self.parametersFrame = tk.Frame(self.optionsFrame)
         self.outputsFrame = tk.Frame(self.optionsFrame)
+        self.buttonsFrame = tk.Frame(self.optionsFrame)
 
         self.modulationFrame.grid(row=0, column=0, sticky="nsew")
         self.parametersFrame.grid(row=1, column=0, sticky="nsew")
         self.outputsFrame.grid(row=0, column=1, sticky="nsew")
+        self.buttonsFrame.grid(row=1, column=1, sticky="nsew")
 
         ### Modulation
-        self.titleLabel = tk.Label(self.modulationFrame, text="Optical modulaton simulation application")
-        self.titleLabel.pack(pady=10)
+        self.modulationLable = tk.Label(self.modulationFrame, text="Modulation parameters")
+        self.modulationLable.pack(pady=10)
 
         # Choosing modulation format
         self.mFormatLabel = tk.Label(self.modulationFrame, text="Modulation formats")
@@ -85,6 +89,8 @@ class Gui:
 
 
         ### Parameters
+        self.parametersLabel = tk.Label(self.parametersFrame, text="Channel parameters")
+        self.parametersLabel.pack(pady=10)
 
         # Length
         self.lengthLabel = tk.Label(self.parametersFrame, text="Length of fiber [km]")
@@ -98,14 +104,7 @@ class Gui:
         self.amplifierCheckbutton = tk.Checkbutton(self.parametersFrame, text="Include EDFA pre amplifier", variable=self.checkButtonVar)
         self.amplifierCheckbutton.pack(pady=10)
 
-        ### Outputs
-    
-        self.berLabel = tk.Label(self.outputsFrame, text="Bit error rate (BER):")
-        self.berLabel.pack(pady=10)
-        self.serLabel = tk.Label(self.outputsFrame, text="Symbol error rate (SER):")
-        self.serLabel.pack(pady=10)
-        self.snrLabel = tk.Label(self.outputsFrame, text="Estimated signal-to-noise ratio (SNR):")
-        self.snrLabel.pack(pady=10)
+        ### Value outputs
 
         self.powerModWLabel = tk.Label(self.outputsFrame, text="Power of modulated signal:")
         self.powerModWLabel.pack(pady=10)
@@ -115,10 +114,23 @@ class Gui:
         self.powerRecWLabel.pack(pady=10)
         self.powerRecdBLabel = tk.Label(self.outputsFrame, text="Power of recieved signal:")
         self.powerRecdBLabel.pack(pady=10)
+    
+        self.berLabel = tk.Label(self.outputsFrame, text="Bit error rate (BER):")
+        self.berLabel.pack(pady=10)
+        self.serLabel = tk.Label(self.outputsFrame, text="Symbol error rate (SER):")
+        self.serLabel.pack(pady=10)
+        self.snrLabel = tk.Label(self.outputsFrame, text="Estimated signal-to-noise ratio (SNR):")
+        self.snrLabel.pack(pady=10)
 
-        ### Simulate button
-        self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.simulate)
-        self.simulateButton.grid(row=1, column=1)
+        ### Buttons
+
+        self.simulateButton = tk.Button(self.buttonsFrame, text="Simulate", command=self.simulate)
+        self.simulateButton.pack(pady=10)
+
+        self.exportButton = tk.Button(self.buttonsFrame, text="Export plots as image", command=self.export)
+        self.exportButton.pack(pady=10)
+
+
         
         self.root.mainloop()
 
@@ -163,6 +175,31 @@ class Gui:
         else: print("Unexpected modulation format error")
 
 
+    def export(self):
+        """
+        Export plots as images to exports folder.
+        """
+
+        # Getting canvases
+        frames = [self.psdFrame, self.eyeDiagramFrame, self.tSignalFrame, self.constellationFrame]
+
+        canvases = [widget for frame in frames for widget in frame.winfo_children()]
+
+        # Specify the path where you want to save the images
+        save_path = '../exports/'
+
+        # Save each widget as an image
+        for i, widget in enumerate(canvases):
+            # Save the widget contents as a PostScript file
+            widget.postscript(file=os.path.join(save_path, f'output_image_{i + 1}.ps'), colormode='color')
+
+            # Convert the PostScript file to an image (e.g., PNG) using Pillow
+            img = Image.open(os.path.join(save_path, f'output_image_{i + 1}.ps'))
+            img.save(os.path.join(save_path, f'output_image_{i + 1}.png'), format='png')
+        
+        messagebox.showinfo("Status of export", "Export is succesfully completed.\nImages are in exports folder")
+
+
     def modulationFormatChange(self, event):
         """
         Change modulation order options when modulation format is changed
@@ -181,6 +218,7 @@ class Gui:
         # Sets new options to modulation order combobox
         self.mOrderCombobox["values"] = orderOptions
         self.mOrderCombobox.set(orderOptions[0])
+
 
     def displayPlots(self, figures):
         """
@@ -266,6 +304,7 @@ class Gui:
         self.powerModdBLabel["text"] = f"Power of modulated signal: {powerValues[1]} dB"
         self.powerRecWLabel["text"] = f"Power of recieved signal: {powerValues[2]} W"
         self.powerRecdBLabel["text"] = f"Power of recieved signal: {powerValues[3]} dB"
+
 
     def checkParameters(self, length, power):
         """
