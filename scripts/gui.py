@@ -82,7 +82,7 @@ class Gui:
         self.powerLabel = tk.Label(self.modulationFrame, text="Power of laser [W]")
         self.powerLabel.pack(pady=10)
         self.powerEntry = tk.Entry(self.modulationFrame)
-        self.powerEntry.insert(0, "0.1")
+        self.powerEntry.insert(0, "1")
         self.powerEntry.pack()
 
 
@@ -97,9 +97,23 @@ class Gui:
         self.lengthEntry.insert(0, "1")
         self.lengthEntry.pack()
 
+        # Loss
+        self.lossLabel = tk.Label(self.parametersFrame, text="Fiber loss [dB/km]")
+        self.lossLabel.pack(pady=10)
+        self.lossEntry = tk.Entry(self.parametersFrame)
+        self.lossEntry.insert(0, "0.2")
+        self.lossEntry.pack()
+
+        # Dispersion
+        self.dispersionLabel = tk.Label(self.parametersFrame, text="Fiber dispersion [ps/nm/km]")
+        self.dispersionLabel.pack(pady=10)
+        self.dispersionEntry = tk.Entry(self.parametersFrame)
+        self.dispersionEntry.insert(0, "16")
+        self.dispersionEntry.pack()
+
         # Include channel amplifier
         self.checkButtonVar = tk.BooleanVar()
-        self.amplifierCheckbutton = tk.Checkbutton(self.parametersFrame, text="Include EDFA pre amplifier", variable=self.checkButtonVar)
+        self.amplifierCheckbutton = tk.Checkbutton(self.parametersFrame, text="Include EDFA pre amplifier to match fiber loss", variable=self.checkButtonVar)
         self.amplifierCheckbutton.pack(pady=10)
 
         ### Value outputs
@@ -135,14 +149,20 @@ class Gui:
         """
 
         # Getting simulation parameters        
-        fiberLength = self.lengthEntry.get()
         laserPower = self.powerEntry.get()
+        fiberLength = self.lengthEntry.get()
+        fiberLoss = self.lossEntry.get()
+        fiberDispersion = self.dispersionEntry.get()        
         
         # Validating parameters
-        fiberLength = self.checkParameter("Length", fiberLength)
-        if fiberLength is None: return
         laserPower = self.checkParameter("Power", laserPower)
         if laserPower is None: return
+        fiberLength = self.checkParameter("Length", fiberLength)
+        if fiberLength is None: return
+        fiberLoss = self.checkParameter("Loss", fiberLoss)
+        if fiberLoss is None: return
+        fiberDispersion = self.checkParameter("Dispersion", fiberDispersion)
+        if fiberDispersion is None: return
 
         # Getting remaining parameters
         modulationFormat = self.mFormatComboBox.get()
@@ -161,7 +181,7 @@ class Gui:
 
             # [bitsTx, symbolsTx, modulation signal, modulated signal, recieved signal, detected signal, symbolsRx, bitsRx]
             #   0       1           2                   3                   4               5               6          7
-            simulation = simulatePAM(simulationParameters, modulationOrder, fiberLength, amplifierBool, laserPower)
+            simulation = simulatePAM(simulationParameters, modulationOrder, fiberLength, amplifierBool, laserPower, fiberLoss, fiberDispersion)
             simulationPlots = createPlots(simulation[1], simulation[2], simulation[3], simulation[4], simulation[5], simulation[6], simulationParameters)
             self.displayPlots(simulationPlots)
             simulationValues = calculateValues("pam", modulationOrder, simulation[0], simulation[3], simulation[4], simulation[7])
@@ -172,7 +192,7 @@ class Gui:
             
             # [bitsTx, symbolsTx, modulation signal, modulated signal, recieved signal, detected signal, symbolsRx, bitsRx]
             #   0       1           2                   3                   4               5               6          7
-            simulation = simulatePSK(simulationParameters, modulationOrder, fiberLength, amplifierBool, laserPower)
+            simulation = simulatePSK(simulationParameters, modulationOrder, fiberLength, amplifierBool, laserPower, fiberLoss, fiberDispersion)
             simulationPlots = createPlots(simulation[1], simulation[2], simulation[3], simulation[4], simulation[5], simulation[6], simulationParameters)
             self.displayPlots(simulationPlots)
             simulationValues = calculateValues("psk", modulationOrder, simulation[0], simulation[3], simulation[4], simulation[7])
@@ -300,13 +320,18 @@ class Gui:
         parameter: float
             converted value
             
-            None if parameters are not ok
+            None if parameter is not ok
         """
+
+        # Parameters that can be 0
+        specialParameters = ["Loss", "Dispersion"]
 
         # Check length of fiber
         value = convertNumber(parameterValue)
 
-        if value == 0:
+        if value == 0 and parameterName in specialParameters:
+            return 0
+        elif value == 0:
             messagebox.showerror(f"{parameterName} input error", f"Zero is not valid {parameterName}!")
             return None
         elif value == -1:
