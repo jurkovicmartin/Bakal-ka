@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from scripts.plot import eyediagram, pconst
 
 
-def simulatePAM(simulationParameters, order, length, amplifier, power=0.01, dispersion=16):
+def simulatePAM(simulationParameters, order, length, amplifier, power=0.01, loss=0.2, dispersion=16):
     """
     Simulation of PAM signal.
 
@@ -45,6 +45,9 @@ def simulatePAM(simulationParameters, order, length, amplifier, power=0.01, disp
 
     power: float
         power of laser [W]
+
+    loss: float
+        fiber loss [dB/km]
 
     dispersion: float
         fiber dispersion [ps/nm/km]
@@ -81,7 +84,7 @@ def simulatePAM(simulationParameters, order, length, amplifier, power=0.01, disp
     modulatedSignal = mzm(carrierSignal, 0.25*modulationSignal, paramMZM)
 
     # Fiber channel
-    recievedSignal = fiberChannel(length, dispersion, amplifier, Fs, modulatedSignal)
+    recievedSignal = fiberChannel(length, loss, dispersion, amplifier, Fs, modulatedSignal)
 
     ### DETECTION
 
@@ -110,7 +113,7 @@ def simulatePAM(simulationParameters, order, length, amplifier, power=0.01, disp
 
     return values
 
-def simulatePSK(simulationParameters, order, length, amplifier, power=0.01, dispersion=16):
+def simulatePSK(simulationParameters, order, length, amplifier, power=0.01, loss=0.2, dispersion=16):
     """
     Simulation of PSK signal.
 
@@ -138,6 +141,9 @@ def simulatePSK(simulationParameters, order, length, amplifier, power=0.01, disp
 
     power: float
         power of laser [W]
+
+    loss: float
+        fiber loss [dB/km]
 
     dispersion: float
         fiber dispersion [ps/nm/km]
@@ -174,7 +180,7 @@ def simulatePSK(simulationParameters, order, length, amplifier, power=0.01, disp
     modulatedSignal = iqm(carrierSignal, 0.25*modulationSignal, paramIQM)
 
     # Fiber channel
-    recievedSignal = fiberChannel(length, dispersion, amplifier, Fs, modulatedSignal)
+    recievedSignal = fiberChannel(length, loss, dispersion, amplifier, Fs, modulatedSignal)
 
     ### DETECTION
 
@@ -204,7 +210,7 @@ def simulatePSK(simulationParameters, order, length, amplifier, power=0.01, disp
 
     return values
 
-def simulateQAM(simulationParameters, order, length, amplifier, power=0.01, dispersion=16):
+def simulateQAM(simulationParameters, order, length, amplifier, power=0.01, loss=0.2, dispersion=16):
     """
     Simulation of QAM signal.
 
@@ -228,10 +234,13 @@ def simulateQAM(simulationParameters, order, length, amplifier, power=0.01, disp
         length of fiber [km]
     
     amplifier: bool
-        true = included pre amplifier EDFA to match fiber attenuation    
+        true = included pre amplifier EDFA to match fiber loss    
 
     power: float
         power of laser [W]
+
+    loss: float
+        fiber loss [dB/km]
 
     dispersion: float
         fiber dispersion [ps/nm/km]
@@ -273,7 +282,7 @@ def simulateQAM(simulationParameters, order, length, amplifier, power=0.01, disp
     modulatedSignal = iqm(carrierSignal, modulationSignal, paramIQM)
 
     # Fiber channel
-    recievedSignal = fiberChannel(length, dispersion, amplifier, Fs, modulatedSignal)
+    recievedSignal = fiberChannel(length, loss, dispersion, amplifier, Fs, modulatedSignal)
 
     return
 
@@ -338,7 +347,7 @@ def generateSignals(format, order, power, SpS, Fs):
     return bitsTx, symbTx, sigTx, sigO
 
 
-def fiberChannel(length, dispersion, amplifier, Fs, signal):
+def fiberChannel(length, loss, dispersion, amplifier, Fs, signal):
     """
     Simulate signal thru fiber.
 
@@ -346,6 +355,9 @@ def fiberChannel(length, dispersion, amplifier, Fs, signal):
     -----
     length: float
         length of fiber [km]
+
+    loss: float
+        fiber loss [dB/km]
     
     dispersion: float
         fiber dispersion [ps/nm/km]
@@ -368,7 +380,7 @@ def fiberChannel(length, dispersion, amplifier, Fs, signal):
     # linear optical channel
     paramCh = parameters()
     paramCh.L = length         # total link distance [km]
-    paramCh.α = 0.2        # fiber loss parameter [dB/km]
+    paramCh.α = loss        # fiber loss parameter [dB/km]
     paramCh.D = dispersion         # fiber dispersion parameter [ps/nm/km]
     paramCh.Fc = 193.1e12  # central optical frequency [Hz]
     paramCh.Fs = Fs        # simulation sampling frequency [samples/second]

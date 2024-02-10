@@ -8,11 +8,11 @@
 - PSK
 ## Implement
 - history
-- editing fields for channel properties
 - exporting to img (Pillow package)
 - throwing exceptions instead of prints
 - showing Tx a Rx bits
 - limits for parameters (power)
+- dispersion and loss field
 ## Display
 - karts
 - bit sequence
