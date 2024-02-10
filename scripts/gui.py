@@ -1,11 +1,9 @@
-import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from PIL import Image
 
-from scripts.simulations import simulatePAM, simulatePSK
+from scripts.simulations import simulatePAM, simulatePSK, createPlots, calculateValues
 from scripts.functions import convertNumber
 
 class Gui:
@@ -84,7 +82,7 @@ class Gui:
         self.powerLabel = tk.Label(self.modulationFrame, text="Power of laser [W]")
         self.powerLabel.pack(pady=10)
         self.powerEntry = tk.Entry(self.modulationFrame)
-        self.powerEntry.insert(0, "0")
+        self.powerEntry.insert(0, "0.1")
         self.powerEntry.pack()
 
 
@@ -96,7 +94,7 @@ class Gui:
         self.lengthLabel = tk.Label(self.parametersFrame, text="Length of fiber [km]")
         self.lengthLabel.pack(pady=10)
         self.lengthEntry = tk.Entry(self.parametersFrame)
-        self.lengthEntry.insert(0, "0")
+        self.lengthEntry.insert(0, "1")
         self.lengthEntry.pack()
 
         # Include channel amplifier
@@ -126,11 +124,6 @@ class Gui:
 
         self.simulateButton = tk.Button(self.buttonsFrame, text="Simulate", command=self.simulate)
         self.simulateButton.pack(pady=10)
-
-        self.exportButton = tk.Button(self.buttonsFrame, text="Export plots as image", command=self.export)
-        self.exportButton.pack(pady=10)
-
-
         
         self.root.mainloop()
 
@@ -140,6 +133,7 @@ class Gui:
         """
         Start simulation
         """
+
         # Getting simulation parameters        
         fiberLength = self.lengthEntry.get()
         laserPower = self.powerEntry.get()
@@ -156,48 +150,39 @@ class Gui:
         modulationOrder = int(self.mOrderCombobox.get())
         amplifierBool = self.checkButtonVar.get()
 
+        # Setting simulation parameters
+        SpS = 16     # samples per symbol
+        Rs = 10e9    # Symbol rate
+        Fs = Rs*SpS  # Sampling frequency
+        Ts = 1/Fs    # Sampling period
+
+        simulationParameters = [SpS, Rs, Fs, Ts]
+
         if modulationFormat == "PAM":
 
-            simulation = simulatePAM(modulationOrder, fiberLength, amplifierBool, laserPower)
-            self.displayPlots(simulation[0])
-            self.displayValues(simulation[1], simulation[2])
+            # [bitsTx, symbolsTx, modulation signal, modulated signal, recieved signal, detected signal, symbolsRx, bitsRx]
+            #   0       1           2                   3                   4               5               6          7
+            simulation = simulatePAM(simulationParameters, modulationOrder, fiberLength, amplifierBool, laserPower)
+            simulationPlots = createPlots(simulation[1], simulation[2], simulation[3], simulation[4], simulation[5], simulation[6], simulationParameters)
+            self.displayPlots(simulationPlots)
+            simulationValues = calculateValues("pam", modulationOrder, simulation[0], simulation[3], simulation[4], simulation[7])
+            self.displayValues(simulationValues)
             messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
 
         elif modulationFormat == "PSK":
             
-            simulation = simulatePSK(modulationOrder, fiberLength, amplifierBool, laserPower)
-            self.displayPlots(simulation[0])
-            self.displayValues(simulation[1], simulation[2])
+            # [bitsTx, symbolsTx, modulation signal, modulated signal, recieved signal, detected signal, symbolsRx, bitsRx]
+            #   0       1           2                   3                   4               5               6          7
+            simulation = simulatePSK(simulationParameters, modulationOrder, fiberLength, amplifierBool, laserPower)
+            simulationPlots = createPlots(simulation[1], simulation[2], simulation[3], simulation[4], simulation[5], simulation[6], simulationParameters)
+            self.displayPlots(simulationPlots)
+            simulationValues = calculateValues("psk", modulationOrder, simulation[0], simulation[3], simulation[4], simulation[7])
+            self.displayValues(simulationValues)
             messagebox.showinfo("Status of simulation", "Simulation is succesfully completed.")
             
         elif modulationFormat == "QAM":
             pass
         else: print("Unexpected modulation format error")
-
-
-    def export(self):
-        """
-        Export plots as images to exports folder.
-        """
-
-        # Getting canvases
-        frames = [self.psdFrame, self.eyeDiagramFrame, self.tSignalFrame, self.constellationFrame]
-
-        canvases = [widget for frame in frames for widget in frame.winfo_children()]
-
-        # Specify the path where you want to save the images
-        save_path = '../exports/'
-
-        # Save each widget as an image
-        for i, widget in enumerate(canvases):
-            # Save the widget contents as a PostScript file
-            widget.postscript(file=os.path.join(save_path, f'output_image_{i + 1}.ps'), colormode='color')
-
-            # Convert the PostScript file to an image (e.g., PNG) using Pillow
-            img = Image.open(os.path.join(save_path, f'output_image_{i + 1}.ps'))
-            img.save(os.path.join(save_path, f'output_image_{i + 1}.png'), format='png')
-        
-        messagebox.showinfo("Status of export", "Export is succesfully completed.\nImages are in exports folder")
 
 
     def modulationFormatChange(self, event):
@@ -280,30 +265,23 @@ class Gui:
         canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
 
     
-    def displayValues(self, errorValues, powerValues):
+    def displayValues(self, values):
         """
         Display number values in application.
 
         Parameters
         -----
-        errorValues: list
-            list contains values
-
-            expected order - [BER, SER, SNR]
-
-        powerValues: list
-            list contains values of signals power
-
-            expected order - [Tx W, Tx dB, Rx W, Rx dB]
+        values: list
+            [BER, SER, SNR, Tx W, Tx dB, Rx W, Rx dB]
         """
-        self.berLabel["text"] = f"Bit error rate (BER): {errorValues[0]}"
-        self.serLabel["text"] = f"Symbol error rate (SER): {errorValues[1]}"
-        self.snrLabel["text"] = f"Estimated signal-to-noise ratio (SNR): {errorValues[2]} dB"
+        self.berLabel["text"] = f"Bit error rate (BER): {values[0]}"
+        self.serLabel["text"] = f"Symbol error rate (SER): {values[1]}"
+        self.snrLabel["text"] = f"Estimated signal-to-noise ratio (SNR): {values[2]} dB"
 
-        self.powerModWLabel["text"] = f"Power of modulated signal: {powerValues[0]} W"
-        self.powerModdBLabel["text"] = f"Power of modulated signal: {powerValues[1]} dB"
-        self.powerRecWLabel["text"] = f"Power of recieved signal: {powerValues[2]} W"
-        self.powerRecdBLabel["text"] = f"Power of recieved signal: {powerValues[3]} dB"
+        self.powerModWLabel["text"] = f"Power of modulated signal: {values[3]} W"
+        self.powerModdBLabel["text"] = f"Power of modulated signal: {values[4]} dB"
+        self.powerRecWLabel["text"] = f"Power of recieved signal: {values[5]} W"
+        self.powerRecdBLabel["text"] = f"Power of recieved signal: {values[6]} dB"
 
 
     def checkParameters(self, length, power):

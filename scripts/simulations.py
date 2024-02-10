@@ -17,12 +17,23 @@ import matplotlib.pyplot as plt
 from scripts.plot import eyediagram, pconst
 
 
-def simulatePAM(order, length, amplifier, power=0.01, dispersion=16):
+def simulatePAM(simulationParameters, order, length, amplifier, power=0.01, dispersion=16):
     """
     Simulation of PAM signal.
 
     Parameters
     ----
+    simulationParameters: list
+        [SpS, Rs, Fs, Ts]
+
+        SpS = Samples per symbol
+
+        Rs = Symbol rate
+
+        Fs = Sampling frequency
+
+        Ts = Sampling period
+
     order: int
         order of modulation
 
@@ -41,24 +52,16 @@ def simulatePAM(order, length, amplifier, power=0.01, dispersion=16):
 
     Returns
     -----
-    list: list with (Figure, Axes) tuples
-        [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
-
-        tuple with other values
-            list: [BER, SER, SNR]
-
-            list: [transmition power [W], transmition power [dB], recieved power [W], recieved power [dB]]
+    values: list
+        simulation values [bitsTx, symbolsTx, modulation signal, modulated signal, recieved signal, detected signal, symbolsRx, bitsRx]
     """
     np.random.seed(seed=123) # fixing the seed to get reproducible results
 
 
-    # simulation parameters
-    SpS = 16            # samples per symbol
-    Rs = 10e9          # Symbol rate
-    Fs = SpS*Rs        # Sampling frequency in samples/second
-    Ts = 1/Fs          # Sampling period
-
-    outFigures = []
+    # Simulation parameters
+    SpS = simulationParameters[0]
+    Rs = simulationParameters[1]
+    Fs = simulationParameters[2]
 
     # Generate signals
     signals = generateSignals("pam", order, power, SpS, Fs)
@@ -77,47 +80,8 @@ def simulatePAM(order, length, amplifier, power=0.01, dispersion=16):
 
     modulatedSignal = mzm(carrierSignal, 0.25*modulationSignal, paramMZM)
 
-    # interval for plots
-    interval = np.arange(16*20,16*50)
-    t = interval*Ts/1e-9
-
-    # PSD (Tx PSD)
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.set_xlim(-3*Rs,3*Rs)
-    axs.set_ylim(-255,-155)
-    axs.psd(np.abs(modulatedSignal)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
-    axs.legend(loc="upper left")
-    axs.set_title("Tx power spectral density")
-    plt.close()
-
-    outFigures.append((fig, axs))
-
-    # Modulated signal in time (Tx signal)
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(modulatedSignal[interval])**2, label = "Optical modulated signal", linewidth=2)
-    axs.set_ylabel("Power (p.u.)")
-    axs.set_xlabel("Time (ns)")
-    axs.set_xlim(min(t),max(t))
-    axs.legend(loc="upper left")
-    axs.set_title("Tx signal in time")
-    plt.close()
-
-    outFigures.append((fig, axs))
-
     # Fiber channel
     recievedSignal = fiberChannel(length, dispersion, amplifier, Fs, modulatedSignal)
-
-    # Channel signal in time (Rx signal)
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(recievedSignal[interval])**2, label = "Optical modulated signal", linewidth=2)
-    axs.set_ylabel("Power (p.u.)")
-    axs.set_xlabel("Time (ns)")
-    axs.set_xlim(min(t),max(t))
-    axs.legend(loc="upper left")
-    axs.set_title("Rx signal in time")
-    plt.close()
-
-    outFigures.append((fig, axs))
 
     ### DETECTION
 
@@ -129,11 +93,6 @@ def simulatePAM(order, length, amplifier, power=0.01, dispersion=16):
 
     detectedSignal = photodiode(recievedSignal, paramPD)
 
-    # eyediagrams
-    discard = 100
-    outFigures.append(eyediagram(modulationSignal[discard:-discard], modulationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy"))
-    outFigures.append(eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy"))
-
     detectedSignal = detectedSignal/np.std(detectedSignal)
 
     # capture samples in the middle of signaling intervals
@@ -143,37 +102,31 @@ def simulatePAM(order, length, amplifier, power=0.01, dispersion=16):
     symbolsRx = symbolsRx - symbolsRx.mean()
     symbolsRx = pnorm(symbolsRx)
 
-    # constellation diagrams
-    outFigures.append(pconst(symbolsTx, whiteb=False))
-    outFigures.append(pconst(symbolsRx, whiteb=False))
-
     # Demodulate
     bitsRx = demodulate("pam", order, symbolsRx)
 
-    BER = fastBERcalc(bitsRx, bitsTx, order, "pam")
-    # extract the values from arrays
-    BER = [array[0] for array in BER]
+    # Output
+    values = [bitsTx, symbolsTx, modulationSignal, modulatedSignal, recievedSignal, detectedSignal, symbolsRx, bitsRx]
 
-    # Signals power
-    signalsPower = []
+    return values
 
-    # Transmition signal [W]
-    signalsPower.append(signal_power(modulatedSignal)/1e-3)
-    # Transmition signal [dB]
-    signalsPower.append(10*np.log10(signal_power(modulatedSignal)/1e-3))
-    # Recieved signal [W]
-    signalsPower.append(signal_power(recievedSignal)/1e-3)
-    # Recieved signal [dB]
-    signalsPower.append(10*np.log10(signal_power(recievedSignal)/1e-3))
-
-    return outFigures, BER, signalsPower
-
-def simulatePSK(order, length, amplifier, power=0.01, dispersion=16):
+def simulatePSK(simulationParameters, order, length, amplifier, power=0.01, dispersion=16):
     """
     Simulation of PSK signal.
 
     Parameters
     ----
+    simulationParameters: list
+        [SpS, Rs, Fs, Ts]
+
+        SpS = Samples per symbol
+
+        Rs = Symbol rate
+
+        Fs = Sampling frequency
+
+        Ts = Sampling period
+
     order: int
         order of modulation
 
@@ -191,23 +144,15 @@ def simulatePSK(order, length, amplifier, power=0.01, dispersion=16):
 
     Returns
     -----
-    list: list with (Figure, Axes) tuples
-        [psd, Tx t, Rx t, Tx eye, Rx eye, Tx con, Rx con]
-
-        tuple with other values
-            list: [BER, SER, SNR]
-
-            list: [transmition power [W], transmition power [dB], recieved power [W], recieved power [dB]]
+    values: list
+        simulation values [bitsTx, symbolsTx, modulation signal, modulated signal, recieved signal, detected signal, symbolsRx, bitsRx]
     """
     np.random.seed(seed=123) # fixing the seed to get reproducible results
 
-    # simulation parameters
-    SpS = 16     # samples per symbol
-    Rs = 10e9    # Symbol rate
-    Fs = Rs*SpS  # Sampling frequency
-    Ts = 1/Fs    # Sampling period
-
-    outFigures = []
+    # Simulation parameters
+    SpS = simulationParameters[0]
+    Rs = simulationParameters[1]
+    Fs = simulationParameters[2]
 
     # Generate signals
     signals = generateSignals("psk", order, power, SpS, Fs)
@@ -228,44 +173,8 @@ def simulatePSK(order, length, amplifier, power=0.01, dispersion=16):
 
     modulatedSignal = iqm(carrierSignal, 0.25*modulationSignal, paramIQM)
 
-    # interval for plots
-    interval = np.arange(16*20,16*50)
-    t = interval*Ts/1e-9
-
-    # PSD (Tx PSD)
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.set_xlim(-3*Rs,3*Rs)
-    axs.set_ylim(-230,-130)
-    axs.psd(np.abs(modulatedSignal)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
-    axs.legend(loc="upper left")
-    plt.close()
-
-    outFigures.append((fig, axs))
-
-    # Modulated signal in time (Tx signal)
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(modulatedSignal[interval])**2, label = "Optical modulated signal", linewidth=2)
-    axs.set_ylabel("Power (p.u.)")
-    axs.set_xlabel("Time (ns)")
-    axs.set_xlim(min(t),max(t))
-    axs.legend(loc="upper left")
-    plt.close()
-
-    outFigures.append((fig, axs))
-
     # Fiber channel
     recievedSignal = fiberChannel(length, dispersion, amplifier, Fs, modulatedSignal)
-
-    # Channel signal in time (Rx signal)
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(recievedSignal[interval])**2, label = "Optical modulated signal", linewidth=2)
-    axs.set_ylabel("Power (p.u.)")
-    axs.set_xlabel("Time (ns)")
-    axs.set_xlim(min(t),max(t))
-    axs.legend(loc="upper left")
-    plt.close()
-
-    outFigures.append((fig, axs))
 
     ### DETECTION
 
@@ -277,11 +186,6 @@ def simulatePSK(order, length, amplifier, power=0.01, dispersion=16):
 
     detectedSignal = coherentReceiver(recievedSignal, carrierSignal, paramPD)
 
-    # Eyediagrams
-    discard = 100
-    outFigures.append(eyediagram(modulationSignal[discard:-discard], modulationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy"))
-    outFigures.append(eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy"))
-
     detectedSignal = detectedSignal/np.std(detectedSignal)
 
     # capture samples in the middle of signaling intervals
@@ -291,37 +195,32 @@ def simulatePSK(order, length, amplifier, power=0.01, dispersion=16):
     symbolsRx = symbolsRx - symbolsRx.mean()
     symbolsRx = pnorm(symbolsRx)
 
-    # Constellation diagrams
-    outFigures.append(pconst(symbolsTx, whiteb=False))
-    outFigures.append(pconst(symbolsRx, whiteb=False))
-
     # Demodulate
     bitsRx = demodulate("psk", order, symbolsRx)
+
+    # Output
+    values = [bitsTx, symbolsTx, modulationSignal, modulatedSignal, recievedSignal, detectedSignal, symbolsRx, bitsRx]
     
-    BER = fastBERcalc(bitsRx, bitsTx, order, "psk")
-    # extract the values from arrays
-    BER = [array[0] for array in BER]
 
-    # Signals power
-    signalsPower = []
+    return values
 
-    # Transmition signal [W]
-    signalsPower.append(signal_power(modulatedSignal)/1e-3)
-    # Transmition signal [dB]
-    signalsPower.append(10*np.log10(signal_power(modulatedSignal)/1e-3))
-    # Recieved signal [W]
-    signalsPower.append(signal_power(recievedSignal)/1e-3)
-    # Recieved signal [dB]
-    signalsPower.append(10*np.log10(signal_power(recievedSignal)/1e-3))
-
-    return outFigures, BER, signalsPower
-
-def simulateQAM(order, length, amplifier, power=0.01, dispersion=16):
+def simulateQAM(simulationParameters, order, length, amplifier, power=0.01, dispersion=16):
     """
     Simulation of QAM signal.
 
     Parameters
     ----
+    simulationParameters: list
+        [SpS, Rs, Fs, Ts]
+
+        SpS = Samples per symbol
+
+        Rs = Symbol rate
+
+        Fs = Sampling frequency
+
+        Ts = Sampling period
+
     order: int
         order of modulation
 
@@ -349,13 +248,10 @@ def simulateQAM(order, length, amplifier, power=0.01, dispersion=16):
     """
     np.random.seed(seed=123) # fixing the seed to get reproducible results
 
-    # simulation parameters
-    SpS = 16     # samples per symbol
-    Rs = 10e9    # Symbol rate
-    Fs = Rs*SpS  # Sampling frequency
-    Ts = 1/Fs    # Sampling period
-
-    outFigures = []
+    # Simulation parameters
+    SpS = simulationParameters[0]
+    Rs = simulationParameters[1]
+    Fs = simulationParameters[2]
 
     # Generate signals
     signals = generateSignals("psk", order, power, SpS, Fs)
@@ -374,47 +270,10 @@ def simulateQAM(order, length, amplifier, power=0.01, dispersion=16):
     paramIQM.VbQ = -2
     paramIQM.Vphi = 1
 
-    # optical modulation
-    sigTxo = iqm(carrierSignal, modulationSignal, paramIQM)
-
-    # interval for plots
-    interval = np.arange(16*20,16*50)
-    t = interval*Ts/1e-9
-
-    # PSD (Tx PSD)
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.set_xlim(-3*Rs,3*Rs)
-    axs.set_ylim(-230,-130)
-    axs.psd(np.abs(sigTxo)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
-    axs.legend(loc="upper left")
-    plt.close()
-
-    outFigures.append((fig, axs))
-
-    # Modulated signal in time (Tx signal)
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(sigTxo[interval])**2, label = "Optical modulated signal", linewidth=2)
-    axs.set_ylabel("Power (p.u.)")
-    axs.set_xlabel("Time (ns)")
-    axs.set_xlim(min(t),max(t))
-    axs.legend(loc="upper left")
-    plt.close()
-
-    outFigures.append((fig, axs))
+    modulatedSignal = iqm(carrierSignal, modulationSignal, paramIQM)
 
     # Fiber channel
-    recievedSignal = fiberChannel(length, dispersion, amplifier, Fs)
-
-    # Channel signal in time (Rx signal)
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(recievedSignal[interval])**2, label = "Optical modulated signal", linewidth=2)
-    axs.set_ylabel("Power (p.u.)")
-    axs.set_xlabel("Time (ns)")
-    axs.set_xlim(min(t),max(t))
-    axs.legend(loc="upper left")
-    plt.close()
-
-    outFigures.append((fig, axs))
+    recievedSignal = fiberChannel(length, dispersion, amplifier, Fs, modulatedSignal)
 
     return
 
@@ -478,6 +337,7 @@ def generateSignals(format, order, power, SpS, Fs):
 
     return bitsTx, symbTx, sigTx, sigO
 
+
 def fiberChannel(length, dispersion, amplifier, Fs, signal):
     """
     Simulate signal thru fiber.
@@ -527,6 +387,7 @@ def fiberChannel(length, dispersion, amplifier, Fs, signal):
     
     return sigCh
 
+
 def demodulate(format, order, symbols):
     """
     Demodulate symbols and calculate BER, SER, SNR.
@@ -558,3 +419,152 @@ def demodulate(format, order, symbols):
     bitsRx = demodulateGray(np.sqrt(Es)*symbols, order, format)
 
     return bitsRx
+
+
+def createPlots(symbolsTx, modulationSignal, modulatedSignal, recievedSignal, detectedSignal, symbolsRx, simulationParameters):
+    """
+    Create simulation plots of signals.
+
+    Parameters
+    -----
+    symbolsTx: array
+        symbols to transmit
+
+    modulationSiganl: array
+        electrical modulation signal
+
+    modulatedSignal: array
+        optical modulated signal
+
+    recievedSignal: array
+        optical signal after transmition thru channel
+
+    detectedSignal: array
+        electrical signal at receiver
+
+    symbolsRx: array
+        detected symbols at reciever
+
+    simulationParameters: list
+        [SpS, Rs, Fs, Ts]
+
+        SpS = Samples per symbol
+
+        Rs = Symbol rate
+
+        Fs = Sampling frequency
+
+        Ts = Sampling period
+
+    Returns
+    -----
+    plots: list
+        list with tuples (Figure, Axes)
+    """
+
+    # Simulation parameters
+    SpS = simulationParameters[0]
+    Rs = simulationParameters[1]
+    Fs = simulationParameters[2]
+    Ts = simulationParameters[3]
+
+    plots = [] 
+    
+    # interval for plots
+    interval = np.arange(16*20,16*50)
+    t = interval*Ts/1e-9
+
+    # PSD (Tx PSD)
+    fig, axs = plt.subplots(figsize=(16,3))
+    axs.set_xlim(-3*Rs,3*Rs)
+    # axs.set_ylim(-230,-130)
+    axs.psd(np.abs(modulatedSignal)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
+    axs.legend(loc="upper left")
+    plt.close()
+
+    plots.append((fig, axs))
+
+    # Modulated signal in time (Tx signal)
+    fig, axs = plt.subplots(figsize=(16,3))
+    axs.plot(t, np.abs(modulatedSignal[interval])**2, label = "Tx optical modulated signal", linewidth=2)
+    axs.set_ylabel("Power (p.u.)")
+    axs.set_xlabel("Time (ns)")
+    axs.set_xlim(min(t),max(t))
+    axs.legend(loc="upper left")
+    plt.close()
+
+    plots.append((fig, axs))
+
+    # Channel signal in time (Rx signal)
+    fig, axs = plt.subplots(figsize=(16,3))
+    axs.plot(t, np.abs(recievedSignal[interval])**2, label = "Rx optical modulated signal", linewidth=2)
+    axs.set_ylabel("Power (p.u.)")
+    axs.set_xlabel("Time (ns)")
+    axs.set_xlim(min(t),max(t))
+    axs.legend(loc="upper left")
+    plt.close()
+
+    plots.append((fig, axs))
+
+    # Eyediagrams
+    discard = 100
+    plots.append(eyediagram(modulationSignal[discard:-discard], modulationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy"))
+    plots.append(eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy"))
+
+    # Constellation diagrams
+    plots.append(pconst(symbolsTx, whiteb=False))
+    plots.append(pconst(symbolsRx, whiteb=False))
+
+    return plots
+
+
+def calculateValues(format, order, bitsTx, modulatedSignal, recievedSignal, bitsRx):
+    """
+    Calculate simulation values of signals.
+
+    Parameters
+    -----
+    format: string
+        modulation format 
+
+        pam / psk / qam
+    
+    order: int
+        order of modulation
+
+    bitsTx: array
+        bits to transmit
+
+    modulatedSignal: array
+        optical modulated signal
+
+    recievedSiganl: array
+        optical signal after transmition thru channel
+
+    bitsRx: array
+        trasnmited bits after demodulation 
+
+    Returns
+    -----
+    values: list
+        [BER, SER, SNR, transmition power (W), transmition power (dB), recieved power (W), recieved power (dB)]
+    """
+
+    # Error values
+
+    values = fastBERcalc(bitsRx, bitsTx, order, format)
+    # extract the values from arrays
+    values = [array[0] for array in values]
+
+    # Signals power
+
+    # Transmition signal [W]
+    values.append(signal_power(modulatedSignal)/1e-3)
+    # Transmition signal [dB]
+    values.append(10*np.log10(signal_power(modulatedSignal)/1e-3))
+    # Recieved signal [W]
+    values.append(signal_power(recievedSignal)/1e-3)
+    # Recieved signal [dB]
+    values.append(10*np.log10(signal_power(recievedSignal)/1e-3))
+
+    return values
