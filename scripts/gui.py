@@ -139,18 +139,17 @@ class Gui:
         laserPower = self.powerEntry.get()
         
         # Validating parameters
-        parameters = self.checkParameters(fiberLength, laserPower)
-        if parameters:
-            fiberLength = parameters[0]
-            laserPower = parameters[1]
-        else: return
+        fiberLength = self.checkParameter("Length", fiberLength)
+        if fiberLength is None: return
+        laserPower = self.checkParameter("Power", laserPower)
+        if laserPower is None: return
 
         # Getting remaining parameters
         modulationFormat = self.mFormatComboBox.get()
         modulationOrder = int(self.mOrderCombobox.get())
         amplifierBool = self.checkButtonVar.get()
 
-        # Setting simulation parameters
+        # Setting general simulation parameters
         SpS = 16     # samples per symbol
         Rs = 10e9    # Symbol rate
         Fs = Rs*SpS  # Sampling frequency
@@ -284,62 +283,41 @@ class Gui:
         self.powerRecdBLabel["text"] = f"Power of recieved signal: {values[6]} dB"
 
 
-    def checkParameters(self, length, power):
+    def checkParameter(self, parameterName, parameterValue):
         """
-        Checks if the parameters has valid values.
+        Checks if the parameters has valid values and coverts it to float.
 
         Parameters
         ----
-        length: string
-            length of fiber
+        parameterName: string
+            name of parameter
         
-        power: string
-            power of laser
+        parameterValue: string
+            value to check and covert
 
         Returns
         -----
-        parameters: list: float
-            [length, power]
+        parameter: float
+            converted value
             
             None if parameters are not ok
         """
-        parameters = []
 
         # Check length of fiber
-        length = convertNumber(length)
+        value = convertNumber(parameterValue)
 
-        if length == 0:
-            messagebox.showerror("Length input error", "Zero is not valid length!")
+        if value == 0:
+            messagebox.showerror(f"{parameterName} input error", f"Zero is not valid {parameterName}!")
             return None
-        elif length == -1:
-            messagebox.showerror("Length input error", "Length cannot be negative!")
+        elif value == -1:
+            messagebox.showerror(f"{parameterName} input error", f"{parameterName} cannot be negative!")
             return None
-        elif length == -2:
-            messagebox.showerror("Length input error", "Lentgh must be a number!")
+        elif value == -2:
+            messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be a number!")
             return None
-        elif length == -3:
-            messagebox.showerror("Length input error", "You must input length!")
+        elif value == -3:
+            messagebox.showerror(f"{parameterName} input error", f"You must input {parameterName}!")
             return None
         else:
-            parameters.append(length)
-
-        # Check power of laser
-        power = convertNumber(power)
-
-        if power == 0:
-            messagebox.showerror("Power input error", "Zero is not valid power!")
-            return None
-        elif power == -1:
-            messagebox.showerror("Power input error", "Power cannot be negative!")
-            return None
-        elif power == -2:
-            messagebox.showerror("Power input error", "Power must be a number!")
-            return None
-        elif power == -3:
-            messagebox.showerror("Power input error", "You must input power!")
-            return None
-        else:
-            parameters.append(power)
-
-        return parameters
+            return value
 
