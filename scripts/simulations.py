@@ -1,3 +1,9 @@
+"""
+Main script for simulations.
+Functions for simulation of PAM, PSK, QAM
+Functions for creating simulation plots objects and calculating simulation values
+"""
+
 import numpy as np
 from commpy.utilities  import upsample
 from optic.models.devices import mzm, photodiode, edfa, basicLaserModel, iqm, coherentReceiver
