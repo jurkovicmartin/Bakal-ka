@@ -14,9 +14,9 @@ def convertNumber(input):
 
         -1 = input is negative number
 
-        -2 = input is not number
+        -2 = input is not a number
 
-        -3 = input is empty string
+        -3 = input is an empty string
     """
     if input:
         # Regular expression to match valid numbers, including negative and decimal numbers
