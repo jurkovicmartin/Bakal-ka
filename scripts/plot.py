@@ -187,98 +187,6 @@ def constHist(symb, ax, radius, cmap="turbo", whiteb=True):
     return ax
 
 
-# def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None):
-#     """
-#     Plot the eye diagram of a modulated signal waveform.
-
-#     Parameters
-#     ----------
-#     sigIn : array-like
-#         Input signal waveform.
-#     Nsamples : int
-#         Number of samples to be plotted.
-#     SpS : int
-#         Samples per symbol.
-#     n : int, optional
-#         Number of symbol periods. Defaults to 3.
-#     ptype : str, optional
-#         Type of eye diagram. Can be 'fast' or 'fancy'. Defaults to 'fast'.
-#     plotlabel : str, optional
-#         Label for the plot legend. Defaults to None.
-
-#     Returns
-#     -------
-#     None
-#     """
-#     sig = sigIn.copy()
-
-#     if not plotlabel:
-#         plotlabel = " "
-
-#     if np.iscomplex(sig).any():
-#         d = 1
-#         plotlabel_ = f"{plotlabel} [real]" if plotlabel else "[real]"
-#     else:
-#         d = 0
-#         plotlabel_ = plotlabel
-
-#     for ind in range(d + 1):
-#         if ind == 0:
-#             y = sig[:Nsamples].real
-#             x = np.arange(0, y.size, 1) % (n * SpS)
-#         else:
-#             y = sig[:Nsamples].imag
-
-#             plotlabel_ = f"{plotlabel} [imag]" if plotlabel else "[imag]"
-#         plt.figure()
-#         if ptype == "fancy":
-#             f = interp1d(np.arange(y.size), y, kind="cubic")
-
-#             Nup = 40 * SpS
-#             tnew = np.arange(y.size) * (1 / Nup)
-#             y_ = f(tnew)
-
-#             taxis = (np.arange(y.size) % (n * SpS * Nup)) * (1 / Nup)
-#             imRange = np.array(
-#                 [
-#                     [min(taxis), max(taxis)],
-#                     [min(y) - 0.1 * np.mean(np.abs(y)), 1.1 * max(y)],
-#                 ]
-#             )
-
-#             H, xedges, yedges = np.histogram2d(
-#                 taxis, y_, bins=350, range=imRange
-#             )
-
-#             H = H.T
-#             H = gaussian_filter(H, sigma=1.0)
-
-#             plt.imshow(
-#                 H,
-#                 cmap="turbo",
-#                 origin="lower",
-#                 aspect="auto",
-#                 extent=[0, n, yedges[0], yedges[-1]],
-#             )
-
-#         elif ptype == "fast":
-#             y[x == n * SpS] = np.nan
-#             y[x == 0] = np.nan
-
-#             plt.plot(x / SpS, y, color="blue", alpha=0.8, label=plotlabel_)
-#             plt.xlim(min(x / SpS), max(x / SpS)) 
-
-#             if plotlabel is not None:
-#                 plt.legend(loc="upper left")
-
-#         plt.xlabel("symbol period (Ts)")
-#         plt.ylabel("amplitude")
-#         plt.title(f"eye diagram {plotlabel_}")        
-#         plt.grid(alpha=0.15)
-#         plt.show()
-
-#     return None
-
 def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None):
     """
     Plot the eye diagram of a modulated signal waveform.
@@ -376,3 +284,98 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None):
     plt.close()
 
     return fig, axes
+
+
+### ORIGINAL EYEDIAGRAM FROM OPTICOMMPY LIBRARY
+
+# def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None):
+#     """
+#     Plot the eye diagram of a modulated signal waveform.
+
+#     Parameters
+#     ----------
+#     sigIn : array-like
+#         Input signal waveform.
+#     Nsamples : int
+#         Number of samples to be plotted.
+#     SpS : int
+#         Samples per symbol.
+#     n : int, optional
+#         Number of symbol periods. Defaults to 3.
+#     ptype : str, optional
+#         Type of eye diagram. Can be 'fast' or 'fancy'. Defaults to 'fast'.
+#     plotlabel : str, optional
+#         Label for the plot legend. Defaults to None.
+
+#     Returns
+#     -------
+#     None
+#     """
+#     sig = sigIn.copy()
+
+#     if not plotlabel:
+#         plotlabel = " "
+
+#     if np.iscomplex(sig).any():
+#         d = 1
+#         plotlabel_ = f"{plotlabel} [real]" if plotlabel else "[real]"
+#     else:
+#         d = 0
+#         plotlabel_ = plotlabel
+
+#     for ind in range(d + 1):
+#         if ind == 0:
+#             y = sig[:Nsamples].real
+#             x = np.arange(0, y.size, 1) % (n * SpS)
+#         else:
+#             y = sig[:Nsamples].imag
+
+#             plotlabel_ = f"{plotlabel} [imag]" if plotlabel else "[imag]"
+#         plt.figure()
+#         if ptype == "fancy":
+#             f = interp1d(np.arange(y.size), y, kind="cubic")
+
+#             Nup = 40 * SpS
+#             tnew = np.arange(y.size) * (1 / Nup)
+#             y_ = f(tnew)
+
+#             taxis = (np.arange(y.size) % (n * SpS * Nup)) * (1 / Nup)
+#             imRange = np.array(
+#                 [
+#                     [min(taxis), max(taxis)],
+#                     [min(y) - 0.1 * np.mean(np.abs(y)), 1.1 * max(y)],
+#                 ]
+#             )
+
+#             H, xedges, yedges = np.histogram2d(
+#                 taxis, y_, bins=350, range=imRange
+#             )
+
+#             H = H.T
+#             H = gaussian_filter(H, sigma=1.0)
+
+#             plt.imshow(
+#                 H,
+#                 cmap="turbo",
+#                 origin="lower",
+#                 aspect="auto",
+#                 extent=[0, n, yedges[0], yedges[-1]],
+#             )
+
+#         elif ptype == "fast":
+#             y[x == n * SpS] = np.nan
+#             y[x == 0] = np.nan
+
+#             plt.plot(x / SpS, y, color="blue", alpha=0.8, label=plotlabel_)
+#             plt.xlim(min(x / SpS), max(x / SpS)) 
+
+#             if plotlabel is not None:
+#                 plt.legend(loc="upper left")
+
+#         plt.xlabel("symbol period (Ts)")
+#         plt.ylabel("amplitude")
+#         plt.title(f"eye diagram {plotlabel_}")        
+#         plt.grid(alpha=0.15)
+#         plt.show()
+
+#     return None

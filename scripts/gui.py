@@ -324,12 +324,12 @@ class Gui:
         """
 
         # Parameters that can be 0
-        specialParameters = ["Loss", "Dispersion"]
+        zeroParameters = ["Loss", "Dispersion"]
 
         # Check length of fiber
         value = convertNumber(parameterValue)
 
-        if value == 0 and parameterName in specialParameters:
+        if value == 0 and parameterName in zeroParameters:
             return 0
         elif value == 0:
             messagebox.showerror(f"{parameterName} input error", f"Zero is not valid {parameterName}!")
