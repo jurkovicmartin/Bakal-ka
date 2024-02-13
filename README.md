@@ -4,6 +4,7 @@
 - resizing (lock the size)
 - BER calculation
 - PSK
+- power
 ## Implement
 - history
 - exporting to img
