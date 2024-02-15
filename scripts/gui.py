@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
+from scripts.popup_window import PopupWindow
+
 class Gui:
     def __init__(self):
         self.root = tk.Tk()
@@ -47,6 +49,8 @@ class Gui:
         self.button_4.grid(row=0, column=3)
         self.checkbutton.grid(row=1, column=0, columnspan=4)
 
+        self.current_popup = None
+
         self.root.mainloop()
 
     def toggle_button_5(self):
@@ -59,19 +63,23 @@ class Gui:
             self.button_5.grid_forget()
             self.button_4.grid(row=0, column=3)
 
-    def show_popup(self, button):
-        popup = tk.Toplevel(self.root)
-        popup.title("Popup Window")
+    def show_popup(self, parent_button):
+        # Disable the other buttons when a popup is open
+        self.disable_buttons()
 
-        # Entry field
-        entry = tk.Entry(popup)
-        entry.grid(row=0, column=0)
+        # Open a new popup
+        self.current_popup = PopupWindow(self, parent_button)
 
-        # Button to set text in the main button
-        set_text_button = tk.Button(popup, text="Set Text", command=lambda: self.set_text(button, entry.get(), popup))
-        set_text_button.grid(row=1, column=0)
+    def disable_buttons(self):
+        # Disable all buttons except the currently open popup's parent button
+        for button in [self.button_1, self.button_2, self.button_3, self.button_4, self.button_5]:
+            button.config(state=tk.DISABLED)
 
-    def set_text(self, button, text, popup):
-        button.config(text=text)
-        popup.destroy()
+    def enable_buttons(self):
+        # Enable all buttons
+        for button in [self.button_1, self.button_2, self.button_3, self.button_4, self.button_5]:
+            button.config(state=tk.NORMAL)
+
+        # Reset the currently open popup to None
+        self.current_popup = None
 
