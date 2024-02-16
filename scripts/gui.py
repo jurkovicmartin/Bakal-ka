@@ -88,7 +88,7 @@ class Gui:
             self.currentPopup = PopupWindow(self, parentButton, "reciever")
         elif parentButton == self.amplifierButton:
             self.currentPopup = PopupWindow(self, parentButton, "amplifier")
-        else: print("Unexpected error")
+        else: raise Exception("Unexpected if statement")
 
         
 

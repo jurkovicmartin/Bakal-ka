@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
+from scripts.parameters import Parameters, checkParameter
+
 class PopupWindow:
     def __init__(self, parentGui, parentButton, type):
         """
@@ -163,9 +165,7 @@ class PopupWindow:
 
             return self.popup
         
-        else: print("Unexpected error")
-
-
+        else: raise Exception("Unexpected if statement")
 
 
 
@@ -174,27 +174,53 @@ class PopupWindow:
         self.parentGui.enableButtons()
         self.popup.destroy()
 
+
     def setParameters(self, type):
         """
+        Set parameters.
+
         type: string
             type of button pressed
 
             "source" / "modulator" / "channel" / "reciever" / "amplifier"
+
+        Return: Parameters object
         """
 
         if type == "source":
-            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} W\nFrequency: {self.frequencyEntry.get()} Hz\nNoise: {self.rinEntry.get()}"
+            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} W\nFrequency: {self.frequencyEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
+            parameters = Parameters()
+
+            parameters.addParameter("Power", self.powerEntry.get())
+            parameters.addParameter("Frequency", self.frequencyEntry.get())
+            parameters.addParameter("RIN", self.rinEntry.get())
+
+            # Convert string parameters values to float
+            # Validate the inputed parameters values
+            for key, value in parameters.getAllParameters().items():
+                checked = checkParameter(key, value, self.popup)
+                if checked is None:
+                    return
+                else:
+                    parameters.addParameter(key, checked)
+
         elif type == "modulator":
             parametersString = f"{self.typeCombobox.get()}"
+
         elif type == "channel":
             parametersString = f"Fiber channel\n\nLength: {self.lengthEntry.get()} km\nAttenuation: {self.attenuationEntry.get()} dB/km\nDispersion: {self.dispersionEntry.get()}"
+        
         elif type == "reciever":
             parametersString = f"{self.typeCombobox.get()}"
+        
         elif type == "amplifier":
             parametersString = f"Pre-amplifier\n\nGain: {self.gainEntry.get()}\nNoise: {self.noiseEntry.get()}"
-        else: print("Unexpected error")
+        
+        else: raise Exception("Unexpected if statement")
 
         self.parentButton.config(text=parametersString)
         self.closePopup()
+
+        return parameters
 
   
