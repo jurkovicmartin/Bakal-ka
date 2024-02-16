@@ -13,6 +13,7 @@ class Gui:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
 
+        # Notebook tabs frame
         self.notebookFrame = ttk.Notebook(self.root)
         self.notebookFrame.grid(row=0, column=0, sticky="nsew")
 
@@ -29,57 +30,75 @@ class Gui:
         self.notebookFrame.add(self.graphsFrame, text="Graphs")
         self.notebookFrame.add(self.valuesFrame, text="Values")
 
-        # Create buttons 1-4
-        self.button_1 = tk.Button(self.optionsFrame, text="1", command=lambda: self.show_popup(self.button_1))
-        self.button_2 = tk.Button(self.optionsFrame, text="2", command=lambda: self.show_popup(self.button_2))
-        self.button_3 = tk.Button(self.optionsFrame, text="3", command=lambda: self.show_popup(self.button_3))
-        self.button_4 = tk.Button(self.optionsFrame, text="4", command=lambda: self.show_popup(self.button_4))
+        # Communication chain buttons
+        self.sourceButton = tk.Button(self.optionsFrame, text="Optical source", command=lambda: self.showPopup(self.sourceButton))
+        self.modulatorButton = tk.Button(self.optionsFrame, text="Modulator", command=lambda: self.showPopup(self.modulatorButton))
+        self.channelButton = tk.Button(self.optionsFrame, text="Fiber channel", command=lambda: self.showPopup(self.channelButton))
+        self.recieverButton = tk.Button(self.optionsFrame, text="Reciever", command=lambda: self.showPopup(self.recieverButton))
+        # Aplifier button initially hidden
+        self.amplifierButton = tk.Button(self.optionsFrame, text="Pre-amplifier", command=lambda: self.showPopup(self.amplifierButton))
 
-        # Create button 5 initially hidden
-        self.button_5 = tk.Button(self.optionsFrame, text="5", command=lambda: self.show_popup(self.button_5))
+        self.sourceButton.grid(row=0, column=0)
+        self.modulatorButton.grid(row=0, column=1)
+        self.channelButton.grid(row=0, column=2)
+        self.recieverButton.grid(row=0, column=3)
 
-        # Create a checkbutton and set its command to toggle_button_5
-        self.check_var = tk.BooleanVar()
-        self.checkbutton = tk.Checkbutton(self.optionsFrame, text="Add Button 5", variable=self.check_var, command=self.toggle_button_5)
+        # Checkbutton for including / excluding channel pre-amplifier
+        self.checkVar = tk.BooleanVar()
+        self.amplifierCheckbutton = tk.Checkbutton(self.optionsFrame, text="Add channel pre-amplifier", variable=self.checkVar, command=self.amplifierCheckbuttonChange)
+        
+        self.amplifierCheckbutton.grid(row=1, column=0)
 
-        # Place buttons and checkbutton on the grid
-        self.button_1.grid(row=0, column=0)
-        self.button_2.grid(row=0, column=1)
-        self.button_3.grid(row=0, column=2)
-        self.button_4.grid(row=0, column=3)
-        self.checkbutton.grid(row=1, column=0, columnspan=4)
+        # Simulate button to start simulation
+        self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.simulate)
+        self.simulateButton.grid(row=1, column=1)
 
-        self.current_popup = None
+        self.currentPopup = None
 
         self.root.mainloop()
 
-    def toggle_button_5(self):
-        if self.check_var.get():
-            # If the checkbutton is checked, display button_5
-            self.button_5.grid(row=0, column=3)
-            self.button_4.grid(row=0, column=4)
-        else:
-            # If the checkbutton is unchecked, hide button_5 and restore the original order
-            self.button_5.grid_forget()
-            self.button_4.grid(row=0, column=3)
+    def simulate(self):
+        pass
 
-    def show_popup(self, parent_button):
+    def amplifierCheckbuttonChange(self):
+        if self.checkVar.get():
+            # Show amplifier button
+            self.amplifierButton.grid(row=0, column=3)
+            self.recieverButton.grid(row=0, column=4)
+        else:
+            # Remove amplifier button
+            self.amplifierButton.grid_forget()
+            self.recieverButton.grid(row=0, column=3)
+
+    def showPopup(self, parentButton):
+        """
+        Show popup window to set parametrs
+        """
         # Disable the other buttons when a popup is open
-        self.disable_buttons()
+        self.disableButtons()
 
         # Open a new popup
-        self.current_popup = PopupWindow(self, parent_button)
+        if parentButton == self.sourceButton:
+            self.currentPopup = PopupWindow(self, parentButton, "source")
+        elif parentButton == self.modulatorButton:
+            self.currentPopup = PopupWindow(self, parentButton, "modulator")
+        elif parentButton == self.channelButton:
+            self.currentPopup = PopupWindow(self, parentButton, "channel")
+        elif parentButton == self.recieverButton:
+            self.currentPopup = PopupWindow(self, parentButton, "reciever")
+        elif parentButton == self.amplifierButton:
+            self.currentPopup = PopupWindow(self, parentButton, "amplifier")
+        else: print("Unexpected error")
 
-    def disable_buttons(self):
-        # Disable all buttons except the currently open popup's parent button
-        for button in [self.button_1, self.button_2, self.button_3, self.button_4, self.button_5]:
+        
+
+    def disableButtons(self):
+        for button in [self.sourceButton, self.modulatorButton, self.channelButton, self.recieverButton, self.amplifierButton]:
             button.config(state=tk.DISABLED)
 
-    def enable_buttons(self):
-        # Enable all buttons
-        for button in [self.button_1, self.button_2, self.button_3, self.button_4, self.button_5]:
+    def enableButtons(self):
+        for button in [self.sourceButton, self.modulatorButton, self.channelButton, self.recieverButton, self.amplifierButton]:
             button.config(state=tk.NORMAL)
 
-        # Reset the currently open popup to None
-        self.current_popup = None
-
+        # Reset the currently open popup
+        self.currentPopup = None
