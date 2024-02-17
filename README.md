@@ -1,5 +1,5 @@
 ## Notes
-- loading parameters values back to the entries
+- do parameters for modulator and reciever
 ## New
 - main window via blocks
 - blocks on click pop up window with parameters

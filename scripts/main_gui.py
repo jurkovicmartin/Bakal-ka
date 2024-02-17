@@ -45,6 +45,13 @@ class Gui:
         self.channelButton.grid(row=0, column=2)
         self.recieverButton.grid(row=0, column=3)
 
+        # Parameters of chain blocks
+        self.sourceParameters = None
+        self.modulatorParameters = None
+        self.channelParameters = None
+        self.recieverParameters = None
+        self.amplifierParameters = None
+
         # Checkbutton for including / excluding channel pre-amplifier
         self.checkVar = tk.BooleanVar()
         self.amplifierCheckbutton = tk.Checkbutton(self.optionsFrame, text="Add channel pre-amplifier", variable=self.checkVar, command=self.amplifierCheckbuttonChange)
@@ -81,15 +88,15 @@ class Gui:
 
         # Open a new popup
         if parentButton == self.sourceButton:
-            self.currentPopup = PopupWindow(self, parentButton, "source", self.getParameters)
+            self.currentPopup = PopupWindow(self, parentButton, "source", self.getParameters, self.sourceParameters)
         elif parentButton == self.modulatorButton:
-            self.currentPopup = PopupWindow(self, parentButton, "modulator", self.getParameters)
+            self.currentPopup = PopupWindow(self, parentButton, "modulator", self.getParameters, self.modulatorParameters)
         elif parentButton == self.channelButton:
-            self.currentPopup = PopupWindow(self, parentButton, "channel", self.getParameters)
+            self.currentPopup = PopupWindow(self, parentButton, "channel", self.getParameters, self.channelParameters)
         elif parentButton == self.recieverButton:
-            self.currentPopup = PopupWindow(self, parentButton, "reciever", self.getParameters)
+            self.currentPopup = PopupWindow(self, parentButton, "reciever", self.getParameters, self.recieverParameters)
         elif parentButton == self.amplifierButton:
-            self.currentPopup = PopupWindow(self, parentButton, "amplifier", self.getParameters)
+            self.currentPopup = PopupWindow(self, parentButton, "amplifier", self.getParameters, self.amplifierParameters)
         else: raise Exception("Unexpected if statement")
 
         
