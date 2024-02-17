@@ -1,6 +1,4 @@
 ## Notes
-- validating parameters values
-- returning the parameters
 - loading parameters values back to the entries
 ## New
 - main window via blocks

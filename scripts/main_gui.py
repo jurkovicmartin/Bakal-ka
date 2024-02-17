@@ -1,3 +1,5 @@
+# Main window
+
 import tkinter as tk
 from tkinter import ttk
 
@@ -58,7 +60,7 @@ class Gui:
         self.root.mainloop()
 
     def simulate(self):
-        pass
+        print(self.sourceParameters)
 
     def amplifierCheckbuttonChange(self):
         if self.checkVar.get():
@@ -79,15 +81,15 @@ class Gui:
 
         # Open a new popup
         if parentButton == self.sourceButton:
-            self.currentPopup = PopupWindow(self, parentButton, "source")
+            self.currentPopup = PopupWindow(self, parentButton, "source", self.getParameters)
         elif parentButton == self.modulatorButton:
-            self.currentPopup = PopupWindow(self, parentButton, "modulator")
+            self.currentPopup = PopupWindow(self, parentButton, "modulator", self.getParameters)
         elif parentButton == self.channelButton:
-            self.currentPopup = PopupWindow(self, parentButton, "channel")
+            self.currentPopup = PopupWindow(self, parentButton, "channel", self.getParameters)
         elif parentButton == self.recieverButton:
-            self.currentPopup = PopupWindow(self, parentButton, "reciever")
+            self.currentPopup = PopupWindow(self, parentButton, "reciever", self.getParameters)
         elif parentButton == self.amplifierButton:
-            self.currentPopup = PopupWindow(self, parentButton, "amplifier")
+            self.currentPopup = PopupWindow(self, parentButton, "amplifier", self.getParameters)
         else: raise Exception("Unexpected if statement")
 
         
@@ -102,3 +104,28 @@ class Gui:
 
         # Reset the currently open popup
         self.currentPopup = None
+
+    def getParameters(self, parameters, buttonType):
+        """
+        Get parameters from popup window.
+
+        Parameters
+        -----
+        parameters: variable to get
+
+        type: string
+            type of button pressed
+
+            "source" / "modulator" / "channel" / "reciever" / "amplifier"
+        """
+        if buttonType == "source":
+            self.sourceParameters = parameters
+        elif buttonType == "modulator":
+            self.modulatorParameters = parameters
+        elif buttonType == "channel":
+            self.channelParameters = parameters
+        elif buttonType == "reciever":
+            self.recieverParameters = parameters
+        elif buttonType == "amplifier":
+            self.amplifierParameters = parameters
+        else: raise Exception("Unexpected error")

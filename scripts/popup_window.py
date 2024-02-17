@@ -1,39 +1,52 @@
+# Popup window for setting components parameters
+
 import tkinter as tk
 from tkinter import ttk
 
-from scripts.parameters import Parameters, checkParameter
+from scripts.parameters_functions import checkParameter
 
 class PopupWindow:
-    def __init__(self, parentGui, parentButton, type):
+    def __init__(self, parentGui, parentButton, buttonType, callback):
         """
-        Class to creates popup window to set parameters.
+        Class to creates popup window for setting parameters.
 
-        type: string
+        Parameters
+        -----
+        buttonType: string
             type of button pressed
 
             "source" / "modulator" / "channel" / "reciever" / "amplifier"
+
+        callback: function to return parameters values to the main gui
         """
         self.parentGui = parentGui
         self.parentButton = parentButton
-        self.popup = self.popupGui(type)
+        self.callback = callback
+        self.popup = self.popupGui(buttonType)
 
         # Bind the popup window's closing event to the parent's method
         self.popup.protocol("WM_DELETE_WINDOW", self.closePopup)
 
-    def popupGui(self, type):
+    def popupGui(self, buttonType):
         """
-        Creates popup gui to set parameters.
+        Creates popup gui for setting parameters.
 
-        type: string
+        Parameters
+        -----
+        buttonType: string
             type of button pressed
 
             "source" / "modulator" / "channel" / "reciever" / "amplifier"
+
+        Returns
+        -----
+        popup window: tkinter Toplevel object
         """
 
         self.popup = tk.Toplevel()
         self.popup.geometry("400x400")
 
-        if type == "source":
+        if buttonType == "source":
             self.popup.title("Parameters of optical source")
 
             self.titleLabel = tk.Label(self.popup, text="Parameters of optical source")
@@ -60,12 +73,12 @@ class PopupWindow:
             self.rinEntry.grid(row=3, column=1)
 
             # Set button
-            self.setButton = tk.Button(self.popup, text="Set parameters", command=lambda: self.setParameters(type))
+            self.setButton = tk.Button(self.popup, text="Set parameters", command=lambda: self.setParameters(buttonType))
             self.setButton.grid(row=4, column=0, columnspan=2)
 
             return self.popup
         
-        elif type == "modulator":
+        elif buttonType == "modulator":
             self.popup.title("Parameters of modulator")
 
             self.titleLabel = tk.Label(self.popup, text="Parameters of modulator")
@@ -81,12 +94,12 @@ class PopupWindow:
             self.typeCombobox.grid(row=1, column=1)
 
             # Set button
-            self.setButton = tk.Button(self.popup, text="Set parameters", command=lambda: self.setParameters(type))
+            self.setButton = tk.Button(self.popup, text="Set parameters", command=lambda: self.setParameters(buttonType))
             self.setButton.grid(row=2, column=0, columnspan=2)
 
             return self.popup
         
-        elif type == "channel":
+        elif buttonType == "channel":
             self.popup.title("Parameters of fiber channel")
 
             self.titleLabel = tk.Label(self.popup, text="Parameters of fiber channel")
@@ -113,12 +126,12 @@ class PopupWindow:
             self.dispersionEntry.grid(row=3, column=1)
 
             # Set button
-            self.setButton = tk.Button(self.popup, text="Set parameters", command=lambda: self.setParameters(type))
+            self.setButton = tk.Button(self.popup, text="Set parameters", command=lambda: self.setParameters(buttonType))
             self.setButton.grid(row=4, column=0, columnspan=2)
 
             return self.popup
         
-        elif type == "reciever":
+        elif buttonType == "reciever":
             self.popup.title("Parameters of reciever")
 
             self.titleLabel = tk.Label(self.popup, text="Parameters of reciever")
@@ -134,12 +147,12 @@ class PopupWindow:
             self.typeCombobox.grid(row=1, column=1)
 
             # Set button
-            self.setButton = tk.Button(self.popup, text="Set parameters", command=lambda: self.setParameters(type))
+            self.setButton = tk.Button(self.popup, text="Set parameters", command=lambda: self.setParameters(buttonType))
             self.setButton.grid(row=2, column=0, columnspan=2)
 
             return self.popup
         
-        elif type == "amplifier":
+        elif buttonType == "amplifier":
             self.popup.title("Parameters of amplifier")
 
             self.titleLabel = tk.Label(self.popup, text="Parameters of amplifier")
@@ -160,7 +173,7 @@ class PopupWindow:
             self.noiseEntry.grid(row=2, column=1)
 
             # Set button
-            self.setButton = tk.Button(self.popup, text="Set parameters", command=lambda: self.setParameters(type))
+            self.setButton = tk.Button(self.popup, text="Set parameters", command=lambda: self.setParameters(buttonType))
             self.setButton.grid(row=3, column=0, columnspan=2)
 
             return self.popup
@@ -175,52 +188,87 @@ class PopupWindow:
         self.popup.destroy()
 
 
-    def setParameters(self, type):
+    def setParameters(self, buttonType):
         """
-        Set parameters.
+        Set entried parameters.
 
-        type: string
+        Parameters
+        -----
+        buttonType: string
             type of button pressed
 
             "source" / "modulator" / "channel" / "reciever" / "amplifier"
 
-        Return: Parameters object
         """
 
-        if type == "source":
+        if buttonType == "source":
+            # Showing in main gui
             parametersString = f"Laser\n\nPower: {self.powerEntry.get()} W\nFrequency: {self.frequencyEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
-            parameters = Parameters()
+            # Getting initial values
+            parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "RIN":self.rinEntry.get()}
+            # Validating parameters values
+            parameters = self.validateParameters(parameters)
 
-            parameters.addParameter("Power", self.powerEntry.get())
-            parameters.addParameter("Frequency", self.frequencyEntry.get())
-            parameters.addParameter("RIN", self.rinEntry.get())
+            if parameters is None: return
 
-            # Convert string parameters values to float
-            # Validate the inputed parameters values
-            for key, value in parameters.getAllParameters().items():
-                checked = checkParameter(key, value, self.popup)
-                if checked is None:
-                    return
-                else:
-                    parameters.addParameter(key, checked)
-
-        elif type == "modulator":
+        elif buttonType == "modulator":
+            # Showing in main gui
             parametersString = f"{self.typeCombobox.get()}"
 
-        elif type == "channel":
+        elif buttonType == "channel":
+            # Showing in main gui
             parametersString = f"Fiber channel\n\nLength: {self.lengthEntry.get()} km\nAttenuation: {self.attenuationEntry.get()} dB/km\nDispersion: {self.dispersionEntry.get()}"
-        
-        elif type == "reciever":
+            # Getting initial values
+            parameters = {"Length":self.lengthEntry.get(), "Attenuation":self.attenuationEntry.get(), "Dispersion":self.dispersionEntry.get()}
+            # Validating parameters values
+            parameters = self.validateParameters(parameters)
+
+            if parameters is None: return
+
+        elif buttonType == "reciever":
+            # Showing in main gui
             parametersString = f"{self.typeCombobox.get()}"
         
-        elif type == "amplifier":
+        elif buttonType == "amplifier":
+            # Showing in main gui
             parametersString = f"Pre-amplifier\n\nGain: {self.gainEntry.get()}\nNoise: {self.noiseEntry.get()}"
+            # Getting initial values
+            parameters = {"Gain":self.gainEntry.get(), "Noise":self.noiseEntry.get()}
+            # Validating parameters values
+            parameters = self.validateParameters(parameters)
+
+            if parameters is None: return
         
         else: raise Exception("Unexpected if statement")
 
         self.parentButton.config(text=parametersString)
+        # Return parameters
+        self.callback(parameters, buttonType)
+
         self.closePopup()
 
-        return parameters
+    
+    def validateParameters(self, parameters):
+        """
+        Convert string parameters values to float and validate the inputed values.
 
+        Parameters
+        -----
+        parameters: dictionary
+            values are strings
+
+        Returns
+        -----
+        parameters: dictionary
+            values are floats
+
+            None if some parameter is not ok
+        """
+
+        for key, value in parameters.items():
+            checked = checkParameter(key, value, self.popup)
+            if checked is None: return None
+            else: parameters.update({key:checked})
+
+        return parameters
   

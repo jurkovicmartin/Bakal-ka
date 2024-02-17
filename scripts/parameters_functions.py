@@ -1,18 +1,35 @@
-from scripts.functions import convertNumber
+# Function to work with parameters values
+
+import re
 from tkinter import messagebox
+    
+def convertNumber(input):
+    """
+    Converts string to float value. Also checks the value.
 
-class Parameters:
-    def __init__(self):
-        self.parameters = {}
+    Parameters
+    ----
+    input: string
 
-    def addParameter(self, name, value):
-        self.parameters[name] = value
+    Returns
+    ----
+    converted number: float (also returns 0)
 
-    def getParameter(self, name):
-        return self.parameters.get(name, None)
+        -1 = input is negative number
 
-    def getAllParameters(self):
-        return self.parameters
+        -2 = input is not a number
+
+        -3 = input is an empty string
+    """
+    if input:
+        # Regular expression to match valid numbers, including negative and decimal numbers
+        number_pattern = re.compile(r'^[-+]?\d*\.?\d+$')
+
+        if number_pattern.match(input):
+            out = float(input)
+            return -1 if out < 0 else out
+        else: return -2
+    else: return -3
     
 def checkParameter(parameterName, parameterValue, parentWindow):
         """
@@ -21,15 +38,14 @@ def checkParameter(parameterName, parameterValue, parentWindow):
         Parameters
         ----
         parameterName: string
-            name of parameter
         
         parameterValue: string
-            value to check and covert
+
+        parentWindow: object for showing messageboxes
 
         Returns
         -----
-        parameter: float
-            converted value
+        converted parameter: float
             
             None if parameter is not ok
         """
