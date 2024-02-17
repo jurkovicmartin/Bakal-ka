@@ -93,11 +93,15 @@ class PopupWindow:
             # Setting parameters
 
             # Type
-            self.typeLabel = tk.Label(self.popup, text="Type of modulator")
-            self.typeLabel.grid(row=1, column=0)
-            self.typeCombobox = ttk.Combobox(self.popup, values=["PM", "MZM", "IQM"], state="readonly")
-            self.typeCombobox.set("PM")
-            self.typeCombobox.grid(row=1, column=1)
+            self.modulatorLabel = tk.Label(self.popup, text="Type of modulator")
+            self.modulatorLabel.grid(row=1, column=0)
+            self.modulatorCombobox = ttk.Combobox(self.popup, values=["PM", "MZM", "IQM"], state="readonly")
+            self.modulatorCombobox.set("PM")
+            self.modulatorCombobox.grid(row=1, column=1)
+
+            # Default parameters values
+            if self.defaultParameters is not None:
+                self.modulatorCombobox.set(self.defaultParameters.get("Type"))
 
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
@@ -152,11 +156,15 @@ class PopupWindow:
             # Setting parameters
 
             # Type
-            self.typeLabel = tk.Label(self.popup, text="Type of reciever")
-            self.typeLabel.grid(row=1, column=0)
-            self.typeCombobox = ttk.Combobox(self.popup, values=["Diode", "Coherent", "Hybrid"], state="readonly")
-            self.typeCombobox.set("Diode")
-            self.typeCombobox.grid(row=1, column=1)
+            self.recieverLabel = tk.Label(self.popup, text="Type of reciever")
+            self.recieverLabel.grid(row=1, column=0)
+            self.recieverCombobox = ttk.Combobox(self.popup, values=["Diode", "Coherent", "Hybrid"], state="readonly")
+            self.recieverCombobox.set("Diode")
+            self.recieverCombobox.grid(row=1, column=1)
+
+            # Default parameters values
+            if self.defaultParameters is not None:
+                self.recieverCombobox.set(self.defaultParameters.get("Type"))
 
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
@@ -207,7 +215,7 @@ class PopupWindow:
 
     def setParameters(self):
         """
-        Set entried parameters.
+        Set inserted parameters.
         """
 
         if self.buttonType == "source":
@@ -222,7 +230,9 @@ class PopupWindow:
 
         elif self.buttonType == "modulator":
             # Showing in main gui
-            parametersString = f"{self.typeCombobox.get()}"
+            parametersString = f"{self.modulatorCombobox.get()}"
+            # Getting initial values
+            parameters = {"Type":self.modulatorCombobox.get()}
 
         elif self.buttonType == "channel":
             # Showing in main gui
@@ -236,7 +246,9 @@ class PopupWindow:
 
         elif self.buttonType == "reciever":
             # Showing in main gui
-            parametersString = f"{self.typeCombobox.get()}"
+            parametersString = f"{self.recieverCombobox.get()}"
+            # Getting initial values
+            parameters = {"Type":self.recieverCombobox.get()}
         
         elif self.buttonType == "amplifier":
             # Showing in main gui
