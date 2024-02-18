@@ -1,7 +1,7 @@
 # Main window
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 from scripts.popup_window import PopupWindow
 
@@ -32,7 +32,7 @@ class Gui:
         self.notebookFrame.add(self.graphsFrame, text="Graphs")
         self.notebookFrame.add(self.valuesFrame, text="Values")
 
-        # Communication chain buttons
+        # Communication scheme buttons
         self.sourceButton = tk.Button(self.optionsFrame, text="Optical source", command=lambda: self.showPopup(self.sourceButton))
         self.modulatorButton = tk.Button(self.optionsFrame, text="Modulator", command=lambda: self.showPopup(self.modulatorButton))
         self.channelButton = tk.Button(self.optionsFrame, text="Fiber channel", command=lambda: self.showPopup(self.channelButton))
@@ -45,7 +45,7 @@ class Gui:
         self.channelButton.grid(row=0, column=2)
         self.recieverButton.grid(row=0, column=3)
 
-        # Parameters of chain blocks
+        # Parameters of scheme blocks
         self.sourceParameters = None
         self.modulatorParameters = None
         self.channelParameters = None
@@ -53,8 +53,8 @@ class Gui:
         self.amplifierParameters = None
 
         # Checkbutton for including / excluding channel pre-amplifier
-        self.checkVar = tk.BooleanVar()
-        self.amplifierCheckbutton = tk.Checkbutton(self.optionsFrame, text="Add channel pre-amplifier", variable=self.checkVar, command=self.amplifierCheckbuttonChange)
+        self.amplifierCheckVar = tk.BooleanVar()
+        self.amplifierCheckbutton = tk.Checkbutton(self.optionsFrame, text="Add channel pre-amplifier", variable=self.amplifierCheckVar, command=self.amplifierCheckbuttonChange)
         
         self.amplifierCheckbutton.grid(row=1, column=0)
 
@@ -67,10 +67,35 @@ class Gui:
         self.root.mainloop()
 
     def simulate(self):
-        print(self.sourceParameters)
+        """
+        Start of simulation.
+        Main function button.
+        """
+        # Checking if all needed parameters are set
+        if self.sourceParameters is None:
+            messagebox.showerror("Simulation error", "You must set source parameters.")
+            return
+        elif self.modulatorParameters is None:
+            messagebox.showerror("Simulation error", "You must set modulator parameters.")
+            return
+        elif self.channelParameters is None:
+            messagebox.showerror("Simulation error", "You must set channel parameters.")
+            return
+        elif self.recieverParameters is None:
+            messagebox.showerror("Simulation error", "You must set reciever parameters.")
+            return
+        # Only if amplifier is included
+        elif self.amplifierCheckVar.get() and self.amplifierParameters is None:
+            messagebox.showerror("Simulation error", "You must set amplifier parameters.")
+            return
+        else: pass
+
 
     def amplifierCheckbuttonChange(self):
-        if self.checkVar.get():
+        """
+        Including / exluding amplifier from the scheme.
+        """
+        if self.amplifierCheckVar.get():
             # Show amplifier button
             self.amplifierButton.grid(row=0, column=3)
             self.recieverButton.grid(row=0, column=4)
@@ -81,7 +106,7 @@ class Gui:
 
     def showPopup(self, parentButton):
         """
-        Show popup window to set parametrs
+        Show popup window to set parametrs.
         """
         # Disable the other buttons when a popup is open
         self.disableButtons()
