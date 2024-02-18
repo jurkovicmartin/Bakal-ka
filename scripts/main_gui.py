@@ -71,24 +71,10 @@ class Gui:
         Start of simulation.
         Main function button.
         """
-        # Checking if all needed parameters are set
-        if self.sourceParameters is None:
-            messagebox.showerror("Simulation error", "You must set source parameters.")
-            return
-        elif self.modulatorParameters is None:
-            messagebox.showerror("Simulation error", "You must set modulator parameters.")
-            return
-        elif self.channelParameters is None:
-            messagebox.showerror("Simulation error", "You must set channel parameters.")
-            return
-        elif self.recieverParameters is None:
-            messagebox.showerror("Simulation error", "You must set reciever parameters.")
-            return
-        # Only if amplifier is included
-        elif self.amplifierCheckVar.get() and self.amplifierParameters is None:
-            messagebox.showerror("Simulation error", "You must set amplifier parameters.")
-            return
-        else: pass
+        if not self.checkSimulationStart(): return
+
+        print("OK")
+        
 
 
     def amplifierCheckbuttonChange(self):
@@ -104,7 +90,7 @@ class Gui:
             self.amplifierButton.grid_forget()
             self.recieverButton.grid(row=0, column=3)
 
-    def showPopup(self, parentButton):
+    def showPopup(self, clickedButton):
         """
         Show popup window to set parametrs.
         """
@@ -112,16 +98,16 @@ class Gui:
         self.disableButtons()
 
         # Open a new popup
-        if parentButton == self.sourceButton:
-            self.currentPopup = PopupWindow(self, parentButton, "source", self.getParameters, self.sourceParameters)
-        elif parentButton == self.modulatorButton:
-            self.currentPopup = PopupWindow(self, parentButton, "modulator", self.getParameters, self.modulatorParameters)
-        elif parentButton == self.channelButton:
-            self.currentPopup = PopupWindow(self, parentButton, "channel", self.getParameters, self.channelParameters)
-        elif parentButton == self.recieverButton:
-            self.currentPopup = PopupWindow(self, parentButton, "reciever", self.getParameters, self.recieverParameters)
-        elif parentButton == self.amplifierButton:
-            self.currentPopup = PopupWindow(self, parentButton, "amplifier", self.getParameters, self.amplifierParameters)
+        if clickedButton == self.sourceButton:
+            self.currentPopup = PopupWindow(self, clickedButton, "source", self.getParameters, self.sourceParameters)
+        elif clickedButton == self.modulatorButton:
+            self.currentPopup = PopupWindow(self, clickedButton, "modulator", self.getParameters, self.modulatorParameters)
+        elif clickedButton == self.channelButton:
+            self.currentPopup = PopupWindow(self, clickedButton, "channel", self.getParameters, self.channelParameters)
+        elif clickedButton == self.recieverButton:
+            self.currentPopup = PopupWindow(self, clickedButton, "reciever", self.getParameters, self.recieverParameters)
+        elif clickedButton == self.amplifierButton:
+            self.currentPopup = PopupWindow(self, clickedButton, "amplifier", self.getParameters, self.amplifierParameters)
         else: raise Exception("Unexpected if statement")
 
         
@@ -137,7 +123,7 @@ class Gui:
         # Reset the currently open popup
         self.currentPopup = None
 
-    def getParameters(self, parameters, buttonType):
+    def getParameters(self, parameters: dict, buttonType: str):
         """
         Get parameters from popup window.
 
@@ -145,8 +131,7 @@ class Gui:
         -----
         parameters: variable to get
 
-        type: string
-            type of button pressed
+        buttonType: type of button pressed
 
             "source" / "modulator" / "channel" / "reciever" / "amplifier"
         """
@@ -161,3 +146,25 @@ class Gui:
         elif buttonType == "amplifier":
             self.amplifierParameters = parameters
         else: raise Exception("Unexpected error")
+
+    def checkSimulationStart(self) -> bool:
+        """
+        Checks if all needed parameters are set
+        """
+        if self.sourceParameters is None:
+            messagebox.showerror("Simulation error", "You must set source parameters.")
+            return False
+        elif self.modulatorParameters is None:
+            messagebox.showerror("Simulation error", "You must set modulator parameters.")
+            return False
+        elif self.channelParameters is None:
+            messagebox.showerror("Simulation error", "You must set channel parameters.")
+            return False
+        elif self.recieverParameters is None:
+            messagebox.showerror("Simulation error", "You must set reciever parameters.")
+            return False
+        # Only if amplifier is included
+        elif self.amplifierCheckVar.get() and self.amplifierParameters is None:
+            messagebox.showerror("Simulation error", "You must set amplifier parameters.")
+            return False
+        else: return True

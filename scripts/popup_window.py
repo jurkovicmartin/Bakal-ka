@@ -6,21 +6,19 @@ from tkinter import ttk
 from scripts.parameters_functions import checkParameter
 
 class PopupWindow:
-    def __init__(self, parentGui, parentButton, buttonType, callback, defaultParameters):
+    def __init__(self, parentGui, parentButton, buttonType: str, callback, defaultParameters: dict):
         """
         Class to creates popup window for setting parameters.
 
         Parameters
         -----
-        buttonType: string
-            type of button pressed
+        buttonType: type of button pressed
 
             "source" / "modulator" / "channel" / "reciever" / "amplifier"
 
         callback: function to return parameters values to the main gui
 
-        defaultParameters: dictionary
-            values to input into entry fields
+        defaultParameters: values to input into entry fields
 
             used when popup window isnt shown for the first time
         """
@@ -34,7 +32,7 @@ class PopupWindow:
         # Bind the popup window's closing event to the parent's method
         self.popup.protocol("WM_DELETE_WINDOW", self.closePopup)
 
-    def popupGui(self):
+    def popupGui(self) -> tk.Toplevel:
         """
         Creates popup gui for setting parameters.
 
@@ -269,7 +267,7 @@ class PopupWindow:
         self.closePopup()
 
     
-    def validateParameters(self, parameters):
+    def validateParameters(self, parameters: dict) -> dict:
         """
         Convert string parameters values to float and validate the inputed values.
 

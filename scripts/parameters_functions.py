@@ -3,13 +3,9 @@
 import re
 from tkinter import messagebox
     
-def convertNumber(input):
+def convertNumber(input: str) -> float:
     """
     Converts string to float value. Also checks the value.
-
-    Parameters
-    ----
-    input: string
 
     Returns
     ----
@@ -31,23 +27,17 @@ def convertNumber(input):
         else: return -2
     else: return -3
     
-def checkParameter(parameterName, parameterValue, parentWindow):
+def checkParameter(parameterName: str, parameterValue: str, parentWindow) -> float | None:
         """
         Checks if the parameters has valid values and coverts it to float.
 
         Parameters
         ----
-        parameterName: string
-        
-        parameterValue: string
-
         parentWindow: object for showing messageboxes
 
         Returns
         -----
-        converted parameter: float
-            
-            None if parameter is not ok
+        converted value: None if parameter is not ok
         """
 
         # Parameters that can be 0
