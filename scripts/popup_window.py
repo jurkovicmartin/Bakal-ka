@@ -64,21 +64,28 @@ class PopupWindow:
             self.frequencyEntry = tk.Entry(self.popup)
             self.frequencyEntry.grid(row=2, column=1)
 
+            # Linewidth
+            self.linewidthLabel = tk.Label(self.popup, text="Linewidth [Hz]")
+            self.linewidthLabel.grid(row=3, column=0)
+            self.linewidthEntry = tk.Entry(self.popup)
+            self.linewidthEntry.grid(row=3, column=1)
+
             # RIN noise
             self.rinLabel = tk.Label(self.popup, text="RIN noise")
-            self.rinLabel.grid(row=3, column=0)
+            self.rinLabel.grid(row=4, column=0)
             self.rinEntry = tk.Entry(self.popup)
-            self.rinEntry.grid(row=3, column=1)
+            self.rinEntry.grid(row=4, column=1)
 
             # Default parameters values
             if self.defaultParameters is not None:
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
                 self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
+                self.linewidthEntry.insert(0, self.defaultParameters.get("Linewidth"))
                 self.rinEntry.insert(0, str(self.defaultParameters.get("RIN")))
 
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=4, column=0, columnspan=2)
+            self.setButton.grid(row=5, column=0, columnspan=2)
 
             return self.popup
         
@@ -156,8 +163,8 @@ class PopupWindow:
             # Type
             self.recieverLabel = tk.Label(self.popup, text="Type of reciever")
             self.recieverLabel.grid(row=1, column=0)
-            self.recieverCombobox = ttk.Combobox(self.popup, values=["Diode", "Coherent", "Hybrid"], state="readonly")
-            self.recieverCombobox.set("Diode")
+            self.recieverCombobox = ttk.Combobox(self.popup, values=["Photodiode", "Coherent", "Hybrid"], state="readonly")
+            self.recieverCombobox.set("Photodiode")
             self.recieverCombobox.grid(row=1, column=1)
 
             # Default parameters values
@@ -218,9 +225,9 @@ class PopupWindow:
 
         if self.buttonType == "source":
             # Showing in main gui
-            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} W\nFrequency: {self.frequencyEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
+            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} W\nFrequency: {self.frequencyEntry.get()} Hz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
             # Getting initial values
-            parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "RIN":self.rinEntry.get()}
+            parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "RIN":self.rinEntry.get()}
             # Validating parameters values
             parameters = self.validateParameters(parameters)
 

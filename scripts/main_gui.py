@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from scripts.popup_window import PopupWindow
+from scripts.simulation import simulate
 
 class Gui:
     def __init__(self):
@@ -118,7 +119,7 @@ class Gui:
         self.eyeRxCheckbutton.grid(row=1, column=3)
 
         # Simulate button to start simulation
-        self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.simulate)
+        self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.startSimulation)
         self.simulateButton.pack()
 
         # Variables
@@ -140,15 +141,18 @@ class Gui:
 
         self.root.mainloop()
 
-    def simulate(self):
+    def startSimulation(self):
         """
         Start of simulation.
         Main function button.
         """
         if not self.checkSimulationStart(): return
 
-        print("OK")
+        self.updateGeneralParameters()
+
+        self.simulationResults = simulate(self.generalParameters, self.sourceParameters, self.modulatorParameters, self.channelParameters, self.recieverParameters, self.amplifierParameters)
         
+        print(self.simulationResults)
 
 
     def amplifierCheckbuttonChange(self):
@@ -247,22 +251,21 @@ class Gui:
         """
         Change modulation order options when modulation format is changed
         """
-        selectedOption = self.mFormatComboBox.get()
 
         # Setting order options for selected modulation format
-        if selectedOption == "OOK":
+        if self.mFormatComboBox.get() == "OOK":
             orderOptions = ["2"]
             # Disable modulation order combobox for OOK format
             self.mOrderCombobox.config(state="disabled")
-        elif selectedOption == "PAM":
+        elif self.mFormatComboBox.get() == "PAM":
             orderOptions = ["2", "4"]
             # Enable modulation order combobox
             self.mOrderCombobox.config(state="readonly")
-        elif selectedOption == "PSK":
+        elif self.mFormatComboBox.get() == "PSK":
             orderOptions = ["2", "4", "8", "16"]
             # Enable modulation order combobox
             self.mOrderCombobox.config(state="readonly")
-        elif selectedOption == "QAM":
+        elif self.mFormatComboBox.get() == "QAM":
             orderOptions = ["4", "16", "64"]
             # Enable modulation order combobox
             self.mOrderCombobox.config(state="readonly")
@@ -271,3 +274,14 @@ class Gui:
         # Sets new options to modulation order combobox
         self.mOrderCombobox.config(values=orderOptions)
         self.mOrderCombobox.set(orderOptions[0])
+
+    def updateGeneralParameters(self):
+        """
+        Update general parameters with values from editable fields.
+        """
+
+        self.generalParameters.update({"Format": self.mFormatComboBox.get().lower(), "Order": int(self.mOrderCombobox.get())})
+
+        # OOK is created same as 2 order PAM
+        if self.mFormatComboBox.get() == "OOK":
+            self.generalParameters.update({"Format": "pam"})

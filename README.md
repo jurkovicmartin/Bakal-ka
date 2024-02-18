@@ -1,5 +1,5 @@
 ## Notes
-- do parameters for modulator and reciever
+- include parameters for modulators and recievers
 ## New
 - main window via blocks
 - blocks on click pop up window with parameters
