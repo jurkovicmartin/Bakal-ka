@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from scripts.popup_window import PopupWindow
-from scripts.simulation import simulate
+from scripts.simulation import simulate, getValues, getPlots
 
 class Gui:
     def __init__(self):
@@ -32,6 +32,8 @@ class Gui:
         self.notebookFrame.add(self.optionsFrame, text="Options")
         self.notebookFrame.add(self.graphsFrame, text="Graphs")
         self.notebookFrame.add(self.valuesFrame, text="Values")
+
+        ### OPTIONS TAB
 
         # Options tab frames
         self.schemeFrame = ttk.Frame(self.optionsFrame)
@@ -83,10 +85,10 @@ class Gui:
 
         # Checkbuttons to choose what outputs to display
 
-        # PSD
-        self.psdCheckVar = tk.BooleanVar()
-        self.psdCheckbutton = tk.Checkbutton(self.outputsFrame, text="Show Tx PSD", variable=self.psdCheckVar)
-        self.psdCheckbutton.grid(row=0, column=0)
+        # Tx PSD
+        self.psdTxCheckVar = tk.BooleanVar()
+        self.psdTxCheckbutton = tk.Checkbutton(self.outputsFrame, text="Show Tx PSD", variable=self.psdTxCheckVar)
+        self.psdTxCheckbutton.grid(row=0, column=0)
 
         # Tx constellation
         self.conTxCheckVar = tk.BooleanVar()
@@ -122,14 +124,44 @@ class Gui:
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.startSimulation)
         self.simulateButton.pack()
 
-        # Variables
+        ### GRAPSH TAB
+
+        ### VALUES TAB
+
+        self.powerTxWLabel = tk.Label(self.valuesFrame, text="Tx power:")
+        self.powerTxdBmLabel = tk.Label(self.valuesFrame, text="Tx power:")
+        self.powerRxWLabel = tk.Label(self.valuesFrame, text="Rx power:")
+        self.powerRxdBmLabel = tk.Label(self.valuesFrame, text="Rx power:")
+
+        self.powerTxWLabel.pack()
+        self.powerTxdBmLabel.pack()
+        self.powerRxWLabel.pack()
+        self.powerRxdBmLabel.pack()
+
+        self.berLabel = tk.Label(self.valuesFrame, text="BER:")
+        self.serLabel = tk.Label(self.valuesFrame, text="SER:")
+        self.snrLabel = tk.Label(self.valuesFrame, text="SNR:")
+
+        self.berLabel.pack()
+        self.serLabel.pack()
+        self.snrLabel.pack()
+        
+
+        ### VARIABLES
+        
+        # For testing default values
+        self.sourceParameters = {"Power":0.1, "Frequency":193100000000000, "Linewidth":1000, "RIN":0}
+        self.modulatorParameters = {"Type":"MZM"}
+        self.channelParameters = {"Length":20, "Attenuation":0.2, "Dispersion":16}
+        self.recieverParameters = {"Type":"Photodiode"}
+        self.amplifierParameters = {"Gain":4, "Noise":3}
 
         # Parameters of scheme blocks
-        self.sourceParameters = None
-        self.modulatorParameters = None
-        self.channelParameters = None
-        self.recieverParameters = None
-        self.amplifierParameters = None
+        # self.sourceParameters = None
+        # self.modulatorParameters = None
+        # self.channelParameters = None
+        # self.recieverParameters = None
+        # self.amplifierParameters = None
         
         # General parameters
         self.generalParameters = {"SpS": 16, "Rs": 10 ** 9}
@@ -152,7 +184,14 @@ class Gui:
 
         self.simulationResults = simulate(self.generalParameters, self.sourceParameters, self.modulatorParameters, self.channelParameters, self.recieverParameters, self.amplifierParameters)
         
-        print(self.simulationResults)
+        # Dictionary to define which graphs will be showed
+        self.graphsBool ={"psdTx":self.psdTxCheckVar, "constellationTx":self.conTxCheckVar, "constellationRx":self.conRxCheckVar, "signalTx":self.signalTxCheckVar, "signalRx":self.signalRxCheckVar, "eyediagramTx":self.eyeTxCheckVar, "eyediagramRx":self.eyeRxCheckVar}
+
+        outputValues = getValues(self.simulationResults, self.generalParameters)
+
+        self.showValues(outputValues)
+
+        messagebox.showinfo("Simulation status", "Simulation succesfully completed")
 
 
     def amplifierCheckbuttonChange(self):
@@ -285,3 +324,25 @@ class Gui:
         # OOK is created same as 2 order PAM
         if self.mFormatComboBox.get() == "OOK":
             self.generalParameters.update({"Format": "pam"})
+
+    
+    def showValues(self, outputValues: dict):
+        """
+        Show values from dictionary in the app.
+        """
+        self.berLabel.config(text=f"BER: {outputValues.get('BER')}")
+        self.serLabel.config(text=f"SER: {outputValues.get('SER')}")
+        self.snrLabel.config(text=f"SNR: {outputValues.get('SNR')} dB")
+
+        self.powerTxWLabel.config(text=f"Tx power: {outputValues.get('powerTxW')} W")
+        self.powerTxdBmLabel.config(text=f"Tx power: {outputValues.get('powerTxdBm')} dBm")
+        self.powerRxWLabel.config(text=f"Rx power: {outputValues.get('powerRxW')} W")
+        self.powerRxdBmLabel.config(text=f"Tx power: {outputValues.get('powerRxdBm')} dBm")
+
+
+    def showGraphs(self, plots: dict):
+        """
+        Show graphs from dictionary in the app.
+        """
+
+        

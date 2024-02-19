@@ -1,11 +1,5 @@
 ## Notes
 - include parameters for modulators and recievers
-## New
-- main window via blocks
-- blocks on click pop up window with parameters
-- after setting parameters, they will write to the block
-- Simulate button
-- Ability to choose what will by displayed as output
-- display BER, power
-- tab for showing plots, dynamicky changing with the number of chosen outputs
+- EDFA noise minimum 3 dB
 - image of communication chain above the buttons
+- signal_power warning (divide by zero)

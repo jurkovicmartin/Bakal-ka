@@ -256,3 +256,139 @@ def restoreInformation(detectedSignal, generalParameters: dict) -> dict:
     bitsRx = demodulateGray(np.sqrt(Es)*symbolsRx, modulationOrder, modulationFormat)
 
     return {"symbolsRx":symbolsRx, "bitsRx":bitsRx}
+
+
+def getPlots(boolPlots: dict, simulationResults: dict, generalParameters: dict) -> dict:
+    """
+    Create plots objects.
+
+    Parameters
+    -----
+    boolPlots: define which plots should be returned
+
+    Returns
+    -----
+    plots: psdTx, constellationTx, signalTx, eyediagramTx, constellationRx, signalRx, eyediagramRx
+        as tuples (figure, axes)
+    """
+
+    Ts = generalParameters.get("Ts")
+    Rs = generalParameters.get("Rs")
+    Fs = generalParameters.get("Fs")
+    SpS = generalParameters.get("SpS")
+
+    modulatedSignal = simulationResults.get("modulationSignal")
+    recieverSignal = simulationResults.get("recieverSignal")
+    detectedSignal = simulationResults.get("detectedSignal")
+    symbolsTx = simulationResults.get("symbolsTx")
+    symbolsRx = simulationResults.get("symbolsRx")
+
+    # Dictionary to return
+    plots = {}
+
+    # interval for plots
+    interval = np.arange(16*20,16*50)
+    t = interval*Ts/1e-9
+
+    if boolPlots.get("psdTx"):
+        # PSD (Tx PSD)
+        fig, axs = plt.subplots(figsize=(16,3))
+        axs.set_xlim(-3*Rs,3*Rs)
+        # axs.set_ylim(-230,-130)
+        axs.psd(np.abs(modulatedSignal)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
+        axs.legend(loc="upper left")
+        plt.close()
+
+        plots.update({"psdTx":(fig, axs)})
+    
+    if boolPlots.get("signalTx"):
+        # Modulated signal in time (Tx signal)
+        fig, axs = plt.subplots(figsize=(16,3))
+        axs.plot(t, np.abs(modulatedSignal[interval])**2, label = "Tx optical modulated signal", linewidth=2)
+        axs.set_ylabel("Power (p.u.)")
+        axs.set_xlabel("Time (ns)")
+        axs.set_xlim(min(t),max(t))
+        axs.legend(loc="upper left")
+        plt.close()
+
+        plots.update({"signalTx":(fig, axs)})
+
+    if boolPlots.get("signalRx"):
+        # Reciever signal in time (Rx signal)
+        fig, axs = plt.subplots(figsize=(16,3))
+        axs.plot(t, np.abs(recieverSignal[interval])**2, label = "Rx optical modulated signal", linewidth=2)
+        axs.set_ylabel("Power (p.u.)")
+        axs.set_xlabel("Time (ns)")
+        axs.set_xlim(min(t),max(t))
+        axs.legend(loc="upper left")
+        plt.close()
+
+        plots.update({"signalRx":(fig, axs)})
+
+    if boolPlots.get("eyediagramTx"):
+        # Tx eyediagram
+        discard = 100
+        eye = eyediagram(modulationSignal[discard:-discard], modulationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fast")
+        
+        plots.update({"eyediagramTx":eye})
+
+    if boolPlots.get("eyediagramRx"):
+        # Rx eyediagram
+        discard = 100
+        eye = eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fast")
+
+        plots.update({"eyediagramRx":eye})
+
+    if boolPlots.get("consteallationTx"):
+        # Tx constellation diagram
+        con = pconst(symbolsTx, whiteb=False)
+        
+        plots.update({"constellationTx":con})
+
+    if boolPlots.get("constellationRx"):
+        # Rx constellation diagram
+        con = pconst(symbolsRx, whiteb=False)
+
+        plots.update({"constellationRx":con})
+
+
+def getValues(simulationResults: dict, generalParameters: dict) -> dict:
+    """
+    Calculates simulation values from simulation results.
+
+    Returns
+    -----
+    BER, SER, SNR, powerTxdBm, powerTxW, powerRxdBm, powerRxW
+    """
+    
+    modulationFormat = generalParameters.get("Format")
+    modulationOrder = generalParameters.get("Order")
+
+    bitsTx = simulationResults.get("bitsTx")
+    bitsRx = simulationResults.get("bitsRx")
+    modulatedSignal = simulationResults.get("modulatedSignal")
+    recieverSignal = simulationResults.get("recieverSignal")
+
+    # Error values
+
+    valuesList = fastBERcalc(bitsRx, bitsTx, modulationOrder, modulationFormat)
+    # extract the values from arrays
+    ber, ser, snr = [array[0] for array in valuesList]
+
+    values = {"BER":ber, "SER":ser, "SNR":snr}
+
+    # Tx power [W]
+    power = signal_power(modulatedSignal)/1e-3
+    values.update({"powerTxW":power})
+    # Tx power [dBm]
+    power = 10*np.log10(power)
+    values.update({"powerTxdBm":power})
+    # Rx power [W]
+    power = signal_power(recieverSignal)/1e-3
+    values.update({"powerRxW":power})
+    # Rx power [dBm]
+    power = 10*np.log10(power)
+    values.update({"powerRxdBm":power})
+
+    return values
+
