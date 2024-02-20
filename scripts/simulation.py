@@ -258,18 +258,13 @@ def restoreInformation(detectedSignal, generalParameters: dict) -> dict:
     return {"symbolsRx":symbolsRx, "bitsRx":bitsRx}
 
 
-def getPlots(boolPlots: dict, simulationResults: dict, generalParameters: dict) -> dict:
+def getFigure(type: str, simulationResults: dict, generalParameters: dict):
     """
-    Create plots objects.
+    Create plots object.
 
     Parameters
     -----
-    boolPlots: define which plots should be returned
-
-    Returns
-    -----
-    plots: psdTx, constellationTx, signalTx, eyediagramTx, constellationRx, signalRx, eyediagramRx
-        as tuples (figure, axes)
+    type: specify which plot will be returned
     """
 
     Ts = generalParameters.get("Ts")
@@ -277,31 +272,30 @@ def getPlots(boolPlots: dict, simulationResults: dict, generalParameters: dict) 
     Fs = generalParameters.get("Fs")
     SpS = generalParameters.get("SpS")
 
-    modulatedSignal = simulationResults.get("modulationSignal")
+    informationSignal = simulationResults.get("modulationSignal")
+    modulatedSignal = simulationResults.get("modulatedSignal")
     recieverSignal = simulationResults.get("recieverSignal")
     detectedSignal = simulationResults.get("detectedSignal")
     symbolsTx = simulationResults.get("symbolsTx")
     symbolsRx = simulationResults.get("symbolsRx")
 
-    # Dictionary to return
-    plots = {}
-
     # interval for plots
     interval = np.arange(16*20,16*50)
     t = interval*Ts/1e-9
 
-    if boolPlots.get("psdTx"):
-        # PSD (Tx PSD)
+    if type == "psdTx":
+        # Tx PSD
         fig, axs = plt.subplots(figsize=(16,3))
         axs.set_xlim(-3*Rs,3*Rs)
         # axs.set_ylim(-230,-130)
         axs.psd(np.abs(modulatedSignal)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
         axs.legend(loc="upper left")
+        axs.set_title("Tx power spectral density")
         plt.close()
 
-        plots.update({"psdTx":(fig, axs)})
+        return fig
     
-    if boolPlots.get("signalTx"):
+    elif type == "signalTx":
         # Modulated signal in time (Tx signal)
         fig, axs = plt.subplots(figsize=(16,3))
         axs.plot(t, np.abs(modulatedSignal[interval])**2, label = "Tx optical modulated signal", linewidth=2)
@@ -309,11 +303,12 @@ def getPlots(boolPlots: dict, simulationResults: dict, generalParameters: dict) 
         axs.set_xlabel("Time (ns)")
         axs.set_xlim(min(t),max(t))
         axs.legend(loc="upper left")
+        axs.set_title("Tx signal in time")
         plt.close()
 
-        plots.update({"signalTx":(fig, axs)})
+        return fig
 
-    if boolPlots.get("signalRx"):
+    elif type == "signalRx":
         # Reciever signal in time (Rx signal)
         fig, axs = plt.subplots(figsize=(16,3))
         axs.plot(t, np.abs(recieverSignal[interval])**2, label = "Rx optical modulated signal", linewidth=2)
@@ -321,35 +316,38 @@ def getPlots(boolPlots: dict, simulationResults: dict, generalParameters: dict) 
         axs.set_xlabel("Time (ns)")
         axs.set_xlim(min(t),max(t))
         axs.legend(loc="upper left")
+        axs.set_title("Rx signal in time")
         plt.close()
 
-        plots.update({"signalRx":(fig, axs)})
-
-    if boolPlots.get("eyediagramTx"):
+        return fig
+    
+    elif type == "eyediagramTx":
         # Tx eyediagram
         discard = 100
-        eye = eyediagram(modulationSignal[discard:-discard], modulationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fast")
+        eye = eyediagram(informationSignal[discard:-discard], informationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fast")
         
-        plots.update({"eyediagramTx":eye})
-
-    if boolPlots.get("eyediagramRx"):
+        return eye[0]
+    
+    elif type == "eyediagramRx":
         # Rx eyediagram
         discard = 100
         eye = eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fast")
 
-        plots.update({"eyediagramRx":eye})
-
-    if boolPlots.get("consteallationTx"):
+        return eye[0]
+    
+    elif type == "constellationTx":
         # Tx constellation diagram
         con = pconst(symbolsTx, whiteb=False)
         
-        plots.update({"constellationTx":con})
-
-    if boolPlots.get("constellationRx"):
+        return con[0]
+    
+    elif type == "constellationRx":
         # Rx constellation diagram
         con = pconst(symbolsRx, whiteb=False)
 
-        plots.update({"constellationRx":con})
+        return con[0]
+
+    else: raise Exception("Unexpected error")
 
 
 def getValues(simulationResults: dict, generalParameters: dict) -> dict:

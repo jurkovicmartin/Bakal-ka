@@ -3,8 +3,10 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 from scripts.popup_window import PopupWindow
-from scripts.simulation import simulate, getValues, getPlots
+from scripts.simulation import simulate, getValues, getFigure
 
 class Gui:
     def __init__(self):
@@ -22,27 +24,22 @@ class Gui:
 
         # Tabs
         self.optionsFrame = ttk.Frame(self.notebookFrame)
-        self.graphsFrame = ttk.Frame(self.notebookFrame)
-        self.valuesFrame = ttk.Frame(self.notebookFrame)
+        self.outputsFrame = ttk.Frame(self.notebookFrame)
 
         self.optionsFrame.pack()
-        self.graphsFrame.pack()
-        self.valuesFrame.pack()
+        self.outputsFrame.pack()
 
-        self.notebookFrame.add(self.optionsFrame, text="Options")
-        self.notebookFrame.add(self.graphsFrame, text="Graphs")
-        self.notebookFrame.add(self.valuesFrame, text="Values")
+        self.notebookFrame.add(self.optionsFrame, text="Input options")
+        self.notebookFrame.add(self.outputsFrame, text="Outputs")
 
         ### OPTIONS TAB
 
         # Options tab frames
-        self.schemeFrame = ttk.Frame(self.optionsFrame)
-        self.generalFrame = ttk.Frame(self.optionsFrame)
-        self.outputsFrame = ttk.Frame(self.optionsFrame)
+        self.schemeFrame = tk.Frame(self.optionsFrame)
+        self.generalFrame = tk.Frame(self.optionsFrame)
 
         self.schemeFrame.pack()
         self.generalFrame.pack()
-        self.outputsFrame.pack()
 
         # Scheme frame
 
@@ -81,52 +78,21 @@ class Gui:
         self.mOrderCombobox.set("2")
         self.mOrderCombobox.grid(row=1, column=2)
 
-        # Outputs frame
-
-        # Checkbuttons to choose what outputs to display
-
-        # Tx PSD
-        self.psdTxCheckVar = tk.BooleanVar()
-        self.psdTxCheckbutton = tk.Checkbutton(self.outputsFrame, text="Show Tx PSD", variable=self.psdTxCheckVar)
-        self.psdTxCheckbutton.grid(row=0, column=0)
-
-        # Tx constellation
-        self.conTxCheckVar = tk.BooleanVar()
-        self.conTxCheckbutton = tk.Checkbutton(self.outputsFrame, text="Show Tx constellation", variable=self.conTxCheckVar)
-        self.conTxCheckbutton.grid(row=0, column=1)
-
-        # Rx constellation
-        self.conRxCheckVar = tk.BooleanVar()
-        self.conRxCheckbutton = tk.Checkbutton(self.outputsFrame, text="Show Rx constellation", variable=self.conRxCheckVar)
-        self.conRxCheckbutton.grid(row=1, column=1)
-
-        # Tx signal in time
-        self.signalTxCheckVar = tk.BooleanVar()
-        self.signalTxCheckbutton = tk.Checkbutton(self.outputsFrame, text="Show Tx signal in time", variable=self.signalTxCheckVar)
-        self.signalTxCheckbutton.grid(row=0, column=2)
-      
-        # Rx signal in time
-        self.signalRxCheckVar = tk.BooleanVar()
-        self.signalRxCheckbutton = tk.Checkbutton(self.outputsFrame, text="Show Rx signal in time", variable=self.signalRxCheckVar)
-        self.signalRxCheckbutton.grid(row=1, column=2)
-        
-        # Tx eyediagram
-        self.eyeTxCheckVar = tk.BooleanVar()
-        self.eyeTxCheckbutton = tk.Checkbutton(self.outputsFrame, text="Show Tx eyediagram", variable=self.eyeTxCheckVar)
-        self.eyeTxCheckbutton.grid(row=0, column=3)
-
-        # Rx eyediagram
-        self.eyeRxCheckVar = tk.BooleanVar()
-        self.eyeRxCheckbutton = tk.Checkbutton(self.outputsFrame, text="Show Rx eyediagram", variable=self.eyeRxCheckVar)
-        self.eyeRxCheckbutton.grid(row=1, column=3)
-
         # Simulate button to start simulation
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.startSimulation)
         self.simulateButton.pack()
 
-        ### GRAPSH TAB
+        ### OUTPUTS TAB
 
-        ### VALUES TAB
+        # Frames
+
+        self.valuesFrame = tk.Frame(self.outputsFrame)
+        self.graphsFrame = tk.Frame(self.outputsFrame)
+
+        self.valuesFrame.pack()
+        self.graphsFrame.pack()
+
+        # Values frame
 
         self.powerTxWLabel = tk.Label(self.valuesFrame, text="Tx power:")
         self.powerTxdBmLabel = tk.Label(self.valuesFrame, text="Tx power:")
@@ -145,7 +111,24 @@ class Gui:
         self.berLabel.pack()
         self.serLabel.pack()
         self.snrLabel.pack()
+
+        # Graphs frame
+
+        self.psdTxButton = tk.Button(self.graphsFrame, text="Show Tx PSD", command=lambda: self.showGraph(self.psdTxButton))
+        self.conTxButton = tk.Button(self.graphsFrame, text="Show Tx constellation diagram", command=lambda: self.showGraph(self.conTxButton))
+        self.conRxButton = tk.Button(self.graphsFrame, text="Show Rx constellation diagram", command=lambda: self.showGraph(self.conRxButton))
+        self.sigTxButton = tk.Button(self.graphsFrame, text="Show Tx signal in time", command=lambda: self.showGraph(self.sigTxButton))
+        self.sigRxButton = tk.Button(self.graphsFrame, text="Show Rx signal in time", command=lambda: self.showGraph(self.sigRxButton))
+        self.eyeTxButton = tk.Button(self.graphsFrame, text="Show Tx eyediagram", command=lambda: self.showGraph(self.eyeTxButton))
+        self.eyeRxButton = tk.Button(self.graphsFrame, text="Show Rx eyediagram", command=lambda: self.showGraph(self.eyeRxButton))
         
+        self.psdTxButton.pack()
+        self.conTxButton.pack()
+        self.conRxButton.pack()
+        self.sigTxButton.pack()
+        self.sigRxButton.pack()
+        self.eyeTxButton.pack()
+        self.eyeRxButton.pack()        
 
         ### VARIABLES
         
@@ -182,13 +165,14 @@ class Gui:
 
         self.updateGeneralParameters()
 
+        # Simulation
         self.simulationResults = simulate(self.generalParameters, self.sourceParameters, self.modulatorParameters, self.channelParameters, self.recieverParameters, self.amplifierParameters)
         
-        # Dictionary to define which graphs will be showed
-        self.graphsBool ={"psdTx":self.psdTxCheckVar, "constellationTx":self.conTxCheckVar, "constellationRx":self.conRxCheckVar, "signalTx":self.signalTxCheckVar, "signalRx":self.signalRxCheckVar, "eyediagramTx":self.eyeTxCheckVar, "eyediagramRx":self.eyeRxCheckVar}
-
+        # Showing results
+        # Values to show
         outputValues = getValues(self.simulationResults, self.generalParameters)
-
+        
+        # Actual showing in the app
         self.showValues(outputValues)
 
         messagebox.showinfo("Simulation status", "Simulation succesfully completed")
@@ -340,9 +324,54 @@ class Gui:
         self.powerRxdBmLabel.config(text=f"Tx power: {outputValues.get('powerRxdBm')} dBm")
 
 
-    def showGraphs(self, plots: dict):
+    def showGraph(self, clickedButton):
         """
-        Show graphs from dictionary in the app.
+        Show graph in the app. Graph is defined by clickedButton.
         """
+        # Trying to show plots without simulation data
+        if self.simulationResults is None:
+            messagebox.showerror("Showing error", "You must start simulation first.")
+            return
 
-        
+        # Define which button was clicked to get rigth plot
+        if clickedButton == self.psdTxButton:
+            type = "psdTx"
+            title = "Tx power spectral density"
+        elif clickedButton == self.conTxButton:
+            type ="constellationTx"
+            title = "Tx constellation diagram"
+        elif clickedButton == self.conRxButton:
+            type = "constellationRx"
+            title = "Rx constellation diagram"
+        elif clickedButton == self.sigTxButton:
+            type = "signalTx"
+            title = "Tx signal in time"
+        elif clickedButton == self.sigRxButton:
+            type = "signalRx"
+            title = "Rx signal in time"
+        elif clickedButton == self.eyeTxButton:
+            type = "eyediagramTx"
+            title = "Tx eyediagram"
+        elif clickedButton == self.eyeRxButton:
+            type = "eyediagramRx"
+            title = "Rx eyediagram"
+        else: raise Exception("Unexcpected error")
+
+        figure = getFigure(type, self.simulationResults, self.generalParameters)
+
+        self.popupGraph(title, figure)
+
+    
+    def popupGraph(self, title: str, figure):
+        """
+        Popup window to show the figure.
+        """
+        # Create window
+        popup = tk.Toplevel()
+        popup.geometry("1000x600")
+        popup.title(title)
+
+        # Show figure
+        canvas = FigureCanvasTkAgg(figure, master=popup)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
