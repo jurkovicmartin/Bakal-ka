@@ -357,21 +357,5 @@ class Gui:
             title = "Rx eyediagram"
         else: raise Exception("Unexcpected error")
 
+        # Shows graph
         figure = getFigure(type, self.simulationResults, self.generalParameters)
-
-        self.popupGraph(title, figure)
-
-    
-    def popupGraph(self, title: str, figure):
-        """
-        Popup window to show the figure.
-        """
-        # Create window
-        popup = tk.Toplevel()
-        popup.geometry("1000x600")
-        popup.title(title)
-
-        # Show figure
-        canvas = FigureCanvasTkAgg(figure, master=popup)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)

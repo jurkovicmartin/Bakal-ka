@@ -153,7 +153,10 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True):
             plt.xlim(-radius, radius)
             plt.ylim(-radius, radius)
 
-    plt.close()
+    # plt.close()
+            
+    plt.get_current_fig_manager().set_window_title("Constellation diagram")
+    plt.show()
 
     return fig, ax
 
@@ -213,6 +216,7 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None):
     axes : matplotlib.axes._axes.Axes
         The axes of the plot.
     """
+
     sig = sigIn.copy()
 
     if not plotlabel:
@@ -281,9 +285,12 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None):
     axes.set_title(f"eye diagram {plotlabel_}")
     axes.grid(alpha=0.15)
 
-    plt.close()
+    # plt.close()
+    plt.get_current_fig_manager().set_window_title("Eyediagram")
+    plt.show()
 
     return fig, axes
+    
 
 
 ### ORIGINAL EYEDIAGRAM FROM OPTICOMMPY LIBRARY
@@ -379,3 +386,37 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None):
 #         plt.show()
 
 #     return None
+
+def powerSpectralDensity(Rs: int, Fs: int, signal, title: str):
+    
+    fig, axs = plt.subplots(figsize=(16,3))
+    axs.set_xlim(-3*Rs,3*Rs)
+    # axs.set_ylim(-230,-130)
+    axs.psd(np.abs(signal)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
+    axs.legend(loc="upper left")
+    axs.set_title(title)
+    # plt.close()
+    plt.get_current_fig_manager().set_window_title("Power spectral density")
+    plt.show()
+
+    return fig, axs
+
+
+def signalInTime(Ts: int, signal, title: str):
+
+    # interval for plot
+    interval = np.arange(16*20,16*50)
+    t = interval*Ts/1e-9
+
+    fig, axs = plt.subplots(figsize=(16,3))
+    axs.plot(t, np.abs(signal[interval])**2, label="Optical modulated signal", linewidth=2)
+    axs.set_ylabel("Power (p.u.)")
+    axs.set_xlabel("Time (ns)")
+    axs.set_xlim(min(t),max(t))
+    axs.legend(loc="upper left")
+    axs.set_title(title)
+    # plt.close()
+    plt.get_current_fig_manager().set_window_title("Signal in time")
+    plt.show()
+
+    return fig, axs

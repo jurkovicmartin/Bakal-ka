@@ -16,7 +16,7 @@ except ImportError:
 from optic.utils import parameters
 import matplotlib.pyplot as plt
 
-from scripts.plot import eyediagram, pconst
+from scripts.plot import eyediagram, pconst, powerSpectralDensity, signalInTime
 
 def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict) -> dict:
     """
@@ -260,7 +260,7 @@ def restoreInformation(detectedSignal, generalParameters: dict) -> dict:
 
 def getFigure(type: str, simulationResults: dict, generalParameters: dict):
     """
-    Create plots object.
+    Shows graph in separate window and returns (Figure, Axes) tuple
 
     Parameters
     -----
@@ -279,59 +279,35 @@ def getFigure(type: str, simulationResults: dict, generalParameters: dict):
     symbolsTx = simulationResults.get("symbolsTx")
     symbolsRx = simulationResults.get("symbolsRx")
 
-    # interval for plots
-    interval = np.arange(16*20,16*50)
-    t = interval*Ts/1e-9
-
     if type == "psdTx":
         # Tx PSD
-        fig, axs = plt.subplots(figsize=(16,3))
-        axs.set_xlim(-3*Rs,3*Rs)
-        # axs.set_ylim(-230,-130)
-        axs.psd(np.abs(modulatedSignal)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
-        axs.legend(loc="upper left")
-        axs.set_title("Tx power spectral density")
-        plt.close()
+        psd = powerSpectralDensity(Rs, Fs, modulatedSignal, "Tx power spectral density")
 
-        return fig
+        return psd[0]
     
     elif type == "signalTx":
         # Modulated signal in time (Tx signal)
-        fig, axs = plt.subplots(figsize=(16,3))
-        axs.plot(t, np.abs(modulatedSignal[interval])**2, label = "Tx optical modulated signal", linewidth=2)
-        axs.set_ylabel("Power (p.u.)")
-        axs.set_xlabel("Time (ns)")
-        axs.set_xlim(min(t),max(t))
-        axs.legend(loc="upper left")
-        axs.set_title("Tx signal in time")
-        plt.close()
+        sig = signalInTime(Ts, modulatedSignal, "Tx optical signal")
 
-        return fig
+        return sig[0]
 
     elif type == "signalRx":
         # Reciever signal in time (Rx signal)
-        fig, axs = plt.subplots(figsize=(16,3))
-        axs.plot(t, np.abs(recieverSignal[interval])**2, label = "Rx optical modulated signal", linewidth=2)
-        axs.set_ylabel("Power (p.u.)")
-        axs.set_xlabel("Time (ns)")
-        axs.set_xlim(min(t),max(t))
-        axs.legend(loc="upper left")
-        axs.set_title("Rx signal in time")
-        plt.close()
+        sig = signalInTime(Ts, recieverSignal, "Rx optical signal")
 
-        return fig
+        return sig[0]
     
     elif type == "eyediagramTx":
         # Tx eyediagram
         discard = 100
-        eye = eyediagram(informationSignal[discard:-discard], informationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fast")
+        eye = eyediagram(informationSignal[discard:-discard], informationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy")
         
         return eye[0]
     
     elif type == "eyediagramRx":
         # Rx eyediagram
         discard = 100
-        eye = eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fast")
+        eye = eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy")
 
         return eye[0]
     
