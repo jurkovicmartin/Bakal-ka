@@ -5,7 +5,7 @@ from tkinter import ttk, messagebox
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from scripts.popup_window import PopupWindow
+from scripts.parameters_window import ParametersWindow
 from scripts.simulation import simulate, getValues, getFigure
 
 class Gui:
@@ -200,15 +200,15 @@ class Gui:
 
         # Open a new popup
         if clickedButton == self.sourceButton:
-            self.currentPopup = PopupWindow(self, clickedButton, "source", self.getParameters, self.sourceParameters)
+            self.currentPopup = ParametersWindow(self, clickedButton, "source", self.getParameters, self.sourceParameters)
         elif clickedButton == self.modulatorButton:
-            self.currentPopup = PopupWindow(self, clickedButton, "modulator", self.getParameters, self.modulatorParameters)
+            self.currentPopup = ParametersWindow(self, clickedButton, "modulator", self.getParameters, self.modulatorParameters)
         elif clickedButton == self.channelButton:
-            self.currentPopup = PopupWindow(self, clickedButton, "channel", self.getParameters, self.channelParameters)
+            self.currentPopup = ParametersWindow(self, clickedButton, "channel", self.getParameters, self.channelParameters)
         elif clickedButton == self.recieverButton:
-            self.currentPopup = PopupWindow(self, clickedButton, "reciever", self.getParameters, self.recieverParameters)
+            self.currentPopup = ParametersWindow(self, clickedButton, "reciever", self.getParameters, self.recieverParameters)
         elif clickedButton == self.amplifierButton:
-            self.currentPopup = PopupWindow(self, clickedButton, "amplifier", self.getParameters, self.amplifierParameters)
+            self.currentPopup = ParametersWindow(self, clickedButton, "amplifier", self.getParameters, self.amplifierParameters)
         else: raise Exception("Unexpected error")
 
         

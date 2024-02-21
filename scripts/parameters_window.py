@@ -5,7 +5,7 @@ from tkinter import ttk
 
 from scripts.parameters_functions import checkParameter
 
-class PopupWindow:
+class ParametersWindow:
     def __init__(self, parentGui, parentButton, buttonType: str, callback, defaultParameters: dict):
         """
         Class to creates popup window for setting parameters.
