@@ -388,6 +388,9 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None):
 #     return None
 
 def powerSpectralDensity(Rs: int, Fs: int, signal, title: str):
+    """
+    Plot power spectral density of optical signal.
+    """
     
     fig, axs = plt.subplots(figsize=(16,3))
     axs.set_xlim(-3*Rs,3*Rs)
@@ -402,21 +405,42 @@ def powerSpectralDensity(Rs: int, Fs: int, signal, title: str):
     return fig, axs
 
 
-def signalInTime(Ts: int, signal, title: str):
+def signalInTime(Ts: int, signal, title: str, type: str):
+    """
+    Plot optical / electrical signal in time.
+
+    Parameters
+    -----
+    type: "optical" / "electrical" signal
+    """
 
     # interval for plot
     interval = np.arange(16*20,16*50)
     t = interval*Ts/1e-9
 
-    fig, axs = plt.subplots(figsize=(16,3))
-    axs.plot(t, np.abs(signal[interval])**2, label="Optical modulated signal", linewidth=2)
-    axs.set_ylabel("Power (p.u.)")
-    axs.set_xlabel("Time (ns)")
-    axs.set_xlim(min(t),max(t))
-    axs.legend(loc="upper left")
-    axs.set_title(title)
-    # plt.close()
-    plt.get_current_fig_manager().set_window_title("Signal in time")
-    plt.show()
+    if type == "electrical":
+        fig, axs = plt.subplots(figsize=(16,3))
+        axs.plot(t, signal[interval], label = 'RF binary signal', linewidth=2)
+        axs.set_ylabel('Amplitude (a.u.)')
+        axs.set_xlabel('Time (ns)')
+        axs.set_xlim(min(t),max(t))
+        axs.legend(loc='upper left')
+        axs.set_title(title)
+        plt.get_current_fig_manager().set_window_title("Electrical signal in time")
+        plt.show()
 
-    return fig, axs
+        return fig, axs
+    elif type == "optical":
+        fig, axs = plt.subplots(figsize=(16,3))
+        axs.plot(t, np.abs(signal[interval])**2, label="Optical modulated signal", linewidth=2)
+        axs.set_ylabel("Power (p.u.)")
+        axs.set_xlabel("Time (ns)")
+        axs.set_xlim(min(t),max(t))
+        axs.legend(loc="upper left")
+        axs.set_title(title)
+        # plt.close()
+        plt.get_current_fig_manager().set_window_title("Optical signal in time")
+        plt.show()
+
+        return fig, axs
+    else: raise Exception("Unexpected error")

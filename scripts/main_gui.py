@@ -114,22 +114,38 @@ class Gui:
 
         # Graphs frame
 
-        self.psdTxButton = tk.Button(self.graphsFrame, text="Show Tx PSD", command=lambda: self.showGraph(self.psdTxButton))
-        self.conTxButton = tk.Button(self.graphsFrame, text="Show Tx constellation diagram", command=lambda: self.showGraph(self.conTxButton))
-        self.conRxButton = tk.Button(self.graphsFrame, text="Show Rx constellation diagram", command=lambda: self.showGraph(self.conRxButton))
-        self.sigTxButton = tk.Button(self.graphsFrame, text="Show Tx signal in time", command=lambda: self.showGraph(self.sigTxButton))
-        self.sigRxButton = tk.Button(self.graphsFrame, text="Show Rx signal in time", command=lambda: self.showGraph(self.sigRxButton))
-        self.eyeTxButton = tk.Button(self.graphsFrame, text="Show Tx eyediagram", command=lambda: self.showGraph(self.eyeTxButton))
-        self.eyeRxButton = tk.Button(self.graphsFrame, text="Show Rx eyediagram", command=lambda: self.showGraph(self.eyeRxButton))
+        self.graphsTxFrame = tk.Frame(self.graphsFrame)
+        self.graphsRxFrame = tk.Frame(self.graphsFrame)
+
+        self.graphsTxFrame.grid(row=0, column=0)
+        self.graphsRxFrame.grid(row=0, column=1)
+
+        # Tx graphs
+        self.infTxButton = tk.Button(self.graphsTxFrame, text="Show modulation signal", command=lambda: self.showGraph(self.infTxButton))
+        self.conTxButton = tk.Button(self.graphsTxFrame, text="Show Tx constellation diagram", command=lambda: self.showGraph(self.conTxButton))
+        self.psdTxButton = tk.Button(self.graphsTxFrame, text="Show Tx PSD", command=lambda: self.showGraph(self.psdTxButton))
+        self.sigTxButton = tk.Button(self.graphsTxFrame, text="Show Tx signal in time", command=lambda: self.showGraph(self.sigTxButton))
+        self.eyeTxButton = tk.Button(self.graphsTxFrame, text="Show Tx eyediagram", command=lambda: self.showGraph(self.eyeTxButton))
         
+        self.infTxButton.pack()
         self.psdTxButton.pack()
         self.conTxButton.pack()
-        self.conRxButton.pack()
         self.sigTxButton.pack()
-        self.sigRxButton.pack()
         self.eyeTxButton.pack()
-        self.eyeRxButton.pack()        
 
+        # Rx graphs
+        self.infRxButton = tk.Button(self.graphsRxFrame, text="Show detected signal", command=lambda: self.showGraph(self.infRxButton))
+        self.conRxButton = tk.Button(self.graphsRxFrame, text="Show Rx constellation diagram", command=lambda: self.showGraph(self.conRxButton))
+        self.psdRxButton = tk.Button(self.graphsRxFrame, text="Show Rx PSD", command=lambda: self.showGraph(self.psdRxButton))
+        self.sigRxButton = tk.Button(self.graphsRxFrame, text="Show Rx signal in time", command=lambda: self.showGraph(self.sigRxButton))
+        self.eyeRxButton = tk.Button(self.graphsRxFrame, text="Show Rx eyediagram", command=lambda: self.showGraph(self.eyeRxButton))
+
+        self.infRxButton.pack()
+        self.psdRxButton.pack()
+        self.conRxButton.pack()
+        self.sigRxButton.pack()
+        self.eyeRxButton.pack()
+ 
         ### VARIABLES
         
         # For testing default values
@@ -147,7 +163,8 @@ class Gui:
         # self.amplifierParameters = None
         
         # General parameters
-        self.generalParameters = {"SpS": 16, "Rs": 10 ** 9}
+        # SpS = samples per symbol, Rs = symbol rate, Fs sampling frequency, Ts sampling period
+        self.generalParameters = {"SpS": 8, "Rs": 10 ** 3}
         self.generalParameters.update({"Fs": self.generalParameters.get("SpS") * self.generalParameters.get("Rs")})
         self.generalParameters.update({"Ts": 1 / self.generalParameters.get("Fs")})
 
@@ -334,15 +351,24 @@ class Gui:
             return
 
         # Define which button was clicked to get rigth plot
-        if clickedButton == self.psdTxButton:
-            type = "psdTx"
-            title = "Tx power spectral density"
+        if clickedButton == self.infTxButton:
+            type = "informationTx"
+            title = "Modulation signal"
+        elif clickedButton == self.infRxButton:
+            type = "informationRx"
+            title = "Detected signal"
         elif clickedButton == self.conTxButton:
             type ="constellationTx"
             title = "Tx constellation diagram"
         elif clickedButton == self.conRxButton:
             type = "constellationRx"
             title = "Rx constellation diagram"
+        elif clickedButton == self.psdTxButton:
+            type = "psdTx"
+            title = "Tx power spectral density"
+        elif clickedButton == self.psdRxButton:
+            type = "psdRx"
+            title = "Rx power spectral density"
         elif clickedButton == self.sigTxButton:
             type = "signalTx"
             title = "Tx signal in time"
@@ -358,4 +384,4 @@ class Gui:
         else: raise Exception("Unexcpected error")
 
         # Shows graph
-        figure = getFigure(type, self.simulationResults, self.generalParameters)
+        figure = getFigure(type, title,  self.simulationResults, self.generalParameters)

@@ -258,7 +258,7 @@ def restoreInformation(detectedSignal, generalParameters: dict) -> dict:
     return {"symbolsRx":symbolsRx, "bitsRx":bitsRx}
 
 
-def getFigure(type: str, simulationResults: dict, generalParameters: dict):
+def getFigure(type: str, title: str, simulationResults: dict, generalParameters: dict):
     """
     Shows graph in separate window and returns (Figure, Axes) tuple
 
@@ -279,50 +279,46 @@ def getFigure(type: str, simulationResults: dict, generalParameters: dict):
     symbolsTx = simulationResults.get("symbolsTx")
     symbolsRx = simulationResults.get("symbolsRx")
 
-    if type == "psdTx":
+    if type == "informationTx":
+        # Modulation signal
+        sig = signalInTime(Ts, informationSignal, title, "electrical")
+        return sig[0]
+    elif type == "informationRx":
+        # Detected signal
+        sig = signalInTime(Ts, detectedSignal, title, "electrical")
+    elif type == "constellationTx":
+        # Tx constellation diagram
+        con = pconst(symbolsTx, whiteb=False)
+        return con[0]
+    elif type == "constellationRx":
+        # Rx constellation diagram
+        con = pconst(symbolsRx, whiteb=False)
+        return con[0]
+    elif type == "psdTx":
         # Tx PSD
-        psd = powerSpectralDensity(Rs, Fs, modulatedSignal, "Tx power spectral density")
-
+        psd = powerSpectralDensity(Rs, Fs, modulatedSignal, title)
         return psd[0]
-    
+    elif type == "psdRx":
+        psd = powerSpectralDensity(Rs, Fs, recieverSignal, title)
+        return psd[0]
     elif type == "signalTx":
         # Modulated signal in time (Tx signal)
-        sig = signalInTime(Ts, modulatedSignal, "Tx optical signal")
-
+        sig = signalInTime(Ts, modulatedSignal, title, "optical")
         return sig[0]
-
     elif type == "signalRx":
         # Reciever signal in time (Rx signal)
-        sig = signalInTime(Ts, recieverSignal, "Rx optical signal")
-
+        sig = signalInTime(Ts, recieverSignal, title, "optical")
         return sig[0]
-    
     elif type == "eyediagramTx":
         # Tx eyediagram
         discard = 100
         eye = eyediagram(informationSignal[discard:-discard], informationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy")
-        
         return eye[0]
-    
     elif type == "eyediagramRx":
         # Rx eyediagram
         discard = 100
         eye = eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy")
-
         return eye[0]
-    
-    elif type == "constellationTx":
-        # Tx constellation diagram
-        con = pconst(symbolsTx, whiteb=False)
-        
-        return con[0]
-    
-    elif type == "constellationRx":
-        # Rx constellation diagram
-        con = pconst(symbolsRx, whiteb=False)
-
-        return con[0]
-
     else: raise Exception("Unexpected error")
 
 
