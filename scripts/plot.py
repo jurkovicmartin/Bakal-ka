@@ -229,7 +229,7 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None):
         d = 0
         plotlabel_ = plotlabel
 
-    fig, axes = plt.subplots(figsize=(16,4))
+    fig, axes = plt.subplots(figsize=(8,4))
 
     for ind in range(d + 1):
         if ind == 0:
@@ -392,7 +392,7 @@ def powerSpectralDensity(Rs: int, Fs: int, signal, title: str):
     Plot power spectral density of optical signal.
     """
     
-    fig, axs = plt.subplots(figsize=(16,3))
+    fig, axs = plt.subplots(figsize=(8,4))
     axs.set_xlim(-3*Rs,3*Rs)
     # axs.set_ylim(-230,-130)
     axs.psd(np.abs(signal)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
@@ -400,7 +400,7 @@ def powerSpectralDensity(Rs: int, Fs: int, signal, title: str):
     axs.set_title(title)
     # plt.close()
     plt.get_current_fig_manager().set_window_title("Power spectral density")
-    plt.show()
+    # plt.show()
 
     return fig, axs
 
@@ -419,7 +419,7 @@ def signalInTime(Ts: int, signal, title: str, type: str):
     t = interval*Ts/1e-9
 
     if type == "electrical":
-        fig, axs = plt.subplots(figsize=(16,3))
+        fig, axs = plt.subplots(figsize=(8,4))
         axs.plot(t, signal[interval], label = 'RF binary signal', linewidth=2)
         axs.set_ylabel('Amplitude (a.u.)')
         axs.set_xlabel('Time (ns)')
@@ -431,7 +431,7 @@ def signalInTime(Ts: int, signal, title: str, type: str):
 
         return fig, axs
     elif type == "optical":
-        fig, axs = plt.subplots(figsize=(16,3))
+        fig, axs = plt.subplots(figsize=(8,4))
         axs.plot(t, np.abs(signal[interval])**2, label="Optical modulated signal", linewidth=2)
         axs.set_ylabel("Power (p.u.)")
         axs.set_xlabel("Time (ns)")

@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
 
 from scripts.parameters_window import ParametersWindow
 from scripts.simulation import simulate, getValues, getFigure
@@ -170,6 +171,8 @@ class Gui:
 
         # Track popup windows to allow only one to be opened
         self.currentPopup = None
+        # Save created graphs
+        self.graphs = {}
 
         self.root.mainloop()
 
@@ -383,5 +386,15 @@ class Gui:
             title = "Rx eyediagram"
         else: raise Exception("Unexcpected error")
 
-        # Shows graph
-        figure = getFigure(type, title,  self.simulationResults, self.generalParameters)
+        # Graph was showed once before
+        if type in self.graphs:
+            print("reshow" + type)
+            figure, axes = self.graphs.get(type)
+            plt.show()
+        else:
+            print("New" + type)
+            # Shows new graph
+            figure = getFigure(type, title,  self.simulationResults, self.generalParameters)
+            # Save new graph
+            self.graphs.update({type:figure})
+        

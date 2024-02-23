@@ -282,43 +282,43 @@ def getFigure(type: str, title: str, simulationResults: dict, generalParameters:
     if type == "informationTx":
         # Modulation signal
         sig = signalInTime(Ts, informationSignal, title, "electrical")
-        return sig[0]
+        return sig
     elif type == "informationRx":
         # Detected signal
         sig = signalInTime(Ts, detectedSignal, title, "electrical")
     elif type == "constellationTx":
         # Tx constellation diagram
         con = pconst(symbolsTx, whiteb=False)
-        return con[0]
+        return con
     elif type == "constellationRx":
         # Rx constellation diagram
         con = pconst(symbolsRx, whiteb=False)
-        return con[0]
+        return con
     elif type == "psdTx":
         # Tx PSD
         psd = powerSpectralDensity(Rs, Fs, modulatedSignal, title)
-        return psd[0]
+        return psd
     elif type == "psdRx":
         psd = powerSpectralDensity(Rs, Fs, recieverSignal, title)
-        return psd[0]
+        return psd
     elif type == "signalTx":
         # Modulated signal in time (Tx signal)
         sig = signalInTime(Ts, modulatedSignal, title, "optical")
-        return sig[0]
+        return sig
     elif type == "signalRx":
         # Reciever signal in time (Rx signal)
         sig = signalInTime(Ts, recieverSignal, title, "optical")
-        return sig[0]
+        return sig
     elif type == "eyediagramTx":
         # Tx eyediagram
         discard = 100
         eye = eyediagram(informationSignal[discard:-discard], informationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy")
-        return eye[0]
+        return eye
     elif type == "eyediagramRx":
         # Rx eyediagram
         discard = 100
         eye = eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy")
-        return eye[0]
+        return eye
     else: raise Exception("Unexpected error")
 
 
