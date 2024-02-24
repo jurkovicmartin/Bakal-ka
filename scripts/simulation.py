@@ -40,7 +40,7 @@ def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameter
 
     # Output dictionary
     simulationResults = {}
-
+ 
     # Adds bitsTx, symbolsTx, modulationSignal
     simulationResults.update(modulationSignal(generalParameters))
     # Adds carrierSignal
@@ -50,7 +50,7 @@ def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameter
     # Adds recieverSignal
     simulationResults.update(fiberTransmition(channelParameters, amplifierParameters, simulationResults.get("modulatedSignal"), Fs, frequency))
     # Adds detectedSignal
-    simulationResults.update(detection(recieverParameters, simulationResults.get("recieverSignal"), simulationResults.get("carrierSignal"), Rs, Fs))
+    simulationResults.update(detection(recieverParameters, simulationResults.get("recieverSignal"), simulationResults.get("carrierSignal"), generalParameters))
     # Adds symbolsRx, bitsRx
     simulationResults.update(restoreInformation(simulationResults.get("detectedSignal"), generalParameters))
 
@@ -184,7 +184,7 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
 
     return {"recieverSignal":recieverSignal}
 
-def detection(recieverParameters: dict, recieverSignal, referentSignal, Rs: int, Fs: int) -> dict:
+def detection(recieverParameters: dict, recieverSignal, referentSignal, generalParameters: dict) -> dict:
     """
     Convert optical signal back to electrical
 
@@ -192,14 +192,12 @@ def detection(recieverParameters: dict, recieverSignal, referentSignal, Rs: int,
     ----
     referentSginal: optical signal as a signal from local oscilator for coherent detection
 
-    Rs: symbol rate
-
-    Fs: sampling frequency
-
     Returns
     -----
     detectedSignal
     """
+    Fs = generalParameters.get("Fs")
+    Rs = generalParameters.get("Rs")
 
     if recieverParameters.get("Type") == "Photodiode":
         # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
