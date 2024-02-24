@@ -4,10 +4,9 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.pyplot as plt
 
 from scripts.parameters_window import ParametersWindow
-from scripts.simulation import simulate, getValues, getFigure
+from scripts.simulation import simulate, getValues, getPlot
 
 class Gui:
     def __init__(self):
@@ -45,12 +44,12 @@ class Gui:
         # Scheme frame
 
         # Communication scheme buttons
-        self.sourceButton = tk.Button(self.schemeFrame, text="Optical source", command=lambda: self.showPopup(self.sourceButton))
-        self.modulatorButton = tk.Button(self.schemeFrame, text="Modulator", command=lambda: self.showPopup(self.modulatorButton))
-        self.channelButton = tk.Button(self.schemeFrame, text="Fiber channel", command=lambda: self.showPopup(self.channelButton))
-        self.recieverButton = tk.Button(self.schemeFrame, text="Reciever", command=lambda: self.showPopup(self.recieverButton))
+        self.sourceButton = tk.Button(self.schemeFrame, text="Optical source", command=lambda: self.showParametersPopup(self.sourceButton))
+        self.modulatorButton = tk.Button(self.schemeFrame, text="Modulator", command=lambda: self.showParametersPopup(self.modulatorButton))
+        self.channelButton = tk.Button(self.schemeFrame, text="Fiber channel", command=lambda: self.showParametersPopup(self.channelButton))
+        self.recieverButton = tk.Button(self.schemeFrame, text="Reciever", command=lambda: self.showParametersPopup(self.recieverButton))
         # Aplifier button initially hidden
-        self.amplifierButton = tk.Button(self.schemeFrame, text="Pre-amplifier", command=lambda: self.showPopup(self.amplifierButton))
+        self.amplifierButton = tk.Button(self.schemeFrame, text="Pre-amplifier", command=lambda: self.showParametersPopup(self.amplifierButton))
 
         self.sourceButton.grid(row=0, column=0)
         self.modulatorButton.grid(row=0, column=1)
@@ -88,10 +87,10 @@ class Gui:
         # Frames
 
         self.valuesFrame = tk.Frame(self.outputsFrame)
-        self.graphsFrame = tk.Frame(self.outputsFrame)
+        self.plotsFrame = tk.Frame(self.outputsFrame)
 
         self.valuesFrame.pack()
-        self.graphsFrame.pack()
+        self.plotsFrame.pack()
 
         # Values frame
 
@@ -113,20 +112,20 @@ class Gui:
         self.serLabel.pack()
         self.snrLabel.pack()
 
-        # Graphs frame
+        # plots frame
 
-        self.graphsTxFrame = tk.Frame(self.graphsFrame)
-        self.graphsRxFrame = tk.Frame(self.graphsFrame)
+        self.plotsTxFrame = tk.Frame(self.plotsFrame)
+        self.plotsRxFrame = tk.Frame(self.plotsFrame)
 
-        self.graphsTxFrame.grid(row=0, column=0)
-        self.graphsRxFrame.grid(row=0, column=1)
+        self.plotsTxFrame.grid(row=0, column=0)
+        self.plotsRxFrame.grid(row=0, column=1)
 
-        # Tx graphs
-        self.infTxButton = tk.Button(self.graphsTxFrame, text="Show modulation signal", command=lambda: self.showGraph(self.infTxButton))
-        self.conTxButton = tk.Button(self.graphsTxFrame, text="Show Tx constellation diagram", command=lambda: self.showGraph(self.conTxButton))
-        self.psdTxButton = tk.Button(self.graphsTxFrame, text="Show Tx PSD", command=lambda: self.showGraph(self.psdTxButton))
-        self.sigTxButton = tk.Button(self.graphsTxFrame, text="Show Tx signal in time", command=lambda: self.showGraph(self.sigTxButton))
-        self.eyeTxButton = tk.Button(self.graphsTxFrame, text="Show Tx eyediagram", command=lambda: self.showGraph(self.eyeTxButton))
+        # Tx plots
+        self.infTxButton = tk.Button(self.plotsTxFrame, text="Show modulation signal", command=lambda: self.showGraph(self.infTxButton))
+        self.conTxButton = tk.Button(self.plotsTxFrame, text="Show Tx constellation diagram", command=lambda: self.showGraph(self.conTxButton))
+        self.psdTxButton = tk.Button(self.plotsTxFrame, text="Show Tx PSD", command=lambda: self.showGraph(self.psdTxButton))
+        self.sigTxButton = tk.Button(self.plotsTxFrame, text="Show Tx signal in time", command=lambda: self.showGraph(self.sigTxButton))
+        self.eyeTxButton = tk.Button(self.plotsTxFrame, text="Show Tx eyediagram", command=lambda: self.showGraph(self.eyeTxButton))
         
         self.infTxButton.pack()
         self.psdTxButton.pack()
@@ -134,18 +133,22 @@ class Gui:
         self.sigTxButton.pack()
         self.eyeTxButton.pack()
 
-        # Rx graphs
-        self.infRxButton = tk.Button(self.graphsRxFrame, text="Show detected signal", command=lambda: self.showGraph(self.infRxButton))
-        self.conRxButton = tk.Button(self.graphsRxFrame, text="Show Rx constellation diagram", command=lambda: self.showGraph(self.conRxButton))
-        self.psdRxButton = tk.Button(self.graphsRxFrame, text="Show Rx PSD", command=lambda: self.showGraph(self.psdRxButton))
-        self.sigRxButton = tk.Button(self.graphsRxFrame, text="Show Rx signal in time", command=lambda: self.showGraph(self.sigRxButton))
-        self.eyeRxButton = tk.Button(self.graphsRxFrame, text="Show Rx eyediagram", command=lambda: self.showGraph(self.eyeRxButton))
+        # Rx plots
+        self.infRxButton = tk.Button(self.plotsRxFrame, text="Show detected signal", command=lambda: self.showGraph(self.infRxButton))
+        self.conRxButton = tk.Button(self.plotsRxFrame, text="Show Rx constellation diagram", command=lambda: self.showGraph(self.conRxButton))
+        self.psdRxButton = tk.Button(self.plotsRxFrame, text="Show Rx PSD", command=lambda: self.showGraph(self.psdRxButton))
+        self.sigRxButton = tk.Button(self.plotsRxFrame, text="Show Rx signal in time", command=lambda: self.showGraph(self.sigRxButton))
+        self.eyeRxButton = tk.Button(self.plotsRxFrame, text="Show Rx eyediagram", command=lambda: self.showGraph(self.eyeRxButton))
 
         self.infRxButton.pack()
         self.psdRxButton.pack()
         self.conRxButton.pack()
         self.sigRxButton.pack()
         self.eyeRxButton.pack()
+
+        # Close plots button
+        self.closeplotsButton = tk.Button(self.plotsFrame, text="Close all showed plots", command=self.closeGraphsWindows)
+        self.closeplotsButton.grid(row=1, column=0, columnspan=2)
  
         ### VARIABLES
         
@@ -169,10 +172,9 @@ class Gui:
         self.generalParameters.update({"Fs": self.generalParameters.get("SpS") * self.generalParameters.get("Rs")})
         self.generalParameters.update({"Ts": 1 / self.generalParameters.get("Fs")})
 
-        # Track popup windows to allow only one to be opened
-        self.currentPopup = None
-        # Save created graphs
-        self.graphs = {}
+        # Simulation results variables
+        self.plots = {}
+        self.simulationResults = None
 
         self.root.mainloop()
 
@@ -184,6 +186,9 @@ class Gui:
         if not self.checkSimulationStart(): return
 
         self.updateGeneralParameters()
+
+        # Clearing dictionary with plots
+        self.plots.clear()
 
         # Simulation
         self.simulationResults = simulate(self.generalParameters, self.sourceParameters, self.modulatorParameters, self.channelParameters, self.recieverParameters, self.amplifierParameters)
@@ -211,38 +216,41 @@ class Gui:
             self.amplifierButton.grid_forget()
             self.recieverButton.grid(row=0, column=3)
 
-    def showPopup(self, clickedButton):
+    def showParametersPopup(self, clickedButton):
         """
-        Show popup window to set parametrs.
+        Show Toplevel popup window to set parametrs.
         """
         # Disable the other buttons when a popup is open
-        self.disableButtons()
+        self.disableAllButtons()
 
         # Open a new popup
         if clickedButton == self.sourceButton:
-            self.currentPopup = ParametersWindow(self, clickedButton, "source", self.getParameters, self.sourceParameters)
+            ParametersWindow(self, clickedButton, "source", self.getParameters, self.sourceParameters)
         elif clickedButton == self.modulatorButton:
-            self.currentPopup = ParametersWindow(self, clickedButton, "modulator", self.getParameters, self.modulatorParameters)
+            ParametersWindow(self, clickedButton, "modulator", self.getParameters, self.modulatorParameters)
         elif clickedButton == self.channelButton:
-            self.currentPopup = ParametersWindow(self, clickedButton, "channel", self.getParameters, self.channelParameters)
+            ParametersWindow(self, clickedButton, "channel", self.getParameters, self.channelParameters)
         elif clickedButton == self.recieverButton:
-            self.currentPopup = ParametersWindow(self, clickedButton, "reciever", self.getParameters, self.recieverParameters)
+            ParametersWindow(self, clickedButton, "reciever", self.getParameters, self.recieverParameters)
         elif clickedButton == self.amplifierButton:
-            self.currentPopup = ParametersWindow(self, clickedButton, "amplifier", self.getParameters, self.amplifierParameters)
+            ParametersWindow(self, clickedButton, "amplifier", self.getParameters, self.amplifierParameters)
         else: raise Exception("Unexpected error")
 
         
 
-    def disableButtons(self):
-        for button in [self.sourceButton, self.modulatorButton, self.channelButton, self.recieverButton, self.amplifierButton]:
-            button.config(state=tk.DISABLED)
+    def disableAllButtons(self):
+        frames = [self.schemeFrame, self.optionsFrame, self.plotsFrame, self.plotsTxFrame, self.plotsRxFrame]
+        for frame in frames:
+            for button in frame.winfo_children():
+                if isinstance(button, tk.Button):
+                    button.config(state="disabled")
 
-    def enableButtons(self):
-        for button in [self.sourceButton, self.modulatorButton, self.channelButton, self.recieverButton, self.amplifierButton]:
-            button.config(state=tk.NORMAL)
-
-        # Reset the currently open popup
-        self.currentPopup = None
+    def enableAllButtons(self):
+        frames = [self.schemeFrame, self.optionsFrame, self.plotsFrame, self.plotsTxFrame, self.plotsRxFrame]
+        for frame in frames:
+            for button in frame.winfo_children():
+                if isinstance(button, tk.Button):
+                    button.config(state="normal")
 
     def getParameters(self, parameters: dict, buttonType: str):
         """
@@ -387,14 +395,33 @@ class Gui:
         else: raise Exception("Unexcpected error")
 
         # Graph was showed once before
-        if type in self.graphs:
-            print("reshow" + type)
-            figure, axes = self.graphs.get(type)
-            plt.show()
+        if type in self.plots:
+            plot = self.plots.get(type)
+            self.displayPlot(plot, title)
+        # Graph will be shown for the first time
         else:
-            print("New" + type)
-            # Shows new graph
-            figure = getFigure(type, title,  self.simulationResults, self.generalParameters)
-            # Save new graph
-            self.graphs.update({type:figure})
-        
+            plot = getPlot(type, title,  self.simulationResults, self.generalParameters)
+            self.displayPlot(plot, title)
+            self.plots.update({type:plot})
+
+    def displayPlot(self, plot, title: str):
+        """
+        Creates Toplevel popup window to show plot.
+        """
+        # Creates the window
+        popupGraph = tk.Toplevel()
+        popupGraph.geometry("1000x600")
+        popupGraph.title(title)
+
+        # Shows the plot
+        canvas = FigureCanvasTkAgg(plot[0], master=popupGraph)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side="top", fill="both", expand=1)
+
+    def closeGraphsWindows(self):
+        """
+        Closes all opened Toplevel windows.
+        """
+        for window in self.root.winfo_children():
+            if isinstance(window, tk.Toplevel):
+                window.destroy()

@@ -214,7 +214,7 @@ class ParametersWindow:
 
     def closePopup(self):
         # Enable the parent buttons and destroy the popup window
-        self.parentGui.enableButtons()
+        self.parentGui.enableAllButtons()
         self.popup.destroy()
 
 

@@ -4,3 +4,4 @@
 - image of communication chain above the buttons
 - signal_power warning (divide by zero)
 - fix eyediagrams
+- parameters limits
