@@ -105,7 +105,7 @@ def carrierSignal(sourceParameters: dict, Fs: int, modulationSignal) -> dict:
 
     # Laser parameters
     paramLaser = parameters()
-    paramLaser.P = sourceParameters.get("Power")   # laser power [W] [default: 10 dBm]
+    paramLaser.P = sourceParameters.get("Power")   # laser power [dBm] [default: 10 dBm]
     paramLaser.lw = sourceParameters.get("Linewidth")    # laser linewidth [Hz] [default: 1 kHz]
     paramLaser.RIN_var = sourceParameters.get("RIN")  # variance of the RIN noise [default: 1e-20]
     paramLaser.Fs = Fs  # sampling rate [samples/s]

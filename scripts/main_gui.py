@@ -153,11 +153,12 @@ class Gui:
         ### VARIABLES
         
         # For testing default values
-        self.sourceParameters = {"Power":0.1, "Frequency":193100000000000, "Linewidth":1000, "RIN":0}
+        self.sourceParameters = {"Power":10, "Frequency":193100000000000, "Linewidth":1000, "RIN":0}
         self.modulatorParameters = {"Type":"MZM"}
         self.channelParameters = {"Length":20, "Attenuation":0.2, "Dispersion":16}
         self.recieverParameters = {"Type":"Photodiode"}
         self.amplifierParameters = {"Gain":4, "Noise":3}
+        self.amplifierParameters = None
 
         # Parameters of scheme blocks
         # self.sourceParameters = None

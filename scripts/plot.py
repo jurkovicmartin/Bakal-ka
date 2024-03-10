@@ -19,7 +19,7 @@ from scipy.ndimage.filters import gaussian_filter
 from optic.dsp.core import pnorm, signal_power
 import warnings
 
-warnings.filterwarnings('ignore', r'All-NaN (slice|axis) encountered')
+warnings.filterwarnings("ignore", r"All-NaN (slice|axis) encountered")
 
 def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tuple[plt.Figure, plt.Axes]:
     """
@@ -98,7 +98,7 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tup
                 for ind in range(len(x)):
                     if pType == "fancy":
                         if ind == 0:
-                            ax = fig.add_subplot(nRows, nCols, Position[k], projection='scatter_density')
+                            ax = fig.add_subplot(nRows, nCols, Position[k], projection="scatter_density")
                         ax = constHist(x[ind][:, k], ax, radius, cmap, whiteb)
                     elif pType == "fast":
                         if ind == 0:
@@ -114,10 +114,11 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tup
                 if lim:
                     ax.set_xlim(-radius, radius)
                     ax.set_ylim(-radius, radius)
+            print("firt case")
         else:
             for k in range(nSubPts):                
                 if pType == "fancy":
-                    ax = fig.add_subplot(nRows, nCols, Position[k], projection='scatter_density')
+                    ax = fig.add_subplot(nRows, nCols, Position[k], projection="scatter_density")
                     ax = constHist(x[:, k], ax, radius, cmap, whiteb)
                 elif pType == "fast":
                     ax = fig.add_subplot(nRows, nCols, Position[k])
@@ -132,6 +133,7 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tup
                 if lim:
                     ax.set_xlim(-radius, radius)
                     ax.set_ylim(-radius, radius)
+            print("second case")
 
         fig.tight_layout()
 
@@ -139,7 +141,7 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tup
         fig = plt.figure(figsize=(6,6))
         #ax = plt.gca()
         if pType == "fancy":
-            ax = fig.add_subplot(1, 1, 1, projection='scatter_density')
+            ax = fig.add_subplot(1, 1, 1, projection="scatter_density")
             ax = constHist(x[:, 0], ax, radius, cmap, whiteb)
         elif pType == "fast":
             ax = plt.gca()
@@ -150,8 +152,9 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tup
         # plt.grid()
 
         if lim:
-            plt.xlim(-radius, radius)
-            plt.ylim(-radius, radius)
+            plt.xlim(-radius - 1, radius + 1)
+            plt.ylim(-radius - 1, radius + 1)
+        print("third case")
 
     plt.close()
 
@@ -202,7 +205,7 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None) -> tuple
     n : int, optional
         Number of symbol periods. Defaults to 3.
     ptype : str, optional
-        Type of eye diagram. Can be 'fast' or 'fancy'. Defaults to 'fast'.
+        Type of eye diagram. Can be "fast" or "fancy". Defaults to "fast".
     plotlabel : str, optional
         Label for the plot legend. Defaults to None.
 
@@ -312,29 +315,48 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
     type: "optical" / "electrical" signal
     """
 
-    # interval for plot
-    interval = np.arange(16*20,16*50)
-    t = interval*Ts/1e-9
-
     if type == "electrical":
-        fig, axs = plt.subplots(figsize=(8,4))
-        axs.plot(t, signal[interval], label = 'RF binary signal', linewidth=2)
-        axs.set_ylabel('Amplitude (a.u.)')
-        axs.set_xlabel('Time (ns)')
-        axs.set_xlim(min(t),max(t))
-        axs.legend(loc='upper left')
-        axs.set_title(title)
+        # interval for plot
+        interval = np.arange(100,500)
+        t = interval*Ts/1e-9
+
+        fig, axs = plt.subplots(2, 1, figsize=(8, 4))
+
+        # Real
+        axs[0].plot(t, signal[interval].real, label="Real Part", linewidth=2, color="blue")
+        axs[0].set_ylabel("Amplitude (a.u.)")
+        axs[0].legend(loc="upper left")
+
+        # Imaginary
+        axs[1].plot(t, signal[interval].imag, label="Imaginary Part", linewidth=2, color="orange")
+        axs[1].set_ylabel("Amplitude (a.u.)")
+        axs[1].set_xlabel("Time (s)")
+        axs[1].legend(loc="upper left")
+
+        plt.suptitle("Modulation signal")
         plt.close()
 
         return fig, axs
+    
     elif type == "optical":
-        fig, axs = plt.subplots(figsize=(8,4))
-        axs.plot(t, np.abs(signal[interval])**2, label="Optical modulated signal", linewidth=2)
-        axs.set_ylabel("Power (p.u.)")
-        axs.set_xlabel("Time (ns)")
-        axs.set_xlim(min(t),max(t))
-        axs.legend(loc="upper left")
-        axs.set_title(title)
+        # interval for plot
+        interval = np.arange(100,250)
+        t = interval*Ts/1e-9
+
+        fig, axs = plt.subplots(2, 1, figsize=(8, 4))
+
+        # Real
+        axs[0].plot(t, signal[interval].real, label="Real Part", linewidth=2, color="blue")
+        axs[0].set_ylabel("Amplitude (a.u.)")
+        axs[0].legend(loc="upper left")
+
+        # Imaginary
+        axs[1].plot(t, signal[interval].imag, label="Imaginary Part", linewidth=2, color="orange")
+        axs[1].set_ylabel("Amplitude (a.u.)")
+        axs[1].set_xlabel("Time (s)")
+        axs[1].legend(loc="upper left")
+
+        plt.suptitle("Optical modulated signal signal")
         plt.close()
 
         return fig, axs

@@ -53,7 +53,7 @@ class ParametersWindow:
             # Setting parameters
 
             # Power
-            self.lengthLabel = tk.Label(self.popup, text="Power of laser [W]")
+            self.lengthLabel = tk.Label(self.popup, text="Power of laser [dBm]")
             self.lengthLabel.grid(row=1, column=0)
             self.powerEntry = tk.Entry(self.popup)
             self.powerEntry.grid(row=1, column=1)
