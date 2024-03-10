@@ -6,3 +6,4 @@
 - fix constellations (kinda)
 - parameters limits
 - signal source frequency entry
+- include ideal source

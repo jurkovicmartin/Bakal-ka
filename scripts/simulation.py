@@ -16,7 +16,7 @@ except ImportError:
 from optic.utils import parameters
 import matplotlib.pyplot as plt
 
-from scripts.plot import eyediagram, pconst, powerSpectralDensity, signalInTime
+from scripts.my_plot import eyediagram, pconst, powerSpectralDensity, signalInTime
 
 def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict) -> dict:
     """

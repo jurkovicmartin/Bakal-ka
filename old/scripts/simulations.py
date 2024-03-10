@@ -20,7 +20,7 @@ except ImportError:
 from optic.utils import parameters
 import matplotlib.pyplot as plt
 
-from scripts.plot import eyediagram, pconst
+from scripts.my_plot import eyediagram, pconst
 
 
 def simulatePAM(simulationParameters, order, length, amplifier, power=0.01, loss=0.2, dispersion=16):

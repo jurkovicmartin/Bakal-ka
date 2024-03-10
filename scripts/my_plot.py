@@ -1,11 +1,7 @@
 
 """
-OptiCommPY edited script - functions pconst, eyediagram
-Edits done because of more suiting ploting for my application
-I want plot functions only to return objects to plot them in application window, not to pop new window and display it
-Changes:
-pconst - not show figure, size of figure
-eyediagram - not show figure, return objects to plot, size of figure
+Script inspired by OpticommPY functions with a little changes.
+Also added some more functions.
 """
 
 import matplotlib.pyplot as plt
