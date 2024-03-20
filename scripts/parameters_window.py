@@ -32,6 +32,8 @@ class ParametersWindow:
         # Bind the popup window's closing event to the parent's method
         self.popup.protocol("WM_DELETE_WINDOW", self.closePopup)
 
+    ### METHODS
+
     def popupGui(self) -> tk.Toplevel:
         """
         Creates popup gui for setting parameters.
@@ -40,7 +42,6 @@ class ParametersWindow:
         -----
         popup window: tkinter Toplevel object
         """
-
         self.popup = tk.Toplevel()
         self.popup.geometry("400x400")
 
@@ -83,9 +84,14 @@ class ParametersWindow:
                 self.linewidthEntry.insert(0, self.defaultParameters.get("Linewidth"))
                 self.rinEntry.insert(0, str(self.defaultParameters.get("RIN")))
 
+            # Ideal parameters checkbutton
+            self.sourceCheckVar = tk.BooleanVar()
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.sourceCheckVar, command=lambda: self.idealCheckbuttonChange("source"))
+            self.idealCheckbutton.grid(row=5, column=0, columnspan=2)
+
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=5, column=0, columnspan=2)
+            self.setButton.grid(row=6, column=0, columnspan=2)
 
             return self.popup
         
@@ -146,9 +152,14 @@ class ParametersWindow:
                 self.attenuationEntry.insert(0, str(self.defaultParameters.get("Attenuation")))
                 self.dispersionEntry.insert(0, str(self.defaultParameters.get("Dispersion")))
 
+            # Ideal parameters checkbutton
+            self.channelCheckVar = tk.BooleanVar()
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.channelCheckVar, command=lambda: self.idealCheckbuttonChange("channel"))
+            self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
+
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=4, column=0, columnspan=2)
+            self.setButton.grid(row=5, column=0, columnspan=2)
 
             return self.popup
         
@@ -211,10 +222,9 @@ class ParametersWindow:
         else: raise Exception("Unexpected if statement")
 
 
-
     def closePopup(self):
         # Enable the parent buttons and destroy the popup window
-        self.parentGui.enableAllButtons()
+        self.parentGui.enableButtons()
         self.popup.destroy()
 
 
@@ -222,7 +232,6 @@ class ParametersWindow:
         """
         Set inserted parameters.
         """
-
         if self.buttonType == "source":
             # Showing in main gui
             parametersString = f"Laser\n\nPower: {self.powerEntry.get()} W\nFrequency: {self.frequencyEntry.get()} Hz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
@@ -280,21 +289,43 @@ class ParametersWindow:
 
         Parameters
         -----
-        parameters: dictionary
-            values are strings
+        parameters: values are strings
 
         Returns
         -----
-        parameters: dictionary
-            values are floats
+        parameters: values are floats
 
             None if some parameter is not ok
         """
-
         for key, value in parameters.items():
             checked = checkParameter(key, value, self.popup)
             if checked is None: return None
             else: parameters.update({key:checked})
 
         return parameters
-  
+    
+
+    def idealCheckbuttonChange(self, type: str):
+        """
+        Disable / Enable parameters that cause some bias
+
+        Parameters
+        -----
+        type: specify which parameters are being set
+        """
+        if type == "source":
+            if self.sourceCheckVar.get():
+                self.rinEntry.delete(0, tk.END)
+                self.rinEntry.config(state="disabled")
+            else:
+                self.rinEntry.config(state="normal")
+                self.rinEntry.insert(0, "0") 
+
+        elif type == "channel":
+            if self.channelCheckVar.get():
+                self.attenuationEntry.delete(0, tk.END)
+                self.attenuationEntry.config(state="disabled")
+            else:
+                self.attenuationEntry.config(state="normal")
+                self.attenuationEntry.insert(0, "0")
+                

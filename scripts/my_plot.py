@@ -290,7 +290,6 @@ def powerSpectralDensity(Rs: int, Fs: int, signal, title: str) -> tuple[plt.Figu
     """
     Plot power spectral density of optical signal.
     """
-    
     fig, axs = plt.subplots(figsize=(8,4))
     axs.set_xlim(-3*Rs,3*Rs)
     # axs.set_ylim(-230,-130)
@@ -310,7 +309,6 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
     -----
     type: "optical" / "electrical" signal
     """
-
     if type == "electrical":
         # interval for plot
         interval = np.arange(100,500)
@@ -356,4 +354,5 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
         plt.close()
 
         return fig, axs
+    
     else: raise Exception("Unexpected error")

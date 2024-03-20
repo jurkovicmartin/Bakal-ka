@@ -5,5 +5,8 @@
 - signal_power warning (divide by zero)
 - fix constellations (kinda)
 - parameters limits
-- signal source frequency entry
-- include ideal source
+- signal source frequency entry (units)
+- include ideal source and other ideal blocks
+- load, save and work with ideal variable
+- displaying signals in time (display modul)
+- WDM

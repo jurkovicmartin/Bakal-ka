@@ -149,10 +149,13 @@ class Gui:
         # Close plots button
         self.closeplotsButton = tk.Button(self.plotsFrame, text="Close all showed plots", command=self.closeGraphsWindows)
         self.closeplotsButton.grid(row=1, column=0, columnspan=2)
+
+        # Frames with buttons that will be disabled when doing configuration
+        self.buttonFrames = [self.schemeFrame, self.optionsFrame, self.plotsFrame, self.plotsTxFrame, self.plotsRxFrame]
  
         ### VARIABLES
         
-        # For testing default values
+        # Testing values
         self.sourceParameters = {"Power":10, "Frequency":193100000000000, "Linewidth":1000, "RIN":0}
         self.modulatorParameters = {"Type":"MZM"}
         self.channelParameters = {"Length":20, "Attenuation":0.2, "Dispersion":16}
@@ -179,6 +182,10 @@ class Gui:
 
         self.root.mainloop()
 
+
+
+    ### METHODS
+
     def startSimulation(self):
         """
         Start of simulation.
@@ -188,7 +195,6 @@ class Gui:
 
         self.updateGeneralParameters()
 
-        # Clearing dictionary with plots
         self.plots.clear()
 
         # Simulation
@@ -197,7 +203,6 @@ class Gui:
         # Showing results
         # Values to show
         outputValues = getValues(self.simulationResults, self.generalParameters)
-        
         # Actual showing in the app
         self.showValues(outputValues)
 
@@ -217,12 +222,13 @@ class Gui:
             self.amplifierButton.grid_forget()
             self.recieverButton.grid(row=0, column=3)
 
+
     def showParametersPopup(self, clickedButton):
         """
         Show Toplevel popup window to set parametrs.
         """
         # Disable the other buttons when a popup is open
-        self.disableAllButtons()
+        self.disableButtons()
 
         # Open a new popup
         if clickedButton == self.sourceButton:
@@ -238,20 +244,19 @@ class Gui:
         else: raise Exception("Unexpected error")
 
         
-
-    def disableAllButtons(self):
-        frames = [self.schemeFrame, self.optionsFrame, self.plotsFrame, self.plotsTxFrame, self.plotsRxFrame]
-        for frame in frames:
+    def disableButtons(self):
+        for frame in self.buttonFrames:
             for button in frame.winfo_children():
                 if isinstance(button, tk.Button):
                     button.config(state="disabled")
 
-    def enableAllButtons(self):
-        frames = [self.schemeFrame, self.optionsFrame, self.plotsFrame, self.plotsTxFrame, self.plotsRxFrame]
-        for frame in frames:
+
+    def enableButtons(self):
+        for frame in self.buttonFrames:
             for button in frame.winfo_children():
                 if isinstance(button, tk.Button):
                     button.config(state="normal")
+
 
     def getParameters(self, parameters: dict, buttonType: str):
         """
@@ -277,6 +282,7 @@ class Gui:
             self.amplifierParameters = parameters
         else: raise Exception("Unexpected error")
 
+
     def checkSimulationStart(self) -> bool:
         """
         Checks if all needed parameters are set
@@ -299,11 +305,11 @@ class Gui:
             return False
         else: return True
 
+
     def modulationFormatChange(self, event):
         """
         Change modulation order options when modulation format is changed
         """
-
         # Setting order options for selected modulation format
         if self.mFormatComboBox.get() == "OOK":
             orderOptions = ["2"]
@@ -327,11 +333,11 @@ class Gui:
         self.mOrderCombobox.config(values=orderOptions)
         self.mOrderCombobox.set(orderOptions[0])
 
+
     def updateGeneralParameters(self):
         """
         Update general parameters with values from editable fields.
         """
-
         self.generalParameters.update({"Format": self.mFormatComboBox.get().lower(), "Order": int(self.mOrderCombobox.get())})
 
         # OOK is created same as 2 order PAM
@@ -399,11 +405,13 @@ class Gui:
         if type in self.plots:
             plot = self.plots.get(type)
             self.displayPlot(plot, title)
+
         # Graph will be shown for the first time
         else:
             plot = getPlot(type, title,  self.simulationResults, self.generalParameters)
             self.displayPlot(plot, title)
             self.plots.update({type:plot})
+
 
     def displayPlot(self, plot, title: str):
         """
@@ -418,6 +426,7 @@ class Gui:
         canvas = FigureCanvasTkAgg(plot[0], master=popupGraph)
         canvas.draw()
         canvas.get_tk_widget().pack(side="top", fill="both", expand=1)
+
 
     def closeGraphsWindows(self):
         """

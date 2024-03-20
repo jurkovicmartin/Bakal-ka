@@ -15,10 +15,8 @@ def idealLaserModel(param) -> np.array:
     -----
     param: parameters of laser
     """
-
     P = getattr(param, "P", 10)  # Laser power in dBm
     Ns = getattr(param, "Ns", 1000)  # Number of samples of the signal
-
 
     # Return optical signal
     return np.full(Ns, np.sqrt(dBm2W(P)))

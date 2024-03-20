@@ -5,7 +5,7 @@ from tkinter import messagebox
     
 def convertNumber(input: str) -> float:
     """
-    Converts string to float value. Also checks the value.
+    Converts string to float value. Returns preset values for special cases.
 
     Returns
     ----
@@ -27,6 +27,7 @@ def convertNumber(input: str) -> float:
         else: return -2
     else: return -3
     
+
 def checkParameter(parameterName: str, parameterValue: str, parentWindow) -> float | None:
         """
         Checks if the parameters has valid values and coverts it to float.
@@ -39,11 +40,9 @@ def checkParameter(parameterName: str, parameterValue: str, parentWindow) -> flo
         -----
         converted value: None if parameter is not ok
         """
-
         # Parameters that can be 0
         zeroParameters = ["RIN", "Attenuation", "Dispersion", "Noise"]
 
-        # Check length of fiber
         value = convertNumber(parameterValue)
 
         if value == 0 and parameterName in zeroParameters:
