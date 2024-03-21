@@ -77,18 +77,26 @@ class ParametersWindow:
             self.rinEntry = tk.Entry(self.popup)
             self.rinEntry.grid(row=4, column=1)
 
-            # Default parameters values
-            if self.defaultParameters is not None:
-                self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
-                self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
-                self.linewidthEntry.insert(0, self.defaultParameters.get("Linewidth"))
-                self.rinEntry.insert(0, str(self.defaultParameters.get("RIN")))
-
             # Ideal parameters checkbutton
             self.sourceCheckVar = tk.BooleanVar()
             self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.sourceCheckVar, command=lambda: self.idealCheckbuttonChange("source"))
             self.idealCheckbutton.grid(row=5, column=0, columnspan=2)
 
+            # Default parameters values
+            if self.defaultParameters is not None:
+
+                if self.defaultParameters.get("Ideal"):
+                    self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
+                    self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
+                    self.linewidthEntry.insert(0, self.defaultParameters.get("Linewidth"))
+                    # Checkbutton
+                    self.idealCheckbutton.invoke() # Trigger command function
+                else:
+                    self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
+                    self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
+                    self.linewidthEntry.insert(0, self.defaultParameters.get("Linewidth"))
+                    self.rinEntry.insert(0, str(self.defaultParameters.get("RIN")))
+    
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
             self.setButton.grid(row=6, column=0, columnspan=2)
@@ -240,7 +248,13 @@ class ParametersWindow:
             # Validating parameters values
             parameters = self.validateParameters(parameters)
 
+            # Return if parameters are not valid
             if parameters is None: return
+
+            if self.sourceCheckVar.get():
+                parameters.update({"Ideal":True})
+            else:
+                parameters.update({"Ideal":False})
 
         elif self.buttonType == "modulator":
             # Showing in main gui
@@ -316,10 +330,10 @@ class ParametersWindow:
         if type == "source":
             if self.sourceCheckVar.get():
                 self.rinEntry.delete(0, tk.END)
+                self.rinEntry.insert(0, "0")
                 self.rinEntry.config(state="disabled")
             else:
                 self.rinEntry.config(state="normal")
-                self.rinEntry.insert(0, "0") 
 
         elif type == "channel":
             if self.channelCheckVar.get():
