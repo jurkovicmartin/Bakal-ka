@@ -303,16 +303,21 @@ class ParametersWindow:
 
     def idealCheckbuttonChange(self):
         """
-        Disable / Enable parameters that cause some bias
+        Change parameters to simulate ideal components
         """
         if self.type == "source":
             if self.sourceCheckVar.get():
                 self.rinEntry.delete(0, tk.END)
                 self.rinEntry.insert(0, "0")
                 self.rinEntry.config(state="disabled")
+
+                self.linewidthEntry.delete(0, tk.END)
+                self.linewidthEntry.insert(0, "1")
+                self.linewidthEntry.config(state="disabled")
             else:
                 self.rinEntry.config(state="normal")
-
+                self.linewidthEntry.config(state="normal")
+                
         elif self.type == "channel":
             if self.channelCheckVar.get():
                 self.attenuationEntry.delete(0, tk.END)
@@ -324,7 +329,6 @@ class ParametersWindow:
                 self.dispersionEntry.config(state="disabled")
             else:
                 self.attenuationEntry.config(state="normal")
-
                 self.dispersionEntry.config(state="normal")
 
         else: raise Exception("Unexpected error")
@@ -341,7 +345,6 @@ class ParametersWindow:
             if self.defaultParameters.get("Ideal"):
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
                 self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
-                self.linewidthEntry.insert(0, str(self.defaultParameters.get("Linewidth")))
                 # Change check button statr
                 self.idealCheckbutton.invoke() # Trigger command function
             else:

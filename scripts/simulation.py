@@ -17,6 +17,7 @@ from optic.utils import parameters
 import matplotlib.pyplot as plt
 
 from scripts.my_plot import eyediagram, pconst, powerSpectralDensity, signalInTime
+from scripts.my_devices import idealLaserModel
 
 def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict) -> dict:
     """
@@ -111,7 +112,10 @@ def carrierSignal(sourceParameters: dict, Fs: int, modulationSignal) -> dict:
     paramLaser.Fs = Fs  # sampling rate [samples/s]
     paramLaser.Ns = len(modulationSignal)   # number of signal samples [default: 1e3]
 
-    return {"carrierSignal":basicLaserModel(paramLaser)}
+    if sourceParameters.get("Ideal"):
+        return {"carrierSignal":idealLaserModel(paramLaser)}
+    else:
+        return {"carrierSignal":basicLaserModel(paramLaser)}
 
 def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict:
     """
