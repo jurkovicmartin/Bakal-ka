@@ -102,26 +102,24 @@ signalTx = firFilter(pulse, symbolsUp)
 
 
 
-
-
 # Define the start and end indices to plot
 start_index = 10
 end_index = 200  # Choose the end index according to your requirements
 
 # Slice both t and symbolsTx arrays
 t_slice = t[start_index:end_index]
-siginalTx_slice = signalTx[start_index:end_index]
+signalTx_slice = signalTx[start_index:end_index]
 
 # Plotting real and imaginary parts in separate subplots
 fig, axs = plt.subplots(2, 1, figsize=(8, 8))
 
 # Plot real part
-axs[0].plot(t_slice, siginalTx_slice.real, label='Real Part', linewidth=2, color='blue')
+axs[0].plot(t_slice, signalTx_slice.real, label='Real Part', linewidth=2, color='blue')
 axs[0].set_ylabel('Amplitude (a.u.)')
 axs[0].legend(loc='upper left')
 
 # Plot imaginary part
-axs[1].plot(t_slice, siginalTx_slice.imag, label='Imaginary Part', linewidth=2, color='red')
+axs[1].plot(t_slice, signalTx_slice.imag, label='Imaginary Part', linewidth=2, color='red')
 axs[1].set_ylabel('Amplitude (a.u.)')
 axs[1].set_xlabel('Time (s)')  # Adjust the unit based on your data
 axs[1].legend(loc='upper left')
@@ -138,6 +136,16 @@ plt.suptitle("symbolsTx (Real and Imaginary Parts)")
 # axs.set_xlim(min(t),max(t))
 # axs.legend(loc='upper left')
 # axs.set_title("signalTx")
+
+
+modul = np.sqrt(signalTx_slice.real**2 + signalTx_slice.imag**2)
+
+fig, axs = plt.subplots(figsize=(8,4))
+axs.plot(t_slice, modul, label="Module show", linewidth=2, color="blue")
+axs.set_ylabel("Module")
+axs.set_xlabel("Time")
+axs.legend(loc="upper left")
+
 plt.show()
 
 #return {"bitsTx":bitsTx, "symbolsTx":symbolsTx, "modulationSignal":signalTx}
