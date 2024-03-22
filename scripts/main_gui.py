@@ -78,9 +78,13 @@ class Gui:
         self.mOrderCombobox.set("2")
         self.mOrderCombobox.grid(row=1, column=2)
 
-        # Simulate button to start simulation
+        # Start simulation
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.startSimulation)
         self.simulateButton.pack()
+
+        # Quit
+        self.quitButton = tk.Button(self.optionsFrame, text="Quit", command=self.terminateApp)
+        self.quitButton.pack()
 
         ### OUTPUTS TAB
 
@@ -156,7 +160,7 @@ class Gui:
         ### VARIABLES
         
         # Testing values
-        self.sourceParameters = {"Power":10, "Frequency":193100000000000, "Linewidth":1000, "RIN":0}
+        self.sourceParameters = {"Power":10, "Frequency":193.1, "Linewidth":1000, "RIN":0}
         self.modulatorParameters = {"Type":"MZM"}
         self.channelParameters = {"Length":20, "Attenuation":0.2, "Dispersion":16}
         self.recieverParameters = {"Type":"Photodiode"}
@@ -185,12 +189,22 @@ class Gui:
 
 
     ### METHODS
+    
+    def terminateApp(self):
+        """
+        Terminate the app. Closes main window and all other opened windows.
+        """
+        # Toplevels windows (graphs)
+        self.closeGraphsWindows()
+        # Main window
+        self.root.destroy()
 
     def startSimulation(self):
         """
         Start of simulation.
         Main function button.
         """
+        # Not all parameters provided
         if not self.checkSimulationStart(): return
 
         self.updateGeneralParameters()

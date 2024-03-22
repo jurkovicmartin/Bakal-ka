@@ -36,7 +36,7 @@ def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameter
     # Not returning values
     Fs = generalParameters.get("Fs")
     Rs = generalParameters.get("Rs")
-    frequency = sourceParameters.get("Frequency")
+    frequency = sourceParameters.get("Frequency")*10**12 # Manage units (THz -> Hz)
 
     # Output dictionary
     simulationResults = {}
@@ -154,7 +154,7 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
     -----
     Fs: sampling frequency
 
-    frequency: central frequency of optical signal
+    frequency: central frequency of optical signal [Hz]
 
     Returns
     -----
@@ -166,7 +166,7 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
     paramCh.L = fiberParameters.get("Length")         # total link distance [km]
     paramCh.α = fiberParameters.get("Attenuation")        # fiber loss parameter [dB/km]
     paramCh.D = fiberParameters.get("Dispersion")         # fiber dispersion parameter [ps/nm/km]
-    paramCh.Fc = frequency  # central optical frequency [Hz]
+    paramCh.Fc = frequency # central optical frequency [Hz]
     paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
 
     recieverSignal = linearFiberChannel(modulatedSignal, paramCh)

@@ -24,7 +24,7 @@ class ParametersWindow:
         """
         self.parentGui = parentGui
         self.parentButton = parentButton
-        self.buttonType = buttonType
+        self.type = buttonType
         self.callback = callback
         self.defaultParameters = defaultParameters
         self.popup = self.popupGui()
@@ -45,7 +45,7 @@ class ParametersWindow:
         self.popup = tk.Toplevel()
         self.popup.geometry("400x400")
 
-        if self.buttonType == "source":
+        if self.type == "source":
             self.popup.title("Parameters of optical source")
 
             self.titleLabel = tk.Label(self.popup, text="Parameters of optical source")
@@ -60,7 +60,7 @@ class ParametersWindow:
             self.powerEntry.grid(row=1, column=1)
 
             # Frequency
-            self.frequencyLabel = tk.Label(self.popup, text="Laser frequency [Hz]")
+            self.frequencyLabel = tk.Label(self.popup, text="Laser frequency [THz]")
             self.frequencyLabel.grid(row=2, column=0)
             self.frequencyEntry = tk.Entry(self.popup)
             self.frequencyEntry.grid(row=2, column=1)
@@ -79,31 +79,18 @@ class ParametersWindow:
 
             # Ideal parameters checkbutton
             self.sourceCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.sourceCheckVar, command=lambda: self.idealCheckbuttonChange("source"))
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.sourceCheckVar, command=self.idealCheckbuttonChange)
             self.idealCheckbutton.grid(row=5, column=0, columnspan=2)
-
-            # Default parameters values
-            if self.defaultParameters is not None:
-
-                if self.defaultParameters.get("Ideal"):
-                    self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
-                    self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
-                    self.linewidthEntry.insert(0, self.defaultParameters.get("Linewidth"))
-                    # Checkbutton
-                    self.idealCheckbutton.invoke() # Trigger command function
-                else:
-                    self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
-                    self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
-                    self.linewidthEntry.insert(0, self.defaultParameters.get("Linewidth"))
-                    self.rinEntry.insert(0, str(self.defaultParameters.get("RIN")))
     
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
             self.setButton.grid(row=6, column=0, columnspan=2)
 
+            self.setDefaultParameters()
+
             return self.popup
         
-        elif self.buttonType == "modulator":
+        elif self.type == "modulator":
             self.popup.title("Parameters of modulator")
 
             self.titleLabel = tk.Label(self.popup, text="Parameters of modulator")
@@ -118,17 +105,15 @@ class ParametersWindow:
             self.modulatorCombobox.set("PM")
             self.modulatorCombobox.grid(row=1, column=1)
 
-            # Default parameters values
-            if self.defaultParameters is not None:
-                self.modulatorCombobox.set(self.defaultParameters.get("Type"))
-
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
             self.setButton.grid(row=2, column=0, columnspan=2)
 
+            self.setDefaultParameters()
+
             return self.popup
         
-        elif self.buttonType == "channel":
+        elif self.type == "channel":
             self.popup.title("Parameters of fiber channel")
 
             self.titleLabel = tk.Label(self.popup, text="Parameters of fiber channel")
@@ -154,24 +139,20 @@ class ParametersWindow:
             self.dispersionEntry = tk.Entry(self.popup)
             self.dispersionEntry.grid(row=3, column=1)
 
-            # Default parameters values
-            if self.defaultParameters is not None:
-                self.lengthEntry.insert(0, str(self.defaultParameters.get("Length")))
-                self.attenuationEntry.insert(0, str(self.defaultParameters.get("Attenuation")))
-                self.dispersionEntry.insert(0, str(self.defaultParameters.get("Dispersion")))
-
             # Ideal parameters checkbutton
             self.channelCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.channelCheckVar, command=lambda: self.idealCheckbuttonChange("channel"))
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
             self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
 
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
             self.setButton.grid(row=5, column=0, columnspan=2)
 
+            self.setDefaultParameters()
+
             return self.popup
         
-        elif self.buttonType == "reciever":
+        elif self.type == "reciever":
             self.popup.title("Parameters of reciever")
 
             self.titleLabel = tk.Label(self.popup, text="Parameters of reciever")
@@ -186,17 +167,15 @@ class ParametersWindow:
             self.recieverCombobox.set("Photodiode")
             self.recieverCombobox.grid(row=1, column=1)
 
-            # Default parameters values
-            if self.defaultParameters is not None:
-                self.recieverCombobox.set(self.defaultParameters.get("Type"))
-
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
             self.setButton.grid(row=2, column=0, columnspan=2)
 
+            self.setDefaultParameters()
+
             return self.popup
         
-        elif self.buttonType == "amplifier":
+        elif self.type == "amplifier":
             self.popup.title("Parameters of amplifier")
 
             self.titleLabel = tk.Label(self.popup, text="Parameters of amplifier")
@@ -216,14 +195,11 @@ class ParametersWindow:
             self.noiseEntry = tk.Entry(self.popup)
             self.noiseEntry.grid(row=2, column=1)
 
-            # Default parameters values
-            if self.defaultParameters is not None:
-                self.gainEntry.insert(0, str(self.defaultParameters.get("Gain")))
-                self.noiseEntry.insert(0, str(self.defaultParameters.get("Noise")))
-
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
             self.setButton.grid(row=3, column=0, columnspan=2)
+
+            self.setDefaultParameters()
 
             return self.popup
         
@@ -240,9 +216,9 @@ class ParametersWindow:
         """
         Set inserted parameters.
         """
-        if self.buttonType == "source":
+        if self.type == "source":
             # Showing in main gui
-            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} W\nFrequency: {self.frequencyEntry.get()} Hz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
+            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} W\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
             # Getting initial values
             parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "RIN":self.rinEntry.get()}
             # Validating parameters values
@@ -256,13 +232,13 @@ class ParametersWindow:
             else:
                 parameters.update({"Ideal":False})
 
-        elif self.buttonType == "modulator":
+        elif self.type == "modulator":
             # Showing in main gui
             parametersString = f"{self.modulatorCombobox.get()}"
             # Getting initial values
             parameters = {"Type":self.modulatorCombobox.get()}
 
-        elif self.buttonType == "channel":
+        elif self.type == "channel":
             # Showing in main gui
             parametersString = f"Fiber channel\n\nLength: {self.lengthEntry.get()} km\nAttenuation: {self.attenuationEntry.get()} dB/km\nDispersion: {self.dispersionEntry.get()}"
             # Getting initial values
@@ -270,15 +246,21 @@ class ParametersWindow:
             # Validating parameters values
             parameters = self.validateParameters(parameters)
 
+            # Return if parameters are not valid
             if parameters is None: return
 
-        elif self.buttonType == "reciever":
+            if self.channelCheckVar.get():
+                parameters.update({"Ideal":True})
+            else:
+                parameters.update({"Ideal":False})
+
+        elif self.type == "reciever":
             # Showing in main gui
             parametersString = f"{self.recieverCombobox.get()}"
             # Getting initial values
             parameters = {"Type":self.recieverCombobox.get()}
         
-        elif self.buttonType == "amplifier":
+        elif self.type == "amplifier":
             # Showing in main gui
             parametersString = f"Pre-amplifier\n\nGain: {self.gainEntry.get()}\nNoise: {self.noiseEntry.get()}"
             # Getting initial values
@@ -288,11 +270,11 @@ class ParametersWindow:
 
             if parameters is None: return
         
-        else: raise Exception("Unexpected if statement")
+        else: raise Exception("Unexpected error")
 
         self.parentButton.config(text=parametersString)
         # Return parameters
-        self.callback(parameters, self.buttonType)
+        self.callback(parameters, self.type)
 
         self.closePopup()
 
@@ -309,7 +291,7 @@ class ParametersWindow:
         -----
         parameters: values are floats
 
-            None if some parameter is not ok
+            None if some parameters are not ok
         """
         for key, value in parameters.items():
             checked = checkParameter(key, value, self.popup)
@@ -319,15 +301,11 @@ class ParametersWindow:
         return parameters
     
 
-    def idealCheckbuttonChange(self, type: str):
+    def idealCheckbuttonChange(self):
         """
         Disable / Enable parameters that cause some bias
-
-        Parameters
-        -----
-        type: specify which parameters are being set
         """
-        if type == "source":
+        if self.type == "source":
             if self.sourceCheckVar.get():
                 self.rinEntry.delete(0, tk.END)
                 self.rinEntry.insert(0, "0")
@@ -335,11 +313,73 @@ class ParametersWindow:
             else:
                 self.rinEntry.config(state="normal")
 
-        elif type == "channel":
+        elif self.type == "channel":
             if self.channelCheckVar.get():
                 self.attenuationEntry.delete(0, tk.END)
+                self.attenuationEntry.insert(0, "0")
                 self.attenuationEntry.config(state="disabled")
+
+                self.dispersionEntry.delete(0, tk.END)
+                self.dispersionEntry.insert(0, "0")
+                self.dispersionEntry.config(state="disabled")
             else:
                 self.attenuationEntry.config(state="normal")
-                self.attenuationEntry.insert(0, "0")
-                
+
+                self.dispersionEntry.config(state="normal")
+
+        else: raise Exception("Unexpected error")
+
+        
+    def setDefaultParameters(self):
+        """
+        Set default parameters to the entries. If there are any.
+        """
+        if self.type == "source":
+            # No default parameters
+            if self.defaultParameters is None: return
+
+            if self.defaultParameters.get("Ideal"):
+                self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
+                self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
+                self.linewidthEntry.insert(0, str(self.defaultParameters.get("Linewidth")))
+                # Change check button statr
+                self.idealCheckbutton.invoke() # Trigger command function
+            else:
+                self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
+                self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
+                self.linewidthEntry.insert(0, str(self.defaultParameters.get("Linewidth")))
+                self.rinEntry.insert(0, str(self.defaultParameters.get("RIN")))
+        
+        elif self.type == "modulator":
+            # No default parameters
+            if self.defaultParameters is None: return
+            
+            self.modulatorCombobox.set(self.defaultParameters.get("Type"))
+
+        elif self.type == "channel":
+            # No default parameters
+            if self.defaultParameters is None: return
+
+            if self.defaultParameters.get("Ideal"):
+                self.lengthEntry.insert(0, str(self.defaultParameters.get("Length")))
+                # Change check button statr
+                self.idealCheckbutton.invoke() # Trigger command function
+            else:
+                self.lengthEntry.insert(0, str(self.defaultParameters.get("Length")))
+                self.attenuationEntry.insert(0, str(self.defaultParameters.get("Attenuation")))
+                self.dispersionEntry.insert(0, str(self.defaultParameters.get("Dispersion")))
+
+        elif self.type == "reciever":
+            # No default parameters
+            if self.defaultParameters is None: return
+
+            self.recieverCombobox.set(self.defaultParameters.get("Type"))
+
+        elif self.type == "amplifier":
+            # No default parameters
+            if self.defaultParameters is None: return
+
+            self.gainEntry.insert(0, str(self.defaultParameters.get("Gain")))
+            self.noiseEntry.insert(0, str(self.defaultParameters.get("Noise")))        
+        
+        else: raise Exception("Unexpected error")
