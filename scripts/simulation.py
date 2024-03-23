@@ -2,7 +2,7 @@
 
 import numpy as np
 from commpy.utilities  import upsample
-from optic.models.devices import mzm, photodiode, edfa, basicLaserModel, iqm, coherentReceiver, pm
+from optic.models.devices import mzm, photodiode, basicLaserModel, iqm, coherentReceiver, pm
 from optic.models.channels import linearFiberChannel
 from optic.comm.modulation import modulateGray, GrayMapping, demodulateGray
 from optic.dsp.core import pulseShape, pnorm, signal_power
@@ -17,7 +17,7 @@ from optic.utils import parameters
 import matplotlib.pyplot as plt
 
 from scripts.my_plot import eyediagram, pconst, powerSpectralDensity, signalInTime
-from scripts.my_devices import idealLaserModel
+from scripts.my_devices import idealLaserModel, edfa
 
 def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict) -> dict:
     """
@@ -164,8 +164,11 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
     -----
     recieverSignal: signal at the end of fiber
     """
-
-    # linear optical channel
+    # Directly pass modulated signal without changes
+    if fiberParameters.get("Ideal"):
+        return {"recieverSignal":modulatedSignal}
+    
+    # Linear optical channel
     paramCh = parameters()
     paramCh.L = fiberParameters.get("Length")         # total link distance [km]
     paramCh.α = fiberParameters.get("Attenuation")        # fiber loss parameter [dB/km]
@@ -184,7 +187,7 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
         paramEDFA.Fc = frequency
         paramEDFA.Fs = Fs
 
-        recieverSignal = edfa(recieverSignal, paramEDFA)
+        recieverSignal = edfa(recieverSignal, amplifierParameters.get("Ideal"), paramEDFA)
 
     return {"recieverSignal":recieverSignal}
 

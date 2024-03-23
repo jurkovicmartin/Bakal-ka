@@ -141,7 +141,7 @@ class ParametersWindow:
 
             # Ideal parameters checkbutton
             self.channelCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters\nNote that ideal channel doesnt include pre-amplifier!", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
             self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
 
             # Set button
@@ -167,9 +167,14 @@ class ParametersWindow:
             self.recieverCombobox.set("Photodiode")
             self.recieverCombobox.grid(row=1, column=1)
 
+            # Ideal parameters checkbutton
+            self.recieverCheckVar = tk.BooleanVar()
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange)
+            self.idealCheckbutton.grid(row=2, column=0, columnspan=2)
+
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=2, column=0, columnspan=2)
+            self.setButton.grid(row=3, column=0, columnspan=2)
 
             self.setDefaultParameters()
 
@@ -184,20 +189,25 @@ class ParametersWindow:
             # Setting parameters
 
             # Gain
-            self.gainLabel = tk.Label(self.popup, text="Gain of amplifier")
+            self.gainLabel = tk.Label(self.popup, text="Gain [dB]")
             self.gainLabel.grid(row=1, column=0)
             self.gainEntry = tk.Entry(self.popup)
             self.gainEntry.grid(row=1, column=1)
 
             # Noise
-            self.noiseLabel = tk.Label(self.popup, text="Noise of amplifier")
+            self.noiseLabel = tk.Label(self.popup, text="Noise")
             self.noiseLabel.grid(row=2, column=0)
             self.noiseEntry = tk.Entry(self.popup)
             self.noiseEntry.grid(row=2, column=1)
 
+            # Ideal parameters checkbutton
+            self.amplifierCheckVar = tk.BooleanVar()
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.amplifierCheckVar, command=self.idealCheckbuttonChange)
+            self.idealCheckbutton.grid(row=3, column=0, columnspan=2)
+
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=3, column=0, columnspan=2)
+            self.setButton.grid(row=4, column=0, columnspan=2)
 
             self.setDefaultParameters()
 
@@ -218,7 +228,7 @@ class ParametersWindow:
         """
         if self.type == "source":
             # Showing in main gui
-            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} W\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
+            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
             # Getting initial values
             parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "RIN":self.rinEntry.get()}
             # Validating parameters values
@@ -227,10 +237,7 @@ class ParametersWindow:
             # Return if parameters are not valid
             if parameters is None: return
 
-            if self.sourceCheckVar.get():
-                parameters.update({"Ideal":True})
-            else:
-                parameters.update({"Ideal":False})
+            parameters.update(self.setIdealParameter(parameters))
 
         elif self.type == "modulator":
             # Showing in main gui
@@ -249,32 +256,36 @@ class ParametersWindow:
             # Return if parameters are not valid
             if parameters is None: return
 
-            if self.channelCheckVar.get():
-                parameters.update({"Ideal":True})
-            else:
-                parameters.update({"Ideal":False})
+            parameters.update(self.setIdealParameter(parameters))
 
         elif self.type == "reciever":
             # Showing in main gui
             parametersString = f"{self.recieverCombobox.get()}"
             # Getting initial values
             parameters = {"Type":self.recieverCombobox.get()}
+
+            parameters.update(self.setIdealParameter(parameters))
         
         elif self.type == "amplifier":
             # Showing in main gui
-            parametersString = f"Pre-amplifier\n\nGain: {self.gainEntry.get()}\nNoise: {self.noiseEntry.get()}"
+            parametersString = f"Pre-amplifier\n\nGain: {self.gainEntry.get()} dB\nNoise: {self.noiseEntry.get()}"
             # Getting initial values
             parameters = {"Gain":self.gainEntry.get(), "Noise":self.noiseEntry.get()}
             # Validating parameters values
             parameters = self.validateParameters(parameters)
 
             if parameters is None: return
+
+            parameters.update(self.setIdealParameter(parameters))
         
         else: raise Exception("Unexpected error")
 
         self.parentButton.config(text=parametersString)
         # Return parameters
         self.callback(parameters, self.type)
+        # Check for combination of ideal channel + pre-amplifier
+        # Only for channel parameters setting, is here because the Ideal state is passed only line above
+        self.parentGui.attentionCheck()
 
         self.closePopup()
 
@@ -327,9 +338,22 @@ class ParametersWindow:
                 self.dispersionEntry.delete(0, tk.END)
                 self.dispersionEntry.insert(0, "0")
                 self.dispersionEntry.config(state="disabled")
+
             else:
                 self.attenuationEntry.config(state="normal")
                 self.dispersionEntry.config(state="normal")
+
+        elif self.type == "reciever":
+            pass
+
+        elif self.type == "amplifier":
+            if self.amplifierCheckVar.get():
+                self.noiseEntry.delete(0, tk.END)
+                self.noiseEntry.insert(0, "0")
+                self.noiseEntry.config(state="disabled")
+            
+            else:
+                self.noiseEntry.config(state="normal")
 
         else: raise Exception("Unexpected error")
 
@@ -345,7 +369,7 @@ class ParametersWindow:
             if self.defaultParameters.get("Ideal"):
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
                 self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
-                # Change check button statr
+                # Change check button state
                 self.idealCheckbutton.invoke() # Trigger command function
             else:
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
@@ -365,7 +389,7 @@ class ParametersWindow:
 
             if self.defaultParameters.get("Ideal"):
                 self.lengthEntry.insert(0, str(self.defaultParameters.get("Length")))
-                # Change check button statr
+                # Change check button state
                 self.idealCheckbutton.invoke() # Trigger command function
             else:
                 self.lengthEntry.insert(0, str(self.defaultParameters.get("Length")))
@@ -376,13 +400,60 @@ class ParametersWindow:
             # No default parameters
             if self.defaultParameters is None: return
 
-            self.recieverCombobox.set(self.defaultParameters.get("Type"))
+            if self.defaultParameters.get("Ideal"):
+                self.recieverCombobox.set(self.defaultParameters.get("Type"))
+                # Change check button state
+                self.idealCheckbutton.invoke() # Trigger command function
+            else:
+                self.recieverCombobox.set(self.defaultParameters.get("Type"))
 
         elif self.type == "amplifier":
             # No default parameters
             if self.defaultParameters is None: return
 
-            self.gainEntry.insert(0, str(self.defaultParameters.get("Gain")))
-            self.noiseEntry.insert(0, str(self.defaultParameters.get("Noise")))        
-        
+            if self.defaultParameters.get("Ideal"):
+                self.gainEntry.insert(0, str(self.defaultParameters.get("Gain")))
+                # Change check button state
+                self.idealCheckbutton.invoke() # Trigger command function
+            
+            else:
+                self.gainEntry.insert(0, str(self.defaultParameters.get("Gain")))
+                self.noiseEntry.insert(0, str(self.defaultParameters.get("Noise")))
+                    
         else: raise Exception("Unexpected error")
+
+
+    def setIdealParameter(self, parameters: dict) -> dict:
+        """
+        Set ideal parameter to chain blocks parameters.
+
+        Returns
+        ----
+        dictionary with "Ideal" key, value pair
+        """
+        if self.type == "source":
+            # Maunaly set ideal parameters
+            if parameters.get("Linewidth") == 1 and parameters.get("RIN") == 0:
+                return {"Ideal":True}
+            # Set value based on the ideal checkbox
+            else:
+                return {"Ideal":self.sourceCheckVar.get()}
+        
+        elif self.type == "channel":
+            # Maunaly set ideal parameters
+            if parameters.get("Attenuation") == 0 and parameters.get("Dispersion") == 0:
+                return{"Ideal":True}
+            # Set value based on the ideal checkbox
+            else:
+                return{"Ideal":self.channelCheckVar.get()}
+            
+        elif self.type == "reciever":
+            return {"Ideal":self.recieverCheckVar.get()}
+
+        elif self.type == "amplifier":
+            # Maunaly set ideal parameters
+            if parameters.get("Noise") == 0:
+                return {"Ideal":True}
+            # Set value based on the ideal checkbox
+            else:
+                return {"Ideal":self.amplifierCheckVar.get()}

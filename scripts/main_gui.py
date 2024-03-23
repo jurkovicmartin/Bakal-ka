@@ -78,6 +78,10 @@ class Gui:
         self.mOrderCombobox.set("2")
         self.mOrderCombobox.grid(row=1, column=2)
 
+        # Attention label
+        self.attentionLabel = tk.Label(self.optionsFrame, text="")
+        self.attentionLabel.pack()
+
         # Start simulation
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.startSimulation)
         self.simulateButton.pack()
@@ -231,10 +235,14 @@ class Gui:
             # Show amplifier button
             self.amplifierButton.grid(row=0, column=3)
             self.recieverButton.grid(row=0, column=4)
+            
+            self.attentionCheck()
         else:
             # Remove amplifier button
             self.amplifierButton.grid_forget()
             self.recieverButton.grid(row=0, column=3)
+
+            self.attentionCheck()
 
 
     def showParametersPopup(self, clickedButton):
@@ -259,6 +267,9 @@ class Gui:
 
         
     def disableButtons(self):
+        """
+        Disable buttons when window to set parameters is opened
+        """
         for frame in self.buttonFrames:
             for button in frame.winfo_children():
                 if isinstance(button, tk.Button):
@@ -266,6 +277,9 @@ class Gui:
 
 
     def enableButtons(self):
+        """
+        Enable buttons when parameters have been set
+        """
         for frame in self.buttonFrames:
             for button in frame.winfo_children():
                 if isinstance(button, tk.Button):
@@ -449,3 +463,13 @@ class Gui:
         for window in self.root.winfo_children():
             if isinstance(window, tk.Toplevel):
                 window.destroy()
+
+    
+    def attentionCheck(self):
+        """
+        Checks for attention for combination of ideal channel and pre-amplifier. Also updates the attention label.
+        """
+        if self.channelParameters.get("Ideal") and self.amplifierCheckVar.get():
+            self.attentionLabel.config(text="Attention, when using ideal channel the pre-amplifier will be ignored!")
+        else:
+            self.attentionLabel.config(text="")

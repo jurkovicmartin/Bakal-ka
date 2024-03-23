@@ -1,11 +1,11 @@
 ## Notes
 - include parameters for modulators and recievers
-- EDFA noise minimum 3 dB
 - image of communication chain above the buttons
 - signal_power warning (divide by zero)
-- fix constellations (kinda)
+- fix constellations (kinda fixed)
 - parameters limits
-- include ideal source and other ideal blocks
-- load, save and work with ideal variable
-- displaying signals in time (display modul)
+- Finish remainyning ideal blocks
+- displaying signals in time (display modul)(not better)
 - WDM
+- finish units
+- look at whole communication
