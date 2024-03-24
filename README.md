@@ -1,11 +1,17 @@
 ## Notes
+
+# Include
 - include parameters for modulators and recievers
 - image of communication chain above the buttons
-- signal_power warning (divide by zero)
-- fix constellations (kinda fixed)
 - parameters limits
 - Finish remainyning ideal blocks
-- displaying signals in time (display modul)(not better)
-- WDM
 - finish units
+
+# Debug
+- signal_power warning (divide by zero)
+- constellations (kinda fixed)
+- displaying signals in time (display modul)(not better)
 - look at whole communication
+
+# Big
+- WDM
