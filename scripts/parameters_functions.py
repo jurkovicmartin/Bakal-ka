@@ -3,29 +3,29 @@
 import re
 from tkinter import messagebox
     
-def convertNumber(input: str) -> float:
+def convertNumber(input: str) -> tuple[float, bool]:
     """
-    Converts string to float value. Returns preset values for special cases.
+    Converts string to float value. Bool value indicates empty input string.
 
     Returns
+
+    (float, False) = converted float number
+    
+    (None, False) = input string has character in it
+
+    (None, True) = input string is empty
     ----
-    converted number: float (also returns 0)
-
-        -1 = input is negative number
-
-        -2 = input is not a number
-
-        -3 = input is an empty string
     """
     if input:
         # Regular expression to match valid numbers, including negative and decimal numbers
         number_pattern = re.compile(r'^[-+]?\d*\.?\d+$')
 
         if number_pattern.match(input):
-            out = float(input)
-            return -1 if out < 0 else out
-        else: return -2
-    else: return -3
+            return float(input), False
+        else:
+            return None, False
+    else:
+        return None, True
     
 
 def checkParameter(parameterName: str, parameterValue: str, parentWindow) -> float | None:
@@ -41,23 +41,28 @@ def checkParameter(parameterName: str, parameterValue: str, parentWindow) -> flo
         converted value: None if parameter is not ok
         """
         # Parameters that can be 0
-        zeroParameters = ["RIN", "Attenuation", "Dispersion", "Noise"]
+        zeroParameters = ["Power", "RIN", "Attenuation", "Dispersion", "Noise"]
 
-        value = convertNumber(parameterValue)
+        # Parameters that can be negative
+        negativeParameters = ["Power"]
 
-        if value == 0 and parameterName in zeroParameters:
-            return 0
+        value, isEmpty = convertNumber(parameterValue)
+
+        if value is None and isEmpty is False:
+            messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be a number!", parent=parentWindow)
+            return None
+        elif value is None and isEmpty is True:
+            messagebox.showerror(f"{parameterName} input error", f"You must input {parameterName}!", parent=parentWindow)
+            return None
+        elif value == 0 and parameterName in zeroParameters:
+            return value
         elif value == 0:
             messagebox.showerror(f"{parameterName} input error", f"Zero is not valid {parameterName}!", parent=parentWindow)
             return None
-        elif value == -1:
+        elif value < 0 and parameterName in negativeParameters:
+            return value
+        elif value < 0:
             messagebox.showerror(f"{parameterName} input error", f"{parameterName} cannot be negative!", parent=parentWindow)
-            return None
-        elif value == -2:
-            messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be a number!", parent=parentWindow)
-            return None
-        elif value == -3:
-            messagebox.showerror(f"{parameterName} input error", f"You must input {parameterName}!", parent=parentWindow)
             return None
         else:
             return value
