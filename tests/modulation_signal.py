@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 SpS = 8 # Samples per symbol
 modulationOrder = 4
-modulationFormat = "qam"
+modulationFormat = "psk"
 
 # generate pseudo-random bit sequence
 bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))

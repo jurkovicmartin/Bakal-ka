@@ -54,13 +54,13 @@ class ParametersWindow:
             # Setting parameters
 
             # Power
-            self.lengthLabel = tk.Label(self.popup, text="Power of laser [dBm]")
+            self.lengthLabel = tk.Label(self.popup, text="Power [dBm]")
             self.lengthLabel.grid(row=1, column=0)
             self.powerEntry = tk.Entry(self.popup)
             self.powerEntry.grid(row=1, column=1)
 
             # Frequency
-            self.frequencyLabel = tk.Label(self.popup, text="Laser frequency [THz]")
+            self.frequencyLabel = tk.Label(self.popup, text="Central frequency [THz]")
             self.frequencyLabel.grid(row=2, column=0)
             self.frequencyEntry = tk.Entry(self.popup)
             self.frequencyEntry.grid(row=2, column=1)
@@ -122,19 +122,19 @@ class ParametersWindow:
             # Setting parameters
 
             # Length
-            self.lengthLabel = tk.Label(self.popup, text="Length of fiber [km]")
+            self.lengthLabel = tk.Label(self.popup, text="Length [km]")
             self.lengthLabel.grid(row=1, column=0)
             self.lengthEntry = tk.Entry(self.popup)
             self.lengthEntry.grid(row=1, column=1)
 
             # Attenuation
-            self.attenuatinLabel = tk.Label(self.popup, text="Attenuation of fiber [dB/km]")
+            self.attenuatinLabel = tk.Label(self.popup, text="Attenuation [dB/km]")
             self.attenuatinLabel.grid(row=2, column=0)
             self.attenuationEntry = tk.Entry(self.popup)
             self.attenuationEntry.grid(row=2, column=1)
 
             # Dispersion
-            self.dispersionLabel = tk.Label(self.popup, text="Dispersion of fiber")
+            self.dispersionLabel = tk.Label(self.popup, text="Chromatic dispersion [ps/nm/km]")
             self.dispersionLabel.grid(row=3, column=0)
             self.dispersionEntry = tk.Entry(self.popup)
             self.dispersionEntry.grid(row=3, column=1)
@@ -195,7 +195,7 @@ class ParametersWindow:
             self.gainEntry.grid(row=1, column=1)
 
             # Noise
-            self.noiseLabel = tk.Label(self.popup, text="Noise")
+            self.noiseLabel = tk.Label(self.popup, text="Noise figure [dB]")
             self.noiseLabel.grid(row=2, column=0)
             self.noiseEntry = tk.Entry(self.popup)
             self.noiseEntry.grid(row=2, column=1)
@@ -247,7 +247,7 @@ class ParametersWindow:
 
         elif self.type == "channel":
             # Showing in main gui
-            parametersString = f"Fiber channel\n\nLength: {self.lengthEntry.get()} km\nAttenuation: {self.attenuationEntry.get()} dB/km\nDispersion: {self.dispersionEntry.get()}"
+            parametersString = f"Fiber channel\n\nLength: {self.lengthEntry.get()} km\nAttenuation: {self.attenuationEntry.get()} dB/km\nChromatic dispersion: {self.dispersionEntry.get()} ps/nm/km"
             # Getting initial values
             parameters = {"Length":self.lengthEntry.get(), "Attenuation":self.attenuationEntry.get(), "Dispersion":self.dispersionEntry.get()}
             # Validating parameters values
@@ -268,7 +268,7 @@ class ParametersWindow:
         
         elif self.type == "amplifier":
             # Showing in main gui
-            parametersString = f"Pre-amplifier\n\nGain: {self.gainEntry.get()} dB\nNoise: {self.noiseEntry.get()}"
+            parametersString = f"Pre-amplifier\n\nGain: {self.gainEntry.get()} dB\nNoise figure: {self.noiseEntry.get()} dB"
             # Getting initial values
             parameters = {"Gain":self.gainEntry.get(), "Noise":self.noiseEntry.get()}
             # Validating parameters values
