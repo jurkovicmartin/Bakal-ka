@@ -28,9 +28,9 @@ def convertNumber(input: str) -> tuple[float, bool]:
         return None, True
     
 
-def checkParameter(parameterName: str, parameterValue: str, parentWindow) -> float | None:
+def checkParameters(parameterName: str, parameterValue: str, parentWindow) -> float | None:
         """
-        Checks if the parameters has valid values and coverts it to float.
+        Checks if the parameters has valid number values and coverts it to float.
 
         Parameters
         ----
@@ -41,7 +41,7 @@ def checkParameter(parameterName: str, parameterValue: str, parentWindow) -> flo
         converted value: None if parameter is not ok
         """
         # Parameters that can be 0
-        zeroParameters = ["Power", "RIN", "Attenuation", "Dispersion", "Noise"]
+        zeroParameters = ["Power", "RIN", "Attenuation", "Dispersion", "Noise", "Bandwidth"]
 
         # Parameters that can be negative
         negativeParameters = ["Power"]

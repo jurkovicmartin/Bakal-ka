@@ -51,8 +51,8 @@ OOK - photodiode (only with mzm, not iqm)
 # INFORMATION SIGNAL
 SpS = 8 # Samples per symbol
 Fs = 8000
-modulationOrder = 2
-modulationFormat = "psk"
+modulationOrder = 2 
+modulationFormat = "pam"
 
 # generate pseudo-random bit sequence
 bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
@@ -183,7 +183,7 @@ else:
 
 
 # MODULATION
-modulator = "pm"
+modulator = "mzm"
 
 if modulator == "mzm":
     paramMZM = parameters()
@@ -197,7 +197,7 @@ if modulator == "mzm":
     modulated = mzm(carrier, information, paramMZM)
 
 elif modulator == "pm":
-    Vpi = 5 # PM’s Vπ voltage
+    Vpi = 2 # PM’s Vπ voltage
 
     modulated = pm(carrier, information, Vpi)
 
@@ -272,7 +272,7 @@ plt.suptitle("Modulated (Magnitude and Phase)")
 
 
 # DETECTION
-detector = "pass"
+detector = "coherent"
 
 if detector == "photodiode":
     paramPD = parameters()
@@ -286,61 +286,62 @@ elif detector == "coherent":
 
     detected = coherentReceiver(modulated, carrier, paramPD)
 
-elif detector == "hybrid":
-    opcicalDetected = hybrid_2x4_90deg(modulated, carrier) # 4 signals
-
 else: pass
 
     
 
 
 # PLOT
-# t = np.linspace(0, 1, len(detected))
-# # Define the start and end indices to plot
-# start_index = 10
-# end_index = 200  # Choose the end index according to your requirements
+t = np.linspace(0, 1, len(detected))
+# Define the start and end indices to plot
+start_index = 10
+end_index = 200  # Choose the end index according to your requirements
 
-# # Slice both t and symbolsTx arrays
-# t_slice = t[start_index:end_index]
-# signal_slice = detected[start_index:end_index]
+# Slice both t and symbolsTx arrays
+t_slice = t[start_index:end_index]
+signal_slice = detected[start_index:end_index]
 
-# # Plotting real and imaginary parts in separate subplots
-# fig, axs = plt.subplots(2, 1, figsize=(8, 8))
+# Plotting real and imaginary parts in separate subplots
+fig, axs = plt.subplots(2, 1, figsize=(8, 8))
 
-# # Plot real part
-# axs[0].plot(t_slice, signal_slice.real, label='Real Part', linewidth=2, color='blue')
-# axs[0].set_ylabel('Amplitude (a.u.)')
-# axs[0].legend(loc='upper left')
+# Plot real part
+axs[0].plot(t_slice, signal_slice.real, label='Real Part', linewidth=2, color='blue')
+axs[0].set_ylabel('Amplitude (a.u.)')
+axs[0].legend(loc='upper left')
 
-# # Plot imaginary part
-# axs[1].plot(t_slice, signal_slice.imag, label='Imaginary Part', linewidth=2, color='red')
-# axs[1].set_ylabel('Amplitude (a.u.)')
-# axs[1].set_xlabel('Time (s)')  # Adjust the unit based on your data
-# axs[1].legend(loc='upper left')
+# Plot imaginary part
+axs[1].plot(t_slice, signal_slice.imag, label='Imaginary Part', linewidth=2, color='red')
+axs[1].set_ylabel('Amplitude (a.u.)')
+axs[1].set_xlabel('Time (s)')  # Adjust the unit based on your data
+axs[1].legend(loc='upper left')
 
-# plt.suptitle("Detected signal")
+plt.suptitle("Detected signal")
     
 
 # RESTORE
-# detected = detected/np.std(detected)
+detected = detected/np.std(detected)
 
-# # capture samples in the middle of signaling intervals
-# symbolsRx = detected[0::SpS]
+# capture samples in the middle of signaling intervals
+symbolsRx = detected[0::SpS]
 
-# # subtract DC level and normalize power
-# symbolsRx = symbolsRx - symbolsRx.mean()
-# symbolsRx = pnorm(symbolsRx)
+# subtract DC level and normalize power
+symbolsRx = symbolsRx - symbolsRx.mean()
+symbolsRx = pnorm(symbolsRx)
 
-# # demodulate symbols to bits with minimum Euclidean distance 
-# const = GrayMapping(modulationOrder, modulationFormat) # get constellation
-# Es = signal_power(const) # calculate the average energy per symbol of the constellation
+# demodulate symbols to bits with minimum Euclidean distance 
+const = GrayMapping(modulationOrder, modulationFormat) # get constellation
+Es = signal_power(const) # calculate the average energy per symbol of the constellation
 
-# # demodulated bits
-# bitsRx = demodulateGray(np.sqrt(Es)*symbolsRx, modulationOrder, modulationFormat)
+# demodulated bits
+bitsRx = demodulateGray(np.sqrt(Es)*symbolsRx, modulationOrder, modulationFormat)
 
 
-# ber = fastBERcalc(bitsRx, bitsTx, modulationOrder, modulationFormat)[0]
+ber = fastBERcalc(bitsRx, bitsTx, modulationOrder, modulationFormat)[0]
 
-# print(ber)
+print(f"SymbolsTx: {symbolsTx}")
+print(f"SymbolsRx: {symbolsRx}")
+print(f"Tx bits:{bitsTx}")
+print(f"Rx bits:{bitsRx}")
+print(f"BER: {ber}")
 
 plt.show()

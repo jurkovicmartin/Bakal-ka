@@ -303,7 +303,7 @@ def powerSpectralDensity(Rs: int, Fs: int, signal, title: str) -> tuple[plt.Figu
 
 def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, plt.Axes]:
     """
-    Plot optical / electrical signal in time.
+    Plot optical / electrical signal in time. Electrical is showed as real and imaginary part, optical as magnitude and phase.
 
     Parameters
     -----
@@ -322,12 +322,12 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
         axs[0].legend(loc="upper left")
 
         # Imaginary
-        axs[1].plot(t, signal[interval].imag, label="Imaginary Part", linewidth=2, color="orange")
+        axs[1].plot(t, signal[interval].imag, label="Imaginary Part", linewidth=2, color="red")
         axs[1].set_ylabel("Amplitude (a.u.)")
         axs[1].set_xlabel("Time (s)")
         axs[1].legend(loc="upper left")
 
-        plt.suptitle("Modulation signal")
+        plt.suptitle(title)
         plt.close()
 
         return fig, axs
@@ -337,20 +337,25 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
         interval = np.arange(100,250)
         t = interval*Ts/1e-9
 
+        # Calculate magnitude and phase
+        magnitude = np.abs(signal[interval])
+        phase = np.angle(signal[interval],)
+
+        # Plotting magnitude and phase in two subplots
         fig, axs = plt.subplots(2, 1, figsize=(8, 4))
 
-        # Real
-        axs[0].plot(t, signal[interval].real, label="Real Part", linewidth=2, color="blue")
-        axs[0].set_ylabel("Amplitude (a.u.)")
+        # Plot magnitude
+        axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
+        axs[0].set_ylabel("Magnitude")
         axs[0].legend(loc="upper left")
 
-        # Imaginary
-        axs[1].plot(t, signal[interval].imag, label="Imaginary Part", linewidth=2, color="orange")
-        axs[1].set_ylabel("Amplitude (a.u.)")
+        # Plot phase
+        axs[1].plot(t, phase, label="Phase", linewidth=2, color="red")
+        axs[1].set_ylabel("Phase (°)")
         axs[1].set_xlabel("Time (s)")
         axs[1].legend(loc="upper left")
 
-        plt.suptitle("Optical modulated signal signal")
+        plt.suptitle(title)
         plt.close()
 
         return fig, axs

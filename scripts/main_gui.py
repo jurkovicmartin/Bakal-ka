@@ -167,11 +167,12 @@ class Gui:
         self.sourceParameters = {"Power":10, "Frequency":193.1, "Linewidth":1000, "RIN":0}
         self.modulatorParameters = {"Type":"MZM"}
         self.channelParameters = {"Length":20, "Attenuation":0.2, "Dispersion":16}
-        self.recieverParameters = {"Type":"Photodiode"}
+        self.recieverParameters = {"Type":"Photodiode", "Ideal":True}
         self.amplifierParameters = {"Gain":4, "Noise":3}
         self.amplifierParameters = None
 
         # Parameters of scheme blocks
+        # need set values to 0 not None
         # self.sourceParameters = None
         # self.modulatorParameters = None
         # self.channelParameters = None
@@ -377,14 +378,14 @@ class Gui:
         """
         Show values from dictionary in the app.
         """
-        self.berLabel.config(text=f"BER: {outputValues.get('BER')}")
-        self.serLabel.config(text=f"SER: {outputValues.get('SER')}")
-        self.snrLabel.config(text=f"SNR: {outputValues.get('SNR')} dB")
+        self.berLabel.config(text=f"BER: {outputValues.get('BER'):.3}")
+        self.serLabel.config(text=f"SER: {outputValues.get('SER'):.3}")
+        self.snrLabel.config(text=f"SNR: {outputValues.get('SNR'):.3} dB")
 
-        self.powerTxWLabel.config(text=f"Tx power: {outputValues.get('powerTxW')} W")
-        self.powerTxdBmLabel.config(text=f"Tx power: {outputValues.get('powerTxdBm')} dBm")
-        self.powerRxWLabel.config(text=f"Rx power: {outputValues.get('powerRxW')} W")
-        self.powerRxdBmLabel.config(text=f"Tx power: {outputValues.get('powerRxdBm')} dBm")
+        self.powerTxWLabel.config(text=f"Tx power: {outputValues.get('powerTxW'):.3} W")
+        self.powerTxdBmLabel.config(text=f"Tx power: {outputValues.get('powerTxdBm'):.3} dBm")
+        self.powerRxWLabel.config(text=f"Rx power: {outputValues.get('powerRxW'):.3} W")
+        self.powerRxdBmLabel.config(text=f"Tx power: {outputValues.get('powerRxdBm'):.3} dBm")
 
 
     def showGraph(self, clickedButton):

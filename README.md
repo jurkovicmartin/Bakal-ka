@@ -5,17 +5,19 @@
 - include parameters for modulators and recievers
 - image of communication chain above the buttons
 - parameters limits
-- Finish remaining ideal blocks
+- Ideal reciever / ideal modulator
 - general parameters (Fs, ..)
 - (value of carrier power)
-- (different showing PAM real, PSK magnitude + phase, QAM real + imaginary)
-- show signal before detection (end of channel)
+- (mby try showing bits as information)
+- (eyediagram show only for some modulations)
 
 # Debug
 - signal_power warning (divide by zero)
 - constellations (kinda fixed)
-- displaying signals in time (display modul)(not better)
 - look at whole communication
+- reciever bandwidth (0)
+- Effect of laser frequency, linewidth
+- Effect of photodiode bandwidth
 
 # Big
 - WDM

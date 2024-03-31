@@ -3,7 +3,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from scripts.parameters_functions import checkParameter
+from scripts.parameters_functions import checkParameters
 
 class ParametersWindow:
     def __init__(self, parentGui, parentButton, buttonType: str, callback, defaultParameters: dict):
@@ -163,18 +163,16 @@ class ParametersWindow:
             # Type
             self.recieverLabel = tk.Label(self.popup, text="Type of reciever")
             self.recieverLabel.grid(row=1, column=0)
-            self.recieverCombobox = ttk.Combobox(self.popup, values=["Photodiode", "Coherent", "Hybrid"], state="readonly")
+            self.recieverCombobox = ttk.Combobox(self.popup, values=["Photodiode", "Coherent"], state="readonly")
             self.recieverCombobox.set("Photodiode")
             self.recieverCombobox.grid(row=1, column=1)
-
-            # Ideal parameters checkbutton
-            self.recieverCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton.grid(row=2, column=0, columnspan=2)
+            self.recieverCombobox.bind("<<ComboboxSelected>>", self.receiverChange)
+            # Other parameters
+            self.receiverChange(event=None)
 
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=3, column=0, columnspan=2)
+            self.setButton.grid(row=4, column=0, columnspan=2)
 
             self.setDefaultParameters()
 
@@ -260,9 +258,14 @@ class ParametersWindow:
 
         elif self.type == "reciever":
             # Showing in main gui
-            parametersString = f"{self.recieverCombobox.get()}"
+            parametersString = f"{self.recieverCombobox.get()}\nBandwidth: {self.bandwidthEntry.get()} Hz"
             # Getting initial values
-            parameters = {"Type":self.recieverCombobox.get()}
+            parameters = {"Type":self.recieverCombobox.get(), "Bandwidth":self.bandwidthEntry.get()}
+            # Validating parameters values
+            parameters = self.validateParameters(parameters)
+
+            # Return if parameters are not valid
+            if parameters is None: return
 
             parameters.update(self.setIdealParameter(parameters))
         
@@ -304,10 +307,27 @@ class ParametersWindow:
 
             None if some parameters are not ok
         """
-        for key, value in parameters.items():
-            checked = checkParameter(key, value, self.popup)
-            if checked is None: return None
-            else: parameters.update({key:checked})
+        # Parameters are for modulator / reciever, where is string type of the device
+        # So it would not got trough the validation (validates only numbers)
+        # The type selection is done via closed selection combobox (Has only acceptable values so no need to verify them)
+        if "Type" in parameters:
+            deviceType = parameters.pop("Type")
+
+            # Convert and validate the number values
+            for key, value in parameters.items():
+                checked = checkParameters(key, value, self.popup)
+                if checked is None: return None
+                else: parameters.update({key:checked})
+
+            # Return of the device type back to the parameters
+            parameters.update({"Type":deviceType})
+
+        else:
+            # Convert and validate the number values
+            for key, value in parameters.items():
+                checked = checkParameters(key, value, self.popup)
+                if checked is None: return None
+                else: parameters.update({key:checked})
 
         return parameters
     
@@ -344,7 +364,13 @@ class ParametersWindow:
                 self.dispersionEntry.config(state="normal")
 
         elif self.type == "reciever":
-            pass
+            if self.recieverCheckVar.get():
+                self.bandwidthEntry.delete(0, tk.END)
+                self.bandwidthEntry.insert(0, "0")
+                self.bandwidthEntry.config(state="disabled")
+
+            else:
+                self.bandwidthEntry.config(state="normal")
 
         elif self.type == "amplifier":
             if self.amplifierCheckVar.get():
@@ -406,6 +432,7 @@ class ParametersWindow:
                 self.idealCheckbutton.invoke() # Trigger command function
             else:
                 self.recieverCombobox.set(self.defaultParameters.get("Type"))
+                self.bandwidthEntry.insert(0, str(self.defaultParameters.get("Bandwidth")))
 
         elif self.type == "amplifier":
             # No default parameters
@@ -457,3 +484,36 @@ class ParametersWindow:
             # Set value based on the ideal checkbox
             else:
                 return {"Ideal":self.amplifierCheckVar.get()}
+            
+    
+    def receiverChange(self, event):
+        """
+        When reciever combobox is changed.
+        """
+        reciever = self.recieverCombobox.get()
+
+        if reciever == "Photodiode":
+            # Bandwidth
+            self.bandwidthLabel = tk.Label(self.popup, text="Bandwidth [Hz]")
+            self.bandwidthLabel.grid(row=2, column=0)
+            self.bandwidthEntry = tk.Entry(self.popup)
+            self.bandwidthEntry.grid(row=2, column=1)
+
+            # Ideal parameters checkbutton
+            self.recieverCheckVar = tk.BooleanVar()
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange)
+            self.idealCheckbutton.grid(row=3, column=0, columnspan=2)
+
+        elif reciever == "Coherent":
+            # Bandwidth
+            self.bandwidthLabel = tk.Label(self.popup, text="Bandwidth [Hz]")
+            self.bandwidthLabel.grid(row=2, column=0)
+            self.bandwidthEntry = tk.Entry(self.popup)
+            self.bandwidthEntry.grid(row=2, column=1)
+
+            # Ideal parameters checkbutton
+            self.recieverCheckVar = tk.BooleanVar()
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange)
+            self.idealCheckbutton.grid(row=3, column=0, columnspan=2)
+
+        else: raise Exception("Unexpected error")

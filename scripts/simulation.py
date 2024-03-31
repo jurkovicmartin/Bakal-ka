@@ -128,15 +128,15 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict
 
     if modulatorParameters.get("Type") == "PM":
 
-        return {"modulatedSignal":pm(carrierSignal, 0.25*modulationSignal, 5)}
+        return {"modulatedSignal":pm(carrierSignal, modulationSignal, 2)}
     
     elif modulatorParameters.get("Type") == "MZM":
         # MZM parameters
         paramMZM = parameters()
         paramMZM.Vpi = 2
-        paramMZM.Vb = -paramMZM.Vpi/2
+        paramMZM.Vb = -1
 
-        return {"modulatedSignal":mzm(carrierSignal, 0.25*modulationSignal, paramMZM)}
+        return {"modulatedSignal":mzm(carrierSignal, modulationSignal, paramMZM)}
     
     elif modulatorParameters.get("Type") == "IQM":
         # IQM parameters
@@ -146,7 +146,7 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict
         paramIQM.VbQ = -2
         paramIQM.Vphi = 1
 
-        return {"modulatedSignal":iqm(carrierSignal, 0.25*modulationSignal, paramIQM)}
+        return {"modulatedSignal":iqm(carrierSignal, modulationSignal, paramIQM)}
     
     else: raise Exception("Unexpected error")
 
@@ -164,7 +164,7 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
     -----
     recieverSignal: signal at the end of fiber
     """
-    # Directly pass modulated signal without changes
+    # Directly pass modulated signal without changes (Ideal channel)
     if fiberParameters.get("Ideal"):
         return {"recieverSignal":modulatedSignal}
     
@@ -207,25 +207,32 @@ def detection(recieverParameters: dict, recieverSignal, referentSignal, generalP
     Rs = generalParameters.get("Rs")
 
     if recieverParameters.get("Type") == "Photodiode":
-        # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
-        paramPD = parameters()
-        paramPD.ideal = False
-        paramPD.B = Rs
-        paramPD.Fs = Fs
+        # Ideal photodiode
+        if recieverParameters.get("Ideal"):
+            paramPD = parameters
+            paramPD.idel = True
+        else:
+            # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
+            paramPD = parameters()
+            paramPD.ideal = False
+            paramPD.B = recieverParameters.get("Bandwidth")
+            paramPD.Fs = Fs
 
         return {"detectedSignal":photodiode(recieverSignal, paramPD)}
     
     elif recieverParameters.get("Type") == "Coherent":
-        # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
-        paramPD = parameters()
-        paramPD.ideal = False
-        paramPD.B = Rs
-        paramPD.Fs = Fs
+        # Ideal photodiode
+        if recieverParameters.get("Ideal"):
+            paramPD = parameters
+            paramPD.idel = True
+        else:
+            # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
+            paramPD = parameters()
+            paramPD.ideal = False
+            paramPD.B = recieverParameters.get("Bandwidth")
+            paramPD.Fs = Fs
 
         return {"detectedSignal":coherentReceiver(recieverSignal, referentSignal, paramPD)}
-
-    elif recieverParameters.get("Type") == "Hybrid":
-        pass
 
     else: raise Exception("Unexpected error")
 
