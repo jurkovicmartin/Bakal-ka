@@ -164,11 +164,10 @@ class Gui:
         ### VARIABLES
         
         # Testing values
-        self.sourceParameters = {"Power":10, "Frequency":193.1, "Linewidth":1000, "RIN":0}
+        self.sourceParameters = {"Power":10, "Frequency":193.1, "Ideal":True}
         self.modulatorParameters = {"Type":"MZM"}
-        self.channelParameters = {"Length":20, "Attenuation":0.2, "Dispersion":16}
+        self.channelParameters = {"Length":20, "Ideal":True}
         self.recieverParameters = {"Type":"Photodiode", "Ideal":True}
-        self.amplifierParameters = {"Gain":4, "Noise":3}
         self.amplifierParameters = None
 
         # Parameters of scheme blocks
@@ -213,7 +212,7 @@ class Gui:
         if not self.checkSimulationStart(): return
 
         self.updateGeneralParameters()
-
+        # Clear plots for new simulation (othervise old graphs would be shown)
         self.plots.clear()
 
         # Simulation
@@ -345,7 +344,7 @@ class Gui:
             # Disable modulation order combobox for OOK format
             self.mOrderCombobox.config(state="disabled")
         elif self.mFormatComboBox.get() == "PAM":
-            orderOptions = ["2", "4"]
+            orderOptions = ["4"]
             # Enable modulation order combobox
             self.mOrderCombobox.config(state="readonly")
         elif self.mFormatComboBox.get() == "PSK":
@@ -353,7 +352,7 @@ class Gui:
             # Enable modulation order combobox
             self.mOrderCombobox.config(state="readonly")
         elif self.mFormatComboBox.get() == "QAM":
-            orderOptions = ["4", "16", "64"]
+            orderOptions = ["4", "16", "64", "256"]
             # Enable modulation order combobox
             self.mOrderCombobox.config(state="readonly")
         else: raise Exception("Unexpected error")

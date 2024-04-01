@@ -51,8 +51,8 @@ OOK - photodiode (only with mzm, not iqm)
 # INFORMATION SIGNAL
 SpS = 8 # Samples per symbol
 Fs = 8000
-modulationOrder = 2 
-modulationFormat = "pam"
+modulationOrder = 16 
+modulationFormat = "qam"
 
 # generate pseudo-random bit sequence
 bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
@@ -183,7 +183,7 @@ else:
 
 
 # MODULATION
-modulator = "mzm"
+modulator = "iqm"
 
 if modulator == "mzm":
     paramMZM = parameters()

@@ -14,12 +14,15 @@
 # Debug
 - signal_power warning (divide by zero)
 - constellations (kinda fixed)
-- look at whole communication
 - reciever bandwidth (0)
 - Effect of laser frequency, linewidth
 - Effect of photodiode bandwidth
+- information restoration
+- signal power with modulators
 
-# Big
+# BIG
 - WDM
+- OFDM
 - polarization multiplexing
+- FEC
 - presets

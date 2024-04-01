@@ -110,7 +110,7 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tup
                 if lim:
                     ax.set_xlim(-radius, radius)
                     ax.set_ylim(-radius, radius)
-            print("firt case")
+
         else:
             for k in range(nSubPts):                
                 if pType == "fancy":
@@ -129,7 +129,7 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tup
                 if lim:
                     ax.set_xlim(-radius, radius)
                     ax.set_ylim(-radius, radius)
-            print("second case")
+
 
         fig.tight_layout()
 
@@ -150,7 +150,6 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tup
         if lim:
             plt.xlim(-radius - 1, radius + 1)
             plt.ylim(-radius - 1, radius + 1)
-        print("third case")
 
     plt.close()
 
