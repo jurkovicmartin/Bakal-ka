@@ -10,6 +10,7 @@
 - (value of carrier power)
 - (mby try showing bits as information)
 - (eyediagram show only for some modulations)
+- transmition speed
 
 # Debug
 - signal_power warning (divide by zero)
@@ -20,6 +21,7 @@
 - information restoration
 - signal power with modulators
 - reciever (citlivost), ...
+- prohodit general parameters a comm. chain
 
 # BIG
 - WDM
