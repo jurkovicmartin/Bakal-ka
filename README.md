@@ -19,6 +19,7 @@
 - Effect of photodiode bandwidth
 - information restoration
 - signal power with modulators
+- reciever (citlivost), ...
 
 # BIG
 - WDM
