@@ -167,7 +167,7 @@ class Gui:
         self.sourceParameters = {"Power":10, "Frequency":193.1, "Ideal":True}
         self.modulatorParameters = {"Type":"MZM"}
         self.channelParameters = {"Length":20, "Ideal":True}
-        self.recieverParameters = {"Type":"Photodiode", "Ideal":True}
+        self.recieverParameters = {"Type":"Photodiode", "Bandwidth":1000, "Ideal":False}
         self.amplifierParameters = None
 
         # Parameters of scheme blocks

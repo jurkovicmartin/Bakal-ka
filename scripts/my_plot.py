@@ -360,3 +360,33 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
         return fig, axs
     
     else: raise Exception("Unexpected error")
+
+
+def constellation(symbols):
+    """
+    Plot constellation diagram using matplotlib.
+
+    Parameters:
+        symbols (list of complex): List of complex symbols.
+
+    Returns:
+        Tuple containing Figure and Axes objects.
+    """
+    fig, ax = plt.subplots()
+
+    # Extract real and imaginary parts of symbols
+    real_part = [s.real for s in symbols]
+    imag_part = [s.imag for s in symbols]
+
+    ax.plot(real_part, imag_part, 'bo')  # Plot symbols as blue dots
+    ax.set_aspect('equal', adjustable='box')  # Equal aspect ratio
+    ax.grid(True)
+    ax.set_xlabel('Real')
+    ax.set_ylabel('Imaginary')
+    ax.set_title('Constellation Diagram')
+
+    # Set x and y limits to always be within [-2, 2]
+    ax.set_xlim([-2, 2])
+    ax.set_ylim([-2, 2])
+
+    return fig, ax
