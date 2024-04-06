@@ -3,7 +3,9 @@ from optic.models.devices import basicLaserModel
 import numpy as np
 import matplotlib.pyplot as plt
 from optic.models.devices import mzm, pm, iqm, photodiode, coherentReceiver, hybrid_2x4_90deg
+from optic.models.channels import linearFiberChannel
 from optic.comm.metrics import fastBERcalc
+from optic.plot import eyediagram
 
 from scripts.my_devices import idealLaserModel
 
@@ -50,9 +52,10 @@ OOK - photodiode (only with mzm, not iqm)
 
 # INFORMATION SIGNAL
 SpS = 8 # Samples per symbol
-Fs = 8000
-modulationOrder = 16 
-modulationFormat = "qam"
+Rs = 1000
+Fs = SpS * Rs
+modulationOrder = 2 
+modulationFormat = "pam"
 
 # generate pseudo-random bit sequence
 bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
@@ -103,35 +106,35 @@ plt.suptitle("Information signal")
 
 
 
-t = np.linspace(0, 1, len(information))
+# t = np.linspace(0, 1, len(information))
 
-# Define the start and end indices to plot
-start_index = 10
-end_index = 200  # Choose the end index according to your requirements
+# # Define the start and end indices to plot
+# start_index = 10
+# end_index = 200  # Choose the end index according to your requirements
 
-# Slice both t and signal arrays
-t_slice = t[start_index:end_index]
-signal_slice = information[start_index:end_index]
+# # Slice both t and signal arrays
+# t_slice = t[start_index:end_index]
+# signal_slice = information[start_index:end_index]
 
-# Calculate magnitude and phase
-magnitude = np.abs(signal_slice)
-phase = np.angle(signal_slice)
+# # Calculate magnitude and phase
+# magnitude = np.abs(signal_slice)
+# phase = np.angle(signal_slice)
 
-# Plotting magnitude and phase in two subplots
-fig, axs = plt.subplots(2, 1, figsize=(8, 8))
+# # Plotting magnitude and phase in two subplots
+# fig, axs = plt.subplots(2, 1, figsize=(8, 8))
 
-# Plot magnitude
-axs[0].plot(t_slice, magnitude, label='Magnitude', linewidth=2, color='blue')
-axs[0].set_ylabel('Magnitude')
-axs[0].legend(loc='upper left')
+# # Plot magnitude
+# axs[0].plot(t_slice, magnitude, label='Magnitude', linewidth=2, color='blue')
+# axs[0].set_ylabel('Magnitude')
+# axs[0].legend(loc='upper left')
 
-# Plot phase
-axs[1].plot(t_slice, phase, label='Phase', linewidth=2, color='red')
-axs[1].set_ylabel('Phase')
-axs[1].set_xlabel('Time (s)')  # Adjust the unit based on your data
-axs[1].legend(loc='upper left')
+# # Plot phase
+# axs[1].plot(t_slice, phase, label='Phase', linewidth=2, color='red')
+# axs[1].set_ylabel('Phase')
+# axs[1].set_xlabel('Time (s)')  # Adjust the unit based on your data
+# axs[1].legend(loc='upper left')
 
-plt.suptitle("Information (Magnitude and Phase)")
+# plt.suptitle("Information (Magnitude and Phase)")
 
 
 
@@ -139,14 +142,14 @@ plt.suptitle("Information (Magnitude and Phase)")
 # Laser parameters
 paramLaser = parameters()
 paramLaser.P = 10  # laser power [dBm] [default: 10 dBm]
-paramLaser.lw = 1000    # laser linewidth [Hz] [default: 1 kHz]
+paramLaser.lw = 1000   # laser linewidth [Hz] [default: 1 kHz]
 paramLaser.RIN_var = 0  # variance of the RIN noise [default: 1e-20]
 paramLaser.Fs = 8  # sampling rate [samples/s]
 paramLaser.Ns = len(information)   # number of signal samples [default: 1e3]
 
-ideal = True
+idealSource = True
 
-if ideal:
+if idealSource:
 
     carrier = idealLaserModel(paramLaser)
 
@@ -183,7 +186,7 @@ else:
 
 
 # MODULATION
-modulator = "iqm"
+modulator = "mzm"
 
 if modulator == "mzm":
     paramMZM = parameters()
@@ -213,30 +216,30 @@ elif modulator == "iqm":
 else: pass
 
 # PLOT
-t = np.linspace(0, 1, len(modulated))
-# Define the start and end indices to plot
-start_index = 10
-end_index = 200  # Choose the end index according to your requirements
+# t = np.linspace(0, 1, len(modulated))
+# # Define the start and end indices to plot
+# start_index = 10
+# end_index = 200  # Choose the end index according to your requirements
 
-# Slice both t and symbolsTx arrays
-t_slice = t[start_index:end_index]
-signal_slice = modulated[start_index:end_index]
+# # Slice both t and symbolsTx arrays
+# t_slice = t[start_index:end_index]
+# signal_slice = modulated[start_index:end_index]
 
-# Plotting real and imaginary parts in separate subplots
-fig, axs = plt.subplots(2, 1, figsize=(8, 8))
+# # Plotting real and imaginary parts in separate subplots
+# fig, axs = plt.subplots(2, 1, figsize=(8, 8))
 
-# Plot real part
-axs[0].plot(t_slice, signal_slice.real, label='Real Part', linewidth=2, color='blue')
-axs[0].set_ylabel('Amplitude (a.u.)')
-axs[0].legend(loc='upper left')
+# # Plot real part
+# axs[0].plot(t_slice, signal_slice.real, label='Real Part', linewidth=2, color='blue')
+# axs[0].set_ylabel('Amplitude (a.u.)')
+# axs[0].legend(loc='upper left')
 
-# Plot imaginary part
-axs[1].plot(t_slice, signal_slice.imag, label='Imaginary Part', linewidth=2, color='red')
-axs[1].set_ylabel('Amplitude (a.u.)')
-axs[1].set_xlabel('Time (s)')  # Adjust the unit based on your data
-axs[1].legend(loc='upper left')
+# # Plot imaginary part
+# axs[1].plot(t_slice, signal_slice.imag, label='Imaginary Part', linewidth=2, color='red')
+# axs[1].set_ylabel('Amplitude (a.u.)')
+# axs[1].set_xlabel('Time (s)')  # Adjust the unit based on your data
+# axs[1].legend(loc='upper left')
 
-plt.suptitle("Modulated signal")
+# plt.suptitle("Modulated signal")
 
 
 
@@ -271,12 +274,41 @@ axs[1].legend(loc='upper left')
 plt.suptitle("Modulated (Magnitude and Phase)")
 
 
+# CHANNEL
+
+idealChannel = False
+
+if idealChannel:
+    pass
+else:
+    # Linear optical channel
+    paramCh = parameters()
+    paramCh.L = 200       # total link distance [km]
+    paramCh.α = 1       # fiber loss parameter [dB/km]
+    paramCh.D = 0        # fiber dispersion parameter [ps/nm/km]
+    paramCh.Fc = 193.1 * (10**12) # central optical frequency [Hz]
+    paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
+
+    modulated = linearFiberChannel(modulated, paramCh)
+
+
+
 # DETECTION
-detector = "coherent"
+detector = "photodiode"
+
+"""
+B <= Fs/2 (ovlivni i tvar)
+R - ovlivni hlavne uroven
+
+oboje se projevuje
+"""
 
 if detector == "photodiode":
     paramPD = parameters()
-    paramPD.ideal = True
+    paramPD.ideal = False
+    paramPD.Fs = Fs
+    paramPD.B = 4000
+    paramPD.R = 0.00001
 
     detected = photodiode(modulated, paramPD)
 
@@ -318,6 +350,10 @@ axs[1].legend(loc='upper left')
 plt.suptitle("Detected signal")
     
 
+discard = 100
+eyediagram(information[discard:-discard], information.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy")
+eyediagram(detected[discard:-discard], information.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy")
+
 # RESTORE
 detected = detected/np.std(detected)
 
@@ -343,5 +379,7 @@ print(f"SymbolsRx: {symbolsRx}")
 print(f"Tx bits:{bitsTx}")
 print(f"Rx bits:{bitsRx}")
 print(f"BER: {ber}")
+
+
 
 plt.show()

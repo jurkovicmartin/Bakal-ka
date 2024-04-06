@@ -88,7 +88,7 @@ carrier = basicLaserModel(paramLaser)
 
 
 # MODULATION
-modulator = "iqm"
+modulator = "mzm"
 
 if modulator == "mzm":
     paramMZM = parameters()

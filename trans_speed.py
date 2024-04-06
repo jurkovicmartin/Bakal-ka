@@ -19,14 +19,17 @@ except ImportError:
 SpS = 8  # Samples per symbol
 modulationOrder = 4
 modulationFormat = "pam"
-Rs = 100 # Symbol rate
+Rs = 1000 # Symbol rate
+data = 10**6 # bits 10**9 = Gb
 
 # generate pseudo-random bit sequence
-bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
+bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*data))
+
 
 # generate modulated symbol sequence
 symbolsTx = modulateGray(bitsTx, modulationOrder, modulationFormat)
 symbolsTx = pnorm(symbolsTx) # power normalization
+
 
 # upsampling
 symbolsUp = upsample(symbolsTx, SpS)
@@ -45,4 +48,5 @@ transTime = len(symbolsTx)/Rs
 
 transSpeed = len(bitsTx)/transTime
 
-print(f"{transSpeed} bps")
+print(f"time: {transTime} s")
+print(f"speed: {transSpeed} bps")
