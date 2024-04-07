@@ -16,8 +16,8 @@ except ImportError:
     from optic.dsp.core import firFilter
 
 
-SpS = 8  # Samples per symbol
-modulationOrder = 4
+SpS = 16  # Samples per symbol
+modulationOrder = 2
 modulationFormat = "pam"
 Rs = 1000 # Symbol rate
 data = 10**6 # bits 10**9 = Gb

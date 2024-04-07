@@ -7,6 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from scripts.parameters_window import ParametersWindow
 from scripts.simulation import simulate, getValues, getPlot
+from scripts.parameters_functions import checkParameters
 
 class Gui:
     def __init__(self):
@@ -35,11 +36,11 @@ class Gui:
         ### OPTIONS TAB
 
         # Options tab frames
-        self.schemeFrame = tk.Frame(self.optionsFrame)
         self.generalFrame = tk.Frame(self.optionsFrame)
+        self.schemeFrame = tk.Frame(self.optionsFrame)
 
-        self.schemeFrame.pack()
-        self.generalFrame.pack()
+        self.generalFrame.pack(pady=10)
+        self.schemeFrame.pack(pady=10)
 
         # Scheme frame
 
@@ -58,29 +59,45 @@ class Gui:
 
         # General frame
 
-        # Checkbutton for including / excluding channel pre-amplifier
-        self.amplifierCheckVar = tk.BooleanVar()
-        self.amplifierCheckbutton = tk.Checkbutton(self.generalFrame, text="Add channel pre-amplifier", variable=self.amplifierCheckVar, command=self.amplifierCheckbuttonChange)
-        self.amplifierCheckbutton.grid(row=0, column=0)
-
         # Choosing modulation format to map
         self.mFormatLabel = tk.Label(self.generalFrame, text="Modulation formats")
-        self.mFormatLabel.grid(row=0, column=1)
         self.mFormatComboBox = ttk.Combobox(self.generalFrame, values=["OOK", "PAM", "PSK", "QAM"], state="readonly")
         self.mFormatComboBox.set("OOK")
-        self.mFormatComboBox.grid(row=1, column=1)
         self.mFormatComboBox.bind("<<ComboboxSelected>>", self.modulationFormatChange)
+        self.mFormatLabel.grid(row=0, column=0)
+        self.mFormatComboBox.grid(row=1, column=0)
 
         # Choosing modulation order to map
         self.mOrderLabel = tk.Label(self.generalFrame, text="Order of modulation")
-        self.mOrderLabel.grid(row=0, column=2)
         self.mOrderCombobox = ttk.Combobox(self.generalFrame, values=["2"], state="disabled")
         self.mOrderCombobox.set("2")
-        self.mOrderCombobox.grid(row=1, column=2)
+        self.mOrderLabel.grid(row=0, column=1)
+        self.mOrderCombobox.grid(row=1, column=1)
 
-        # Attention label
-        self.attentionLabel = tk.Label(self.optionsFrame, text="")
-        self.attentionLabel.pack()
+        # Data quantity
+        self.dataQuantityLabel = tk.Label(self.generalFrame, text="Data quantity to transmission")
+        self.dataQuantityCombobox = ttk.Combobox(self.generalFrame, values=["kb", "Mb", "Gb"], state="readonly")
+        self.dataQuantityCombobox.set("kb")
+        self.dataQuantityLabel.grid(row=0, column=2)
+        self.dataQuantityCombobox.grid(row=1, column=2)
+
+        # Symbol rate
+        self.symbolRateLabel = tk.Label(self.generalFrame, text="Symbol rate [symbols/s]")
+        self.symbolRateEntry = tk.Entry(self.generalFrame)
+        self.symbolRateEntry.insert(0, "0")
+        self.symbolRateLabel.grid(row=0, column=3)
+        self.symbolRateEntry.grid(row=1, column=3)
+
+        # Checkbutton for including / excluding channel pre-amplifier
+        self.amplifierCheckVar = tk.BooleanVar()
+        self.amplifierCheckbutton = tk.Checkbutton(self.generalFrame, text="Add channel pre-amplifier", variable=self.amplifierCheckVar, command=self.amplifierCheckbuttonChange)
+        self.amplifierCheckbutton.grid(row=2, column=0)
+
+        # Attention label for adding pre-amplifier
+        self.attentionLabel = tk.Label(self.generalFrame, text="")
+        self.attentionLabel.grid(row=2, column=1, columnspan=2)
+
+        # Other
 
         # Start simulation
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.startSimulation)
@@ -106,19 +123,19 @@ class Gui:
         self.powerTxdBmLabel = tk.Label(self.valuesFrame, text="Tx power:")
         self.powerRxWLabel = tk.Label(self.valuesFrame, text="Rx power:")
         self.powerRxdBmLabel = tk.Label(self.valuesFrame, text="Rx power:")
+        self.powerTxWLabel.grid(row=0, column=0)
+        self.powerTxdBmLabel.grid(row=0, column=1)
+        self.powerRxWLabel.grid(row=1, column=0)
+        self.powerRxdBmLabel.grid(row=1, column=1)
 
-        self.powerTxWLabel.pack()
-        self.powerTxdBmLabel.pack()
-        self.powerRxWLabel.pack()
-        self.powerRxdBmLabel.pack()
-
+        self.transSpeedLabel = tk.Label(self.valuesFrame, text="Transmission speed:")
+        self.snrLabel = tk.Label(self.valuesFrame, text="SNR:")
         self.berLabel = tk.Label(self.valuesFrame, text="BER:")
         self.serLabel = tk.Label(self.valuesFrame, text="SER:")
-        self.snrLabel = tk.Label(self.valuesFrame, text="SNR:")
-
-        self.berLabel.pack()
-        self.serLabel.pack()
-        self.snrLabel.pack()
+        self.transSpeedLabel.grid(row=2, column=0)
+        self.snrLabel.grid(row=2, column=1)
+        self.berLabel.grid(row=3, column=0)
+        self.serLabel.grid(row=3, column=1)
 
         # plots frame
 
@@ -170,6 +187,8 @@ class Gui:
         self.recieverParameters = {"Type":"Photodiode", "Bandwidth":1000, "Ideal":False}
         self.amplifierParameters = None
 
+        self.generalParameters = {"SpS": 8, "Rs": 10 ** 3}
+
         # Parameters of scheme blocks
         # need set values to 0 not None
         # self.sourceParameters = None
@@ -180,9 +199,8 @@ class Gui:
         
         # General parameters
         # SpS = samples per symbol, Rs = symbol rate, Fs sampling frequency, Ts sampling period
-        self.generalParameters = {"SpS": 8, "Rs": 10 ** 3}
-        self.generalParameters.update({"Fs": self.generalParameters.get("SpS") * self.generalParameters.get("Rs")})
-        self.generalParameters.update({"Ts": 1 / self.generalParameters.get("Fs")})
+        # self.generalParameters = {"SpS":16}
+        
 
         # Simulation results variables
         self.plots = {}
@@ -208,10 +226,12 @@ class Gui:
         Start of simulation.
         Main function button.
         """
+        # Get values of general parameters
+        self.updateGeneralParameters()
+
         # Not all parameters provided
         if not self.checkSimulationStart(): return
-
-        self.updateGeneralParameters()
+        
         # Clear plots for new simulation (othervise old graphs would be shown)
         self.plots.clear()
 
@@ -315,7 +335,10 @@ class Gui:
         """
         Checks if all needed parameters are set
         """
-        if self.sourceParameters is None:
+        # There is only 1 general paramete (Fs), means some problem with setting other parameters
+        if len(self.generalParameters) == 1:
+            return False
+        elif self.sourceParameters is None:
             messagebox.showerror("Simulation error", "You must set source parameters.")
             return False
         elif self.modulatorParameters is None:
@@ -365,26 +388,58 @@ class Gui:
     def updateGeneralParameters(self):
         """
         Update general parameters with values from editable fields.
+
+        If some parameter is not ok in the dictionary there will be only Fs.
         """
+        # Modulation format and order
         self.generalParameters.update({"Format": self.mFormatComboBox.get().lower(), "Order": int(self.mOrderCombobox.get())})
+        # Data quantity
+        self.generalParameters.update({"Data":self.dataQuantityCombobox.get()})
 
         # OOK is created same as 2 order PAM
         if self.mFormatComboBox.get() == "OOK":
             self.generalParameters.update({"Format": "pam"})
+
+        # Symbol rate
+        Rs = checkParameters("Symbol rate", self.symbolRateEntry.get(), self.root)
+        if Rs is None:
+            self.generalParameters = {"SpS":8}
+            return
+            
+        # Rs is ok
+        self.generalParameters.update({"Rs":Rs})
+        self.generalParameters.update({"Fs":self.generalParameters.get("SpS") * self.generalParameters.get("Rs")})
+        self.generalParameters.update({"Ts":1 / self.generalParameters.get("Fs")})
 
     
     def showValues(self, outputValues: dict):
         """
         Show values from dictionary in the app.
         """
-        self.berLabel.config(text=f"BER: {outputValues.get('BER'):.3}")
-        self.serLabel.config(text=f"SER: {outputValues.get('SER'):.3}")
-        self.snrLabel.config(text=f"SNR: {outputValues.get('SNR'):.3} dB")
-
+        # ' ' insted of " " because of f-string 
         self.powerTxWLabel.config(text=f"Tx power: {outputValues.get('powerTxW'):.3} W")
         self.powerTxdBmLabel.config(text=f"Tx power: {outputValues.get('powerTxdBm'):.3} dBm")
         self.powerRxWLabel.config(text=f"Rx power: {outputValues.get('powerRxW'):.3} W")
         self.powerRxdBmLabel.config(text=f"Tx power: {outputValues.get('powerRxdBm'):.3} dBm")
+        
+        self.showTransSpeed(outputValues.get("Speed"))
+        self.snrLabel.config(text=f"SNR: {outputValues.get('SNR'):.3} dB")
+        self.berLabel.config(text=f"BER: {outputValues.get('BER'):.3}")
+        self.serLabel.config(text=f"SER: {outputValues.get('SER'):.3}")
+
+
+    def showTransSpeed(self, transmissionSpeed: float):
+        """
+        Shows transmission speed in the app with reasonable units
+        """
+        if transmissionSpeed >= 10**9:
+            self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed / 10**9} Gb/s")
+        elif transmissionSpeed >= 10**6:
+            self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed / 10**6} Mb/s")
+        elif transmissionSpeed >= 10**3:
+            self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed / 10**3} kb/s")
+        else:
+            self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed} b/s")
 
 
     def showGraph(self, clickedButton):

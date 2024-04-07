@@ -16,8 +16,9 @@ except ImportError:
 from optic.utils import parameters
 import matplotlib.pyplot as plt
 
-from scripts.my_plot import eyediagram, pconst, powerSpectralDensity, signalInTime
 from scripts.my_devices import idealLaserModel, edfa
+from scripts.my_plot import eyediagram, pconst, powerSpectralDensity, signalInTime
+from scripts.output_functions import calculateTransSpeed
 
 def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict) -> dict:
     """
@@ -69,9 +70,10 @@ def modulationSignal(generalParameters: dict) -> dict:
     SpS = generalParameters.get("SpS")  # Samples per symbol
     modulationOrder = generalParameters.get("Order")
     modulationFormat = generalParameters.get("Format")
+    data = convertDataQuantity(generalParameters.get("Data"))
     
     # generate pseudo-random bit sequence
-    bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
+    bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*data))
 
     # generate modulated symbol sequence
     symbolsTx = modulateGray(bitsTx, modulationOrder, modulationFormat)
@@ -336,9 +338,11 @@ def getValues(simulationResults: dict, generalParameters: dict) -> dict:
     
     modulationFormat = generalParameters.get("Format")
     modulationOrder = generalParameters.get("Order")
+    Rs = generalParameters.get("Rs")
 
     bitsTx = simulationResults.get("bitsTx")
     bitsRx = simulationResults.get("bitsRx")
+    symbolsTx = simulationResults.get("symbolsTx")
     modulatedSignal = simulationResults.get("modulatedSignal")
     recieverSignal = simulationResults.get("recieverSignal")
 
@@ -347,8 +351,10 @@ def getValues(simulationResults: dict, generalParameters: dict) -> dict:
     valuesList = fastBERcalc(bitsRx, bitsTx, modulationOrder, modulationFormat)
     # extract the values from arrays
     ber, ser, snr = [array[0] for array in valuesList]
-
     values = {"BER":ber, "SER":ser, "SNR":snr}
+
+    # Transmission speed
+    values.update({"Speed":calculateTransSpeed(bitsTx, symbolsTx, Rs)})
 
     # Tx power [W]
     power = signal_power(modulatedSignal)/1e-3
@@ -365,3 +371,13 @@ def getValues(simulationResults: dict, generalParameters: dict) -> dict:
 
     return values
 
+def convertDataQuantity(data: str) -> int:
+    """
+    Converts string "kb" / "Mb" / "Gb" to int number
+    """
+    if data == "kb":
+        return 10**3
+    elif data == "Mb":
+        return 10**6
+    elif data == "Gb":
+        return 10**9
