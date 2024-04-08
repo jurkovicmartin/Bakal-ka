@@ -172,7 +172,7 @@ class ParametersWindow:
 
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=4, column=0, columnspan=2)
+            self.setButton.grid(row=5, column=0, columnspan=2)
 
             self.setDefaultParameters()
 
@@ -229,13 +229,14 @@ class ParametersWindow:
             parametersString = f"Laser\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
             # Getting initial values
             parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "RIN":self.rinEntry.get()}
+            
+            parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
             parameters = self.validateParameters(parameters)
 
             # Return if parameters are not valid
             if parameters is None: return
 
-            parameters.update(self.setIdealParameter(parameters))
 
         elif self.type == "modulator":
             # Showing in main gui
@@ -243,43 +244,46 @@ class ParametersWindow:
             # Getting initial values
             parameters = {"Type":self.modulatorCombobox.get()}
 
+
         elif self.type == "channel":
             # Showing in main gui
             parametersString = f"Fiber channel\n\nLength: {self.lengthEntry.get()} km\nAttenuation: {self.attenuationEntry.get()} dB/km\nChromatic dispersion: {self.dispersionEntry.get()} ps/nm/km"
             # Getting initial values
             parameters = {"Length":self.lengthEntry.get(), "Attenuation":self.attenuationEntry.get(), "Dispersion":self.dispersionEntry.get()}
+            
+            parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
             parameters = self.validateParameters(parameters)
 
             # Return if parameters are not valid
             if parameters is None: return
 
-            parameters.update(self.setIdealParameter(parameters))
 
         elif self.type == "reciever":
             # Showing in main gui
-            parametersString = f"{self.recieverCombobox.get()}\nBandwidth: {self.bandwidthEntry.get()} Hz"
+            parametersString = f"{self.recieverCombobox.get()}\nBandwidth: {self.bandwidthEntry.get()} Hz\nResolution: {self.resolutionEntry.get()} A/W"
             # Getting initial values
-            parameters = {"Type":self.recieverCombobox.get(), "Bandwidth":self.bandwidthEntry.get()}
+            parameters = {"Type":self.recieverCombobox.get(), "Bandwidth":self.bandwidthEntry.get(), "Resolution":self.resolutionEntry.get()}
+            
+            parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
-            parameters = self.validateParameters(parameters)
+            parameters = self.validateParametersWithString(parameters)
 
             # Return if parameters are not valid
             if parameters is None: return
 
-            parameters.update(self.setIdealParameter(parameters))
         
         elif self.type == "amplifier":
             # Showing in main gui
             parametersString = f"Pre-amplifier\n\nGain: {self.gainEntry.get()} dB\nNoise figure: {self.noiseEntry.get()} dB"
             # Getting initial values
             parameters = {"Gain":self.gainEntry.get(), "Noise":self.noiseEntry.get()}
+            
+            parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
             parameters = self.validateParameters(parameters)
 
             if parameters is None: return
-
-            parameters.update(self.setIdealParameter(parameters))
         
         else: raise Exception("Unexpected error")
 
@@ -297,6 +301,8 @@ class ParametersWindow:
         """
         Convert string parameters values to float and validate the inputed values.
 
+        Counts with "Ideal" bool parameter
+
         Parameters
         -----
         parameters: values are strings
@@ -307,29 +313,74 @@ class ParametersWindow:
 
             None if some parameters are not ok
         """
-        # Parameters are for modulator / reciever, where is string type of the device
-        # So it would not got trough the validation (validates only numbers)
-        # The type selection is done via closed selection combobox (Has only acceptable values so no need to verify them)
-        if "Type" in parameters:
+        # Removes the "Ideal" value because its bool and not number
+        ideal = parameters.pop("Ideal")
+
+        # Convert and validate the number values
+        for key, value in parameters.items():
+            checked = checkParameters(key, value, self.popup)
+            if checked is None:
+                return None
+            else:
+                parameters.update({key:checked})
+
+        # Return ideal parameter
+        parameters.update({"Ideal":ideal})
+
+        return parameters
+    
+
+    def validateParametersWithString(self, parameters: dict) -> dict:
+        """
+        Convert string parameters values to float and validate the inputed values.
+
+        Done for specific parameters that has string as valid value in some parameter.
+
+        Parameters
+        -----
+        parameters: values are strings
+
+        Returns
+        -----
+        parameters: values are floats
+
+            None if some parameters are not ok
+        """
+        # Parameters are for ideal reciever
+        # Ideal reciver contains "inf" values
+        if "Resolution" in parameters and parameters.get("Ideal"):
+            # Removes parameters that has valid string values
+            deviceType = parameters.pop("Type")
+            bandwidth = parameters.pop("Bandwidth")
+            resolution = parameters.pop("Resolution")
+
+            # Validate remaining number values (including "Ideal" bool)
+            parameters = self.validateParameters(parameters)
+
+            # Validating numbers was not ok
+            if parameters is None: return None
+
+            # Return the string values
+            parameters.update({"Type":deviceType, "Bandwidth":bandwidth, "Resolution":resolution})
+
+            return parameters
+        
+        # It is non ideal reciever or modulator => has only "Type" as string values
+        else:
+            # Remove string value from parameters dictionary
             deviceType = parameters.pop("Type")
 
-            # Convert and validate the number values
-            for key, value in parameters.items():
-                checked = checkParameters(key, value, self.popup)
-                if checked is None: return None
-                else: parameters.update({key:checked})
+            # Validate remaining number values (including "Ideal" bool)
+            parameters = self.validateParameters(parameters)
+
+            # Validating numbers was not ok
+            if parameters is None: return None
 
             # Return of the device type back to the parameters
             parameters.update({"Type":deviceType})
 
-        else:
-            # Convert and validate the number values
-            for key, value in parameters.items():
-                checked = checkParameters(key, value, self.popup)
-                if checked is None: return None
-                else: parameters.update({key:checked})
-
-        return parameters
+            return parameters
+        
     
 
     def idealCheckbuttonChange(self):
@@ -366,11 +417,19 @@ class ParametersWindow:
         elif self.type == "reciever":
             if self.recieverCheckVar.get():
                 self.bandwidthEntry.delete(0, tk.END)
-                self.bandwidthEntry.insert(0, "0")
+                self.bandwidthEntry.insert(0, "inf")
                 self.bandwidthEntry.config(state="disabled")
+
+                self.resolutionEntry.delete(0, tk.END)
+                self.resolutionEntry.insert(0, "inf")
+                self.resolutionEntry.config(state="disabled")
 
             else:
                 self.bandwidthEntry.config(state="normal")
+                self.bandwidthEntry.delete(0, tk.END)
+
+                self.resolutionEntry.config(state="normal")
+                self.resolutionEntry.delete(0, tk.END)
 
         elif self.type == "amplifier":
             if self.amplifierCheckVar.get():
@@ -433,6 +492,7 @@ class ParametersWindow:
             else:
                 self.recieverCombobox.set(self.defaultParameters.get("Type"))
                 self.bandwidthEntry.insert(0, str(self.defaultParameters.get("Bandwidth")))
+                self.resolutionEntry.insert(0, str(self.defaultParameters.get("Resolution")))
 
         elif self.type == "amplifier":
             # No default parameters
@@ -499,10 +559,16 @@ class ParametersWindow:
             self.bandwidthEntry = tk.Entry(self.popup)
             self.bandwidthEntry.grid(row=2, column=1)
 
+            # Resolution
+            self.resolutionLabel = tk.Label(self.popup, text="Resolution [A/W]")
+            self.resolutionLabel.grid(row=3, column=0)
+            self.resolutionEntry = tk.Entry(self.popup)
+            self.resolutionEntry.grid(row=3, column=1)
+
             # Ideal parameters checkbutton
             self.recieverCheckVar = tk.BooleanVar()
             self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton.grid(row=3, column=0, columnspan=2)
+            self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
 
         elif reciever == "Coherent":
             # Bandwidth
@@ -511,9 +577,15 @@ class ParametersWindow:
             self.bandwidthEntry = tk.Entry(self.popup)
             self.bandwidthEntry.grid(row=2, column=1)
 
+            # Resolution
+            self.resolutionLabel = tk.Label(self.popup, text="Resolution [A/W]")
+            self.resolutionLabel.grid(row=3, column=0)
+            self.resolutionEntry = tk.Entry(self.popup)
+            self.resolutionEntry.grid(row=3, column=1)
+
             # Ideal parameters checkbutton
             self.recieverCheckVar = tk.BooleanVar()
             self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton.grid(row=3, column=0, columnspan=2)
+            self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
 
         else: raise Exception("Unexpected error")

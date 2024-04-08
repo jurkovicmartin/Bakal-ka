@@ -41,7 +41,7 @@ def checkParameters(parameterName: str, parameterValue: str, parentWindow) -> fl
         converted value: None if parameter is not ok
         """
         # Parameters that can be 0
-        zeroParameters = ["Power", "RIN", "Attenuation", "Dispersion", "Noise", "Bandwidth"]
+        zeroParameters = ["Power", "RIN", "Attenuation", "Dispersion", "Noise"]
 
         # Parameters that can be negative
         negativeParameters = ["Power"]

@@ -180,8 +180,8 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
 
     recieverSignal = linearFiberChannel(modulatedSignal, paramCh)
 
-    # Channel has amplifier
-    if amplifierParameters is not None:
+    # Channel has amplifier = doesnt has initial 0 gain
+    if amplifierParameters.get("Gain") != 0:
         # receiver pre-amplifier
         paramEDFA = parameters()
         paramEDFA.G = amplifierParameters.get("Gain")    # edfa gain
@@ -218,6 +218,7 @@ def detection(recieverParameters: dict, recieverSignal, referentSignal, generalP
             paramPD = parameters()
             paramPD.ideal = False
             paramPD.B = recieverParameters.get("Bandwidth")
+            paramPD.R = recieverParameters.get("Resolution")
             paramPD.Fs = Fs
 
         return {"detectedSignal":photodiode(recieverSignal, paramPD)}
@@ -232,6 +233,7 @@ def detection(recieverParameters: dict, recieverSignal, referentSignal, generalP
             paramPD = parameters()
             paramPD.ideal = False
             paramPD.B = recieverParameters.get("Bandwidth")
+            paramPD.R = recieverParameters.get("Resolution")
             paramPD.Fs = Fs
 
         return {"detectedSignal":coherentReceiver(recieverSignal, referentSignal, paramPD)}

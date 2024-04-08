@@ -1,5 +1,7 @@
 # Main window
 
+# SpS = samples per symbol, Rs = symbol rate, Fs sampling frequency, Ts sampling period
+
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -84,7 +86,7 @@ class Gui:
         # Symbol rate
         self.symbolRateLabel = tk.Label(self.generalFrame, text="Symbol rate [symbols/s]")
         self.symbolRateEntry = tk.Entry(self.generalFrame)
-        self.symbolRateEntry.insert(0, "0")
+        self.symbolRateEntry.insert(0, "1")
         self.symbolRateLabel.grid(row=0, column=3)
         self.symbolRateEntry.grid(row=1, column=3)
 
@@ -106,6 +108,7 @@ class Gui:
         # Quit
         self.quitButton = tk.Button(self.optionsFrame, text="Quit", command=self.terminateApp)
         self.quitButton.pack()
+
 
         ### OUTPUTS TAB
 
@@ -181,26 +184,26 @@ class Gui:
         ### VARIABLES
         
         # Testing values
-        self.sourceParameters = {"Power":10, "Frequency":193.1, "Ideal":True}
-        self.modulatorParameters = {"Type":"MZM"}
-        self.channelParameters = {"Length":20, "Ideal":True}
-        self.recieverParameters = {"Type":"Photodiode", "Bandwidth":1000, "Ideal":False}
-        self.amplifierParameters = None
-
-        self.generalParameters = {"SpS": 8, "Rs": 10 ** 3}
-
-        # Parameters of scheme blocks
-        # need set values to 0 not None
-        # self.sourceParameters = None
-        # self.modulatorParameters = None
-        # self.channelParameters = None
-        # self.recieverParameters = None
+        # self.sourceParameters = {"Power":10, "Frequency":193.1, "Ideal":True}
+        # self.modulatorParameters = {"Type":"MZM"}
+        # self.channelParameters = {"Length":20, "Ideal":True}
+        # self.recieverParameters = {"Type":"Photodiode", "Bandwidth":1000, "Resolution":1, "Ideal":False}
         # self.amplifierParameters = None
-        
-        # General parameters
-        # SpS = samples per symbol, Rs = symbol rate, Fs sampling frequency, Ts sampling period
-        # self.generalParameters = {"SpS":16}
-        
+
+        # self.generalParameters = {"SpS": 8, "Rs": 10 ** 3}
+
+        # Inicial parameters
+        self.sourceParameters = {"Power": 0, "Frequency": 0, "Linewidth": 0, "RIN": 0, "Ideal": False}
+        self.modulatorParameters = {"Type": "MZM"}
+        self.channelParameters = {"Length": 0, "Attenuation": 0, "Dispersion": 0, "Ideal": False}
+        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 0, "Resolution": 0, "Ideal": False}
+        self.amplifierParameters = {"Gain": 0, "Noise": 0, "Ideal": False}
+        # Store initial parameters to check for simulation start
+        self.initialParameters = {"Source": self.sourceParameters, "Modulator": self.modulatorParameters, 
+                                  "Channel": self.channelParameters, "Reciever": self.recieverParameters, "Amplifier": self.amplifierParameters}
+
+        self.generalParameters = {"SpS":16}
+
 
         # Simulation results variables
         self.plots = {}
@@ -236,7 +239,8 @@ class Gui:
         self.plots.clear()
 
         # Simulation
-        self.simulationResults = simulate(self.generalParameters, self.sourceParameters, self.modulatorParameters, self.channelParameters, self.recieverParameters, self.amplifierParameters)
+        self.simulationResults = simulate(self.generalParameters, self.sourceParameters, self.modulatorParameters,
+                                           self.channelParameters, self.recieverParameters, self.amplifierParameters)
         
         # Showing results
         # Values to show
@@ -338,20 +342,21 @@ class Gui:
         # There is only 1 general paramete (Fs), means some problem with setting other parameters
         if len(self.generalParameters) == 1:
             return False
-        elif self.sourceParameters is None:
+        # Source parameters are same as initial
+        elif self.sourceParameters == self.initialParameters.get("Source"):
             messagebox.showerror("Simulation error", "You must set source parameters.")
             return False
-        elif self.modulatorParameters is None:
-            messagebox.showerror("Simulation error", "You must set modulator parameters.")
-            return False
-        elif self.channelParameters is None:
+        # elif self.modulatorParameters == self.initialParameters.get("Modulator"):
+        #     messagebox.showerror("Simulation error", "You must set modulator parameters.")
+        #     return False
+        elif self.channelParameters == self.initialParameters.get("Channel"):
             messagebox.showerror("Simulation error", "You must set channel parameters.")
             return False
-        elif self.recieverParameters is None:
+        elif self.recieverParameters == self.initialParameters.get("Reciever"):
             messagebox.showerror("Simulation error", "You must set reciever parameters.")
             return False
         # Only if amplifier is included
-        elif self.amplifierCheckVar.get() and self.amplifierParameters is None:
+        elif self.amplifierCheckVar.get() and self.amplifierParameters == self.initialParameters.get("Amplifier"):
             messagebox.showerror("Simulation error", "You must set amplifier parameters.")
             return False
         else: return True
