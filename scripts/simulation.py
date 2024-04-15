@@ -303,10 +303,10 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
         return signalInTime(Ts, detectedSignal, title, "electrical")
     elif type == "constellationTx":
         # Tx constellation diagram
-        return pconst(symbolsTx, whiteb=False)
+        return pconst(symbolsTx, whiteb=True)
     elif type == "constellationRx":
         # Rx constellation diagram
-        return pconst(symbolsRx, whiteb=False)
+        return pconst(symbolsRx, whiteb=True)
     elif type == "psdTx":
         # Tx PSD
         return powerSpectralDensity(Rs, Fs, modulatedSignal, title)

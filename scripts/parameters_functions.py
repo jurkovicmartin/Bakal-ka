@@ -28,41 +28,241 @@ def convertNumber(input: str) -> tuple[float, bool]:
         return None, True
     
 
-def checkParameters(parameterName: str, parameterValue: str, parentWindow) -> float | None:
-        """
-        Checks if the parameters has valid number values and coverts it to float.
+def validateParameters(type: str, parameters: dict, generalParameters: dict, parentWindow) -> dict | None:
+    """
+    Checks if the parameters has valid values and coverts numbers into float.
 
-        Parameters
-        ----
-        parentWindow: object for showing messageboxes
+    Parameters
+    ----
+    type: type of block
 
-        Returns
-        -----
-        converted value: None if parameter is not ok
-        """
-        # Parameters that can be 0
-        zeroParameters = ["Power", "RIN", "Attenuation", "Dispersion", "Noise"]
+    parameters: parameters to check
 
-        # Parameters that can be negative
-        negativeParameters = ["Power"]
+    generalParameters: for some parameters limits
 
-        value, isEmpty = convertNumber(parameterValue)
+    parentWindow: object for showing messageboxes
 
-        if value is None and isEmpty is False:
-            messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be a number!", parent=parentWindow)
-            return None
-        elif value is None and isEmpty is True:
-            messagebox.showerror(f"{parameterName} input error", f"You must input {parameterName}!", parent=parentWindow)
-            return None
-        elif value == 0 and parameterName in zeroParameters:
-            return value
-        elif value == 0:
-            messagebox.showerror(f"{parameterName} input error", f"Zero is not valid {parameterName}!", parent=parentWindow)
-            return None
-        elif value < 0 and parameterName in negativeParameters:
-            return value
-        elif value < 0:
-            messagebox.showerror(f"{parameterName} input error", f"{parameterName} cannot be negative!", parent=parentWindow)
+    Returns
+    -----
+    valid parameters
+
+    None if some parameters are not ok
+    """
+    # Removes ideal (bool) value from dictionary
+    ideal = parameters.pop("Ideal")
+
+    # Remove valid string values
+    if type == "modulator" or type == "reciever":
+        numberParameters, stringParameters = removeStringValues(parameters, type, ideal)
+    else:
+        numberParameters = parameters
+        stringParameters = {}
+
+    # Conevert to floats
+    for key, value in numberParameters.items():
+        checked = checkNumber(key, value, parentWindow)
+        # Some number parameters was not inputed correctly
+        if checked is None:
             return None
         else:
-            return value
+            numberParameters.update({key:checked})
+
+    # Check the limits
+
+    for key, value in numberParameters.items():
+        checked = checkLimit(key, value, generalParameters, parentWindow)
+        # Off limit parameter
+        if not checked:
+            return None
+    
+    # Merge all the removed values back together
+    numberParameters.update(stringParameters)
+    numberParameters.update({"Ideal":ideal})
+
+    return numberParameters
+
+
+    
+
+def checkNumber(parameterName: str, parameterValue: str, parentWindow) -> float | None:
+    """
+    Converts string number to float.
+
+    Checks for:
+        empty string
+        string with characters
+
+    Show error message if parameter is not ok and returns None.
+
+    Parameters
+    -----
+    parentWindow: object for showing messageboxes
+    """
+
+    value, isEmpty = convertNumber(parameterValue)
+
+    if value is None and isEmpty is False:
+        messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be a number!", parent=parentWindow)
+        return None
+    elif value is None and isEmpty is True:
+        messagebox.showerror(f"{parameterName} input error", f"You must input {parameterName}!", parent=parentWindow)
+        return None
+    else: return value
+        
+
+def checkLimit(parameterName: str, parameterValue: float, generalParameters: dict, parentWindow) -> bool:
+    """
+    Checks the limit of parameter.
+
+    Parameters
+    -----
+    parentWindow: object for showing messageboxes
+
+    Returns
+    ----
+    True: parameter is ok
+
+    False: parameters is off limit
+    """
+    # Parameter set too low
+    if not checkDownLimit(parameterName, parameterValue, parentWindow):
+        return False
+    
+    # Parameter set too high
+    if not checkUpLimit(parameterName, parameterValue, generalParameters, parentWindow):
+        return False
+    
+    return True
+
+
+
+def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> bool:
+    """
+    Checks down limit of parameter.
+
+    Returns
+    ----
+    True: limit ok
+
+    False: limit not ok
+    """
+    # tuple (bool, value)
+    # True = parameter can be equal or greater
+    # False = parameter must be greater
+    downLimits = {
+        # Source
+        "Power":(True , -150), # >=
+        "Frequency":(False, 0), # >
+        "Linewidth":(True, 1), # >=
+        "RIN":(True, 0), # >=
+        # Modulator
+
+        # Channel
+        "Length":(False, 0), # >
+        "Attenuation":(True, 0), # >=
+        "Dispersion":(True, 0), # >=
+        # Reciever
+        "Bandwidth":(False, 0), # >
+        "Resolution":(False, 0), # >
+        # Amplifier
+        "Gain":(False, 0), # >
+        "Noise":(True, 0), # >=
+    }
+
+    limitComp, limitValue = downLimits.get(parameterName)
+
+    # Can be equal
+    if limitComp:
+        if parameterValue < limitValue:
+            messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be greater or equal to {limitValue}!", parent=parentWindow)
+            return False
+        else:
+            return True
+    else:
+        if parameterValue < limitValue:
+            messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be greater than {limitValue}!", parent=parentWindow)
+            return False
+        elif parameterValue == limitValue:
+            messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be greater than {limitValue}!", parent=parentWindow)
+            return False
+        else:
+            return True
+        
+
+def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: dict, parentWindow) -> bool:
+    """
+    Checks up limit of parameter.
+
+    Returns
+    ----
+    True: limit ok
+
+    False: limit not ok
+    """
+    # tuple (bool, value)
+    # True = parameter can be equal or lower
+    # False = parameter must be lower
+    upLimits = {
+        # Source
+        "Power":(True , -150), 
+        "Frequency":(False, 0), 
+        "Linewidth":(True, 1), 
+        "RIN":(True, 0),
+        # Modulator
+
+        # Channel
+        "Length":(False, 0),
+        "Attenuation":(True, 0),
+        "Dispersion":(True, 0), 
+        # Reciever
+        "Bandwidth":(True, generalParameters.get("Fs") / 2), # <=
+        "Resolution":(False, 0), 
+        # Amplifier
+        "Gain":(False, 0),
+        "Noise":(True, 0), 
+    }
+
+    limitComp, limitValue = upLimits.get(parameterName)
+
+    # Can be equal
+    if limitComp:
+        if parameterValue > limitValue:
+            messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be lower or equal to {limitValue}!", parent=parentWindow)
+            return False
+        else:
+            return True
+    else:
+        if parameterValue < limitValue:
+            messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be lower than {limitValue}!", parent=parentWindow)
+            return False
+        elif parameterValue == limitValue:
+            messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be lower than {limitValue}!", parent=parentWindow)
+            return False
+        else:
+            return True 
+
+
+def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, dict]:
+    """
+    Separates valid string parameters from number parameters.
+
+    Returns
+    -----
+    tuple (dictionary with number parameters, dictionary with string parameters)
+    """
+
+    if type == "modulator":
+        pass
+    elif type == "reciever":
+        # Type of reciever
+        stringDict = {"Type":parameters.pop("Type")}
+
+        # Some parameters has as ideal value "inf"
+        if ideal:
+            stringDict.update({"Bandwidth":parameters.pop("Bandwidth"), "Resolution":parameters.pop("Resolution")})
+        
+
+        return parameters, stringDict
+        
+    else: raise Exception("Unexpected error")     
+    

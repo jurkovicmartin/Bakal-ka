@@ -9,7 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from scripts.parameters_window import ParametersWindow
 from scripts.simulation import simulate, getValues, getPlot
-from scripts.parameters_functions import checkParameters
+from scripts.parameters_functions import convertNumber
 
 class Gui:
     def __init__(self):
@@ -202,7 +202,7 @@ class Gui:
         self.initialParameters = {"Source": self.sourceParameters, "Modulator": self.modulatorParameters, 
                                   "Channel": self.channelParameters, "Reciever": self.recieverParameters, "Amplifier": self.amplifierParameters}
 
-        self.generalParameters = {"SpS":16}
+        self.generalParameters = {"SpS":8}
 
 
         # Simulation results variables
@@ -273,20 +273,24 @@ class Gui:
         """
         Show Toplevel popup window to set parametrs.
         """
+        # Some general parameter was not ok
+        if not self.updateGeneralParameters():
+            return
+
         # Disable the other buttons when a popup is open
         self.disableButtons()
 
         # Open a new popup
         if clickedButton == self.sourceButton:
-            ParametersWindow(self, clickedButton, "source", self.getParameters, self.sourceParameters)
+            ParametersWindow(self, clickedButton, "source", self.getParameters, self.sourceParameters, self.generalParameters)
         elif clickedButton == self.modulatorButton:
-            ParametersWindow(self, clickedButton, "modulator", self.getParameters, self.modulatorParameters)
+            ParametersWindow(self, clickedButton, "modulator", self.getParameters, self.modulatorParameters, self.generalParameters)
         elif clickedButton == self.channelButton:
-            ParametersWindow(self, clickedButton, "channel", self.getParameters, self.channelParameters)
+            ParametersWindow(self, clickedButton, "channel", self.getParameters, self.channelParameters, self.generalParameters)
         elif clickedButton == self.recieverButton:
-            ParametersWindow(self, clickedButton, "reciever", self.getParameters, self.recieverParameters)
+            ParametersWindow(self, clickedButton, "reciever", self.getParameters, self.recieverParameters, self.generalParameters)
         elif clickedButton == self.amplifierButton:
-            ParametersWindow(self, clickedButton, "amplifier", self.getParameters, self.amplifierParameters)
+            ParametersWindow(self, clickedButton, "amplifier", self.getParameters, self.amplifierParameters, self.generalParameters)
         else: raise Exception("Unexpected error")
 
         
@@ -390,11 +394,15 @@ class Gui:
         self.mOrderCombobox.set(orderOptions[0])
 
 
-    def updateGeneralParameters(self):
+    def updateGeneralParameters(self) -> bool:
         """
         Update general parameters with values from editable fields.
 
-        If some parameter is not ok in the dictionary there will be only Fs.
+        Returns
+        ----
+        False: some parameter was not ok
+
+        True: all general parameters are ok
         """
         # Modulation format and order
         self.generalParameters.update({"Format": self.mFormatComboBox.get().lower(), "Order": int(self.mOrderCombobox.get())})
@@ -405,16 +413,28 @@ class Gui:
         if self.mFormatComboBox.get() == "OOK":
             self.generalParameters.update({"Format": "pam"})
 
-        # Symbol rate
-        Rs = checkParameters("Symbol rate", self.symbolRateEntry.get(), self.root)
-        if Rs is None:
-            self.generalParameters = {"SpS":8}
-            return
-            
+        # Check symbol rate
+        Rs, isEmpty = convertNumber(self.symbolRateEntry.get())
+        if Rs is None and isEmpty:
+            messagebox.showerror("Symbol rate input error", "You must input symbol rate!")
+            return False
+        elif Rs is None and not isEmpty:
+            messagebox.showerror("Symbol rate input error", "Symbol rate must be a number!")
+            return False
+        elif Rs < 0:
+            messagebox.showerror("Symbol rate input error", "Symbol rate must be a possitive number!")
+            return False
+        elif Rs == 0:
+            messagebox.showerror("Symbol rate input error", "Symbol rate cannot be 0!")
+            return False
         # Rs is ok
-        self.generalParameters.update({"Rs":Rs})
+        else:
+            self.generalParameters.update({"Rs":Rs})
+        
         self.generalParameters.update({"Fs":self.generalParameters.get("SpS") * self.generalParameters.get("Rs")})
         self.generalParameters.update({"Ts":1 / self.generalParameters.get("Fs")})
+
+        return True
 
     
     def showValues(self, outputValues: dict):

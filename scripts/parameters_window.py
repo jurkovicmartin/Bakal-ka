@@ -3,10 +3,10 @@
 import tkinter as tk
 from tkinter import ttk
 
-from scripts.parameters_functions import checkParameters
+from scripts.parameters_functions import validateParameters
 
 class ParametersWindow:
-    def __init__(self, parentGui, parentButton, buttonType: str, callback, defaultParameters: dict):
+    def __init__(self, parentGui, parentButton, buttonType: str, callback, defaultParameters: dict, generalParameters: dict):
         """
         Class to creates popup window for setting parameters.
 
@@ -27,6 +27,7 @@ class ParametersWindow:
         self.type = buttonType
         self.callback = callback
         self.defaultParameters = defaultParameters
+        self.generalParameters = generalParameters
         self.popup = self.popupGui()
 
         # Bind the popup window's closing event to the parent's method
@@ -232,7 +233,7 @@ class ParametersWindow:
             
             parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
-            parameters = self.validateParameters(parameters)
+            parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup)
 
             # Return if parameters are not valid
             if parameters is None: return
@@ -253,7 +254,7 @@ class ParametersWindow:
             
             parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
-            parameters = self.validateParameters(parameters)
+            parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup)
 
             # Return if parameters are not valid
             if parameters is None: return
@@ -267,7 +268,7 @@ class ParametersWindow:
             
             parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
-            parameters = self.validateParametersWithString(parameters)
+            parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup)
 
             # Return if parameters are not valid
             if parameters is None: return
@@ -281,7 +282,7 @@ class ParametersWindow:
             
             parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
-            parameters = self.validateParameters(parameters)
+            parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup)
 
             if parameters is None: return
         
@@ -296,92 +297,6 @@ class ParametersWindow:
 
         self.closePopup()
 
-    
-    def validateParameters(self, parameters: dict) -> dict:
-        """
-        Convert string parameters values to float and validate the inputed values.
-
-        Counts with "Ideal" bool parameter
-
-        Parameters
-        -----
-        parameters: values are strings
-
-        Returns
-        -----
-        parameters: values are floats
-
-            None if some parameters are not ok
-        """
-        # Removes the "Ideal" value because its bool and not number
-        ideal = parameters.pop("Ideal")
-
-        # Convert and validate the number values
-        for key, value in parameters.items():
-            checked = checkParameters(key, value, self.popup)
-            if checked is None:
-                return None
-            else:
-                parameters.update({key:checked})
-
-        # Return ideal parameter
-        parameters.update({"Ideal":ideal})
-
-        return parameters
-    
-
-    def validateParametersWithString(self, parameters: dict) -> dict:
-        """
-        Convert string parameters values to float and validate the inputed values.
-
-        Done for specific parameters that has string as valid value in some parameter.
-
-        Parameters
-        -----
-        parameters: values are strings
-
-        Returns
-        -----
-        parameters: values are floats
-
-            None if some parameters are not ok
-        """
-        # Parameters are for ideal reciever
-        # Ideal reciver contains "inf" values
-        if "Resolution" in parameters and parameters.get("Ideal"):
-            # Removes parameters that has valid string values
-            deviceType = parameters.pop("Type")
-            bandwidth = parameters.pop("Bandwidth")
-            resolution = parameters.pop("Resolution")
-
-            # Validate remaining number values (including "Ideal" bool)
-            parameters = self.validateParameters(parameters)
-
-            # Validating numbers was not ok
-            if parameters is None: return None
-
-            # Return the string values
-            parameters.update({"Type":deviceType, "Bandwidth":bandwidth, "Resolution":resolution})
-
-            return parameters
-        
-        # It is non ideal reciever or modulator => has only "Type" as string values
-        else:
-            # Remove string value from parameters dictionary
-            deviceType = parameters.pop("Type")
-
-            # Validate remaining number values (including "Ideal" bool)
-            parameters = self.validateParameters(parameters)
-
-            # Validating numbers was not ok
-            if parameters is None: return None
-
-            # Return of the device type back to the parameters
-            parameters.update({"Type":deviceType})
-
-            return parameters
-        
-    
 
     def idealCheckbuttonChange(self):
         """
