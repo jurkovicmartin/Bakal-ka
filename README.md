@@ -15,7 +15,7 @@
 
 # 2
 - constellations (kinda fixed)
-- general parameter Fs combobox
+- general parameter SpS combobox
 - (eyediagram show only for some modulations)
 
 # Include
