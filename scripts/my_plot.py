@@ -311,7 +311,7 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
     if type == "electrical":
         # interval for plot
         interval = np.arange(100,500)
-        t = interval*Ts/1e-9
+        t = interval*Ts
 
         fig, axs = plt.subplots(2, 1, figsize=(8, 4))
 
@@ -334,11 +334,11 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
     elif type == "optical":
         # interval for plot
         interval = np.arange(100,250)
-        t = interval*Ts/1e-9
+        t = interval*Ts
 
         # Calculate magnitude and phase
         magnitude = np.abs(signal[interval])
-        phase = np.angle(signal[interval],)
+        phase = np.angle(signal[interval], deg=True)
 
         # Plotting magnitude and phase in two subplots
         fig, axs = plt.subplots(2, 1, figsize=(8, 4))

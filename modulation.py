@@ -52,13 +52,19 @@ OOK - photodiode (only with mzm, not iqm)
 
 # INFORMATION SIGNAL
 SpS = 8 # Samples per symbol
-Rs = 1000
+Rs = 10e9
 Fs = SpS * Rs
+Ts = 1/Fs
 modulationOrder = 2 
-modulationFormat = "pam"
+modulationFormat = "psk"
+
+idealSource = True
+modulator = "pm"
+idealChannel = True
+detector = "photodiode"
 
 # generate pseudo-random bit sequence
-bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
+bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e2))
 
 # generate modulated symbol sequence
 grayMap = GrayMapping(modulationOrder, modulationFormat)
@@ -142,12 +148,10 @@ plt.suptitle("Information signal")
 # Laser parameters
 paramLaser = parameters()
 paramLaser.P = 10  # laser power [dBm] [default: 10 dBm]
-paramLaser.lw = 1000   # laser linewidth [Hz] [default: 1 kHz]
+paramLaser.lw = 1   # laser linewidth [Hz] [default: 1 kHz]
 paramLaser.RIN_var = 0  # variance of the RIN noise [default: 1e-20]
 paramLaser.Fs = 8  # sampling rate [samples/s]
 paramLaser.Ns = len(information)   # number of signal samples [default: 1e3]
-
-idealSource = True
 
 if idealSource:
 
@@ -186,7 +190,6 @@ else:
 
 
 # MODULATION
-modulator = "mzm"
 
 if modulator == "mzm":
     paramMZM = parameters()
@@ -243,58 +246,51 @@ else: pass
 
 
 
-t = np.linspace(0, 1, len(modulated))
+# t = np.linspace(0, 1, len(modulated))
+interval = np.arange(100,500)
+t = interval*Ts
 
-# Define the start and end indices to plot
-start_index = 10
-end_index = 200  # Choose the end index according to your requirements
-
-# Slice both t and signal arrays
-t_slice = t[start_index:end_index]
-signal_slice = modulated[start_index:end_index]
 
 # Calculate magnitude and phase
-magnitude = np.abs(signal_slice)
-phase = np.angle(signal_slice)
+magnitude = np.abs(modulated[interval])
+phase = np.angle(modulated[interval], deg=True)
 
 # Plotting magnitude and phase in two subplots
 fig, axs = plt.subplots(2, 1, figsize=(8, 8))
 
 # Plot magnitude
-axs[0].plot(t_slice, magnitude, label='Magnitude', linewidth=2, color='blue')
+axs[0].plot(t, magnitude, label='Magnitude', linewidth=2, color='blue')
 axs[0].set_ylabel('Magnitude')
 axs[0].legend(loc='upper left')
 
 # Plot phase
-axs[1].plot(t_slice, phase, label='Phase', linewidth=2, color='red')
-axs[1].set_ylabel('Phase')
+axs[1].plot(t, phase, label='Phase', linewidth=2, color='red')
+axs[1].set_ylabel('Phase (°)')
 axs[1].set_xlabel('Time (s)')  # Adjust the unit based on your data
 axs[1].legend(loc='upper left')
 
 plt.suptitle("Modulated (Magnitude and Phase)")
 
 
+
 # CHANNEL
 
-idealChannel = False
-
 if idealChannel:
-    pass
+    recieved = modulated
 else:
     # Linear optical channel
     paramCh = parameters()
-    paramCh.L = 200       # total link distance [km]
-    paramCh.α = 1       # fiber loss parameter [dB/km]
+    paramCh.L = 60       # total link distance [km]
+    paramCh.α = 0.2       # fiber loss parameter [dB/km]
     paramCh.D = 0        # fiber dispersion parameter [ps/nm/km]
     paramCh.Fc = 193.1 * (10**12) # central optical frequency [Hz]
     paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
 
-    modulated = linearFiberChannel(modulated, paramCh)
+    recieved = linearFiberChannel(modulated, paramCh)
 
 
 
 # DETECTION
-detector = "photodiode"
 
 """
 B <= Fs/2 (ovlivni i tvar)
@@ -307,20 +303,32 @@ if detector == "photodiode":
     paramPD = parameters()
     paramPD.ideal = False
     paramPD.Fs = Fs
-    paramPD.B = 4000
-    paramPD.R = 0.00001
-
-    detected = photodiode(modulated, paramPD)
+    paramPD.B = 100
+    paramPD.R = 1
+    paramPD.N = 100 # Number of filter coeficients ( < Fs)
+    detected = photodiode(recieved, paramPD)
 
 elif detector == "coherent":
     paramPD = parameters()
     paramPD.ideal = True
 
-    detected = coherentReceiver(modulated, carrier, paramPD)
+    detected = coherentReceiver(recieved, carrier, paramPD)
 
 else: pass
 
     
+carrierP = signal_power(carrier)/1e-3
+carrierP = 10*np.log10(carrierP)
+print(carrierP)
+
+modulatedP = signal_power(modulated)/1e-3
+modulatedP = 10*np.log10(modulatedP)
+print(modulatedP)
+
+recievedP = signal_power(recieved)/1e-3
+recievedP = 10*np.log10(recievedP)
+print(recievedP)
+
 
 
 # PLOT
@@ -350,9 +358,9 @@ axs[1].legend(loc='upper left')
 plt.suptitle("Detected signal")
     
 
-discard = 100
-eyediagram(information[discard:-discard], information.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy")
-eyediagram(detected[discard:-discard], information.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy")
+# discard = 100
+# eyediagram(information[discard:-discard], information.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy")
+# eyediagram(detected[discard:-discard], information.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy")
 
 # RESTORE
 detected = detected/np.std(detected)
@@ -372,7 +380,7 @@ Es = signal_power(const) # calculate the average energy per symbol of the conste
 bitsRx = demodulateGray(np.sqrt(Es)*symbolsRx, modulationOrder, modulationFormat)
 
 
-ber = fastBERcalc(bitsRx, bitsTx, modulationOrder, modulationFormat)[0]
+ber = fastBERcalc(symbolsRx, symbolsTx, modulationOrder, modulationFormat)[0]
 
 print(f"SymbolsTx: {symbolsTx}")
 print(f"SymbolsRx: {symbolsRx}")

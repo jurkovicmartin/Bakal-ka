@@ -247,14 +247,14 @@ else: pass
     
 
 # RESTORE
-detected = detected/np.std(detected)
+# detected = detected/np.std(detected)
 
 # capture samples in the middle of signaling intervals
-symbolsRx = detected[0::SpS]
+# symbolsRx = detected[0::SpS]
 
 # subtract DC level and normalize power
-symbolsRx = symbolsRx - symbolsRx.mean()
-symbolsRx = pnorm(symbolsRx)
+# symbolsRx = symbolsRx - symbolsRx.mean()
+# symbolsRx = pnorm(symbolsRx)
 
 # # demodulate symbols to bits with minimum Euclidean distance 
 # const = GrayMapping(modulationOrder, modulationFormat) # get constellation
@@ -272,8 +272,8 @@ symbolsRx = pnorm(symbolsRx)
 # print(f"Rx bits:{bitsRx}")
 # print(f"BER: {ber}")
 
-plot_constellation(symbolsTx, symbolsTx, "Constellation diagram", "tx")
-plot_constellation(symbolsTx, symbolsRx, "Constellation diagram", "rx")
+# plot_constellation(symbolsTx, symbolsTx, "Constellation diagram", "tx")
+# plot_constellation(symbolsTx, symbolsRx, "Constellation diagram", "rx")
 
 # pconst(symbolsTx)
 # pconst(symbolsRx)

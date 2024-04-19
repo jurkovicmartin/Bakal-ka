@@ -345,12 +345,13 @@ def getValues(simulationResults: dict, generalParameters: dict) -> dict:
     bitsTx = simulationResults.get("bitsTx")
     bitsRx = simulationResults.get("bitsRx")
     symbolsTx = simulationResults.get("symbolsTx")
+    symbolsRx = simulationResults.get("symbolsRx")
     modulatedSignal = simulationResults.get("modulatedSignal")
     recieverSignal = simulationResults.get("recieverSignal")
 
     # Error values
 
-    valuesList = fastBERcalc(bitsRx, bitsTx, modulationOrder, modulationFormat)
+    valuesList = fastBERcalc(symbolsRx, symbolsTx, modulationOrder, modulationFormat)
     # extract the values from arrays
     ber, ser, snr = [array[0] for array in valuesList]
     values = {"BER":ber, "SER":ser, "SNR":snr}

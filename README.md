@@ -5,18 +5,23 @@
 - Parameters (popsat vliv)
 
 # 1
-- signal_power warning (divide by zero)
 - Effect of laser frequency, linewidth
 - Effect of photodiode bandwidth
-- information restoration
 - signal power with modulators
 - data quantity lack of memory (memory usage) (speed input)
 - limits
+- no need for bits (Tx, Rx)
+- my Laser
 
 # 2
 - constellations (kinda fixed)
 - general parameter SpS combobox
 - (eyediagram show only for some modulations)
+- signal_power warning (divide by zero)
+- huge attenuation (not aply)
+- source huge noises (bordel)
+- dont allow shit states
+- my PM
 
 # Include
 - image of communication chain above the buttons
