@@ -11,7 +11,8 @@
 - data quantity lack of memory (memory usage) (speed input)
 - limits
 - no need for bits (Tx, Rx)
-- my Laser
+- my Laser (no Linewidth)
+- transmission speed set by Rs -> calculation by symbol rate (symbols/s) and modulation format (know how many bits on symbol)
 
 # 2
 - constellations (kinda fixed)
@@ -22,6 +23,8 @@
 - source huge noises (bordel)
 - dont allow shit states
 - my PM
+- presets / config
+- narocnost simulace (combobox with SpS + data quantity selection)
 
 # Include
 - image of communication chain above the buttons
