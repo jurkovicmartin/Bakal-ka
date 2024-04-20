@@ -13,6 +13,7 @@ from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter
 
 from optic.dsp.core import pnorm, signal_power
+from optic.models.amplification import get_spectrum
 import warnings
 
 warnings.filterwarnings("ignore", r"All-NaN (slice|axis) encountered")
@@ -283,21 +284,6 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None) -> tuple
     plt.close()
 
     return fig, axes
-  
-
-def powerSpectralDensity(Rs: int, Fs: int, signal, title: str) -> tuple[plt.Figure, plt.Axes]:
-    """
-    Plot power spectral density of optical signal.
-    """
-    fig, axs = plt.subplots(figsize=(8,4))
-    axs.set_xlim(-3*Rs,3*Rs)
-    # axs.set_ylim(-230,-130)
-    axs.psd(np.abs(signal)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
-    axs.legend(loc="upper left")
-    axs.set_title(title)
-    plt.close()
-
-    return fig, axs
 
 
 def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, plt.Axes]:
@@ -345,7 +331,7 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
 
         # Plot magnitude
         axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
-        axs[0].set_ylabel("Magnitude")
+        axs[0].set_ylabel("Magnitude (dBm)")
         axs[0].legend(loc="upper left")
 
         # Plot phase
@@ -360,3 +346,53 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
         return fig, axs
     
     else: raise Exception("Unexpected error")
+
+
+def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure, plt.Axes]:
+    """
+    Plot optical spectrum with wavelength.
+
+    Parameters:
+    -----
+    Fs: sampling frequency
+
+    Fc: central frequency
+    """
+    frequency, spectrum = get_spectrum(signal, Fs, Fc, xunits="m")
+    yMin = -70
+    yMax = spectrum.max() + 10
+    fig, ax = plt.subplots(1)
+    ax.plot( 1e9*frequency, spectrum)
+    ax.set_ylim([yMin, yMax])   
+    ax.set_xlabel("Wavelength [nm]")
+    ax.set_ylabel("Magnitude [dBm]")
+    ax.minorticks_on()
+    ax.grid(True)
+
+    plt.suptitle(title)
+    plt.close()
+
+    return fig, ax
+
+
+
+
+
+
+
+
+
+
+def powerSpectralDensity(Rs: int, Fs: int, signal, title: str) -> tuple[plt.Figure, plt.Axes]:
+    """
+    Plot power spectral density of optical signal.
+    """
+    fig, axs = plt.subplots(figsize=(8,4))
+    axs.set_xlim(-3*Rs,3*Rs)
+    # axs.set_ylim(-230,-130)
+    axs.psd(np.abs(signal)**2, Fs=Fs, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
+    axs.legend(loc="upper left")
+    axs.set_title(title)
+    plt.close()
+
+    return fig, axs

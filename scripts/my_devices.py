@@ -7,7 +7,7 @@ Also added some more functions.
 import numpy as np
 import scipy.constants as const
 from optic.utils import dBm2W
-from optic.dsp.core import gaussianComplexNoise
+from optic.dsp.core import gaussianComplexNoise, gaussianNoise
 
 def idealLaserModel(param) -> np.array:
     """
@@ -24,7 +24,7 @@ def idealLaserModel(param) -> np.array:
     return np.full(Ns, np.sqrt(dBm2W(P)))
 
 
-def edfa(Ei, ideal: bool, param=None):
+def edfa(Ei, ideal: bool, param=None) -> np.array:
     """
     Implement simple EDFA model.
 
@@ -70,3 +70,27 @@ def edfa(Ei, ideal: bool, param=None):
         noise = gaussianComplexNoise(Ei.shape, p_noise)
 
         return Ei * np.sqrt(G_lin) + noise
+    
+
+def laserSource(param) -> np.array:
+    """
+    Generates optical carrier signal.
+
+    Parameters:
+    ----
+    Ns: number of samples of the signal
+
+    phn: phase noise
+
+    pwn: power noise
+    """
+    P = getattr(param, "P")  # Laser power in dBm
+    lw = getattr(param, "lw")  # Linewidth in Hz
+    Ns = getattr(param, "Ns")  # Number of samples of the signal
+    phn = getattr(param, "phn") # Gaussian phase noise
+    pwn = getattr(param, "pwn") # Gaussian power noise
+
+    powerNoise = gaussianNoise(Ns, pwn)
+    phaseNoise = gaussianNoise(Ns, phn)
+
+    return np.sqrt(dBm2W(P)) * np.exp(1j * phaseNoise) + powerNoise

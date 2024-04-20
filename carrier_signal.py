@@ -17,6 +17,9 @@ except ImportError:
 from optic.utils import parameters, dBm2W
 from optic.dsp.core import gaussianComplexNoise, gaussianNoise
 
+from optic.plot import plotPSD
+from optic.models.amplification import OSA, get_spectrum
+
 
 
 def laser(param):
@@ -36,11 +39,50 @@ def laser(param):
     return np.sqrt(dBm2W(P)) * np.exp(1j * deltaPn) + deltaP
 
 
+
+def mOSA(x, Fs, Fc=193.1e12):
+    """
+    Plot the optical spectrum of the signal in X and Y polarizations.
+
+    Parameters
+    ----------
+    x : np.array
+        Signal
+    Fs : scalar
+        Sampling frequency in Hz.
+    Fc : scalar, optional
+        Central optical frequency. The default is 193.1e12.
+
+    Returns
+    -------
+    plot
+
+    """
+    freqs, ZX = get_spectrum(x, Fs, Fc, xunits="m")
+    yMin = -70
+    yMax = ZX.max() + 10
+    _,ax = plt.subplots(1)
+    ax.plot( 1e9*freqs, ZX, label="X Pol.")
+    # if (np.shape(x)[1] == 2):
+    #     freqs, ZY = get_spectrum(x[:,1], Fs, Fc)
+    #     ax.plot( 1e9*freqs, ZY, label="Y Pol.", alpha=0.5)
+    #     yMax = np.array([ZX.max(), ZY.max()]).max() + 10
+    #     ax.legend()
+    ax.set_ylim([yMin, yMax])   
+    ax.set_xlabel("Wavelength [nm]")
+    ax.set_ylabel("Magnitude [dBm]")
+    ax.minorticks_on()
+    ax.grid(True)
+    
+    return ax
+
+
 # INFORMATION SIGNAL
 SpS = 8 # Samples per symbol
-Fs = 800
+Rs = 10e9
+Fs = SpS * Rs
 modulationOrder = 2
-modulationFormat = "psk"
+modulationFormat = "pam"
 
 # generate pseudo-random bit sequence
 bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e3))
@@ -94,9 +136,11 @@ information = firFilter(pulse, symbolsUp)
 paramLaser = parameters()
 paramLaser.P = 10  # laser power [dBm] [default: 10 dBm]
 paramLaser.lw = 1000    # laser linewidth [Hz] [default: 1 kHz]
-paramLaser.RIN_var = 0  # variance of the RIN noise [default: 1e-20]
+paramLaser.RIN_var = 1e-20  # variance of the RIN noise [default: 1e-20]
 paramLaser.Fs = 8  # sampling rate [samples/s]
 paramLaser.Ns = len(information)   # number of signal samples [default: 1e3]
+
+Fc = 191.7e12
 
 paramLaser.pn = 1e-2
 
@@ -142,16 +186,16 @@ plt.suptitle("Carrier (Magnitude and Phase)")
 
 # MODULATION
 
-# paramMZM = parameters()
-# paramMZM.Vpi = 2
-# paramMZM.Vb = -paramMZM.Vpi/2
+paramMZM = parameters()
+paramMZM.Vpi = 2
+paramMZM.Vb = -paramMZM.Vpi/2
 
-# modulated = mzm(signal, information, paramMZM)
+modulated = mzm(signal, information, paramMZM)
 
 
-Vpi = 2 # PM’s Vπ voltage
+# Vpi = 2 # PM’s Vπ voltage
 
-modulated = pm(signal, information, Vpi)
+# modulated = pm(signal, information, Vpi)
 
 # t = np.linspace(0, 1, len(modulated))
 interval = np.arange(100,500)
@@ -177,5 +221,21 @@ axs[1].set_xlabel('Time (s)')  # Adjust the unit based on your data
 axs[1].legend(loc='upper left')
 
 plt.suptitle("Modulated (Magnitude and Phase)")
+
+
+
+
+# fig, axs = plt.subplots(figsize=(8,4))
+# # axs.set_xlim(-3*Rs,3*Rs)
+# # axs.set_ylim(-230,-130)
+# axs.psd(np.abs(signal)**2, Fs=Fs, Fc=Fc, NFFT = 16*1024, sides="twosided", label = "Optical signal spectrum")
+# axs.legend(loc="upper left")
+# axs.set_title("PSD")
+
+# plotPSD(modulated, Fs, Fc, label="PSD")
+
+mOSA(modulated, Fs, Fc)
+
+
 
 plt.show()
