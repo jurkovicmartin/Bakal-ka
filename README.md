@@ -8,16 +8,14 @@
 - Effect of laser frequency, linewidth
 - Effect of photodiode bandwidth
 - signal power with modulators
-- data quantity lack of memory (memory usage) (speed input)
 - limits
-- no need for bits (Tx, Rx)
 - my Laser (no Linewidth)
-- transmission speed set by Rs -> calculation by symbol rate (symbols/s) and modulation format (know how many bits on symbol)
+- spectrum x ax units
 
 # 2
 - constellations (kinda fixed)
-- general parameter SpS combobox
 - (eyediagram show only for some modulations)
+- show setted parameters (.0)
 - signal_power warning (divide by zero)
 - huge attenuation (not aply)
 - source huge noises (bordel)
@@ -25,6 +23,8 @@
 - my PM
 - presets / config
 - narocnost simulace (combobox with SpS + data quantity selection)
+- no need for bits (Tx, Rx)
+- SpS on spreads signal in time
 
 # Include
 - image of communication chain above the buttons

@@ -76,17 +76,10 @@ class Gui:
         self.mOrderLabel.grid(row=0, column=1)
         self.mOrderCombobox.grid(row=1, column=1)
 
-        # Data quantity
-        self.dataQuantityLabel = tk.Label(self.generalFrame, text="Data quantity to transmission")
-        self.dataQuantityCombobox = ttk.Combobox(self.generalFrame, values=["kb", "Mb", "Gb"], state="readonly")
-        self.dataQuantityCombobox.set("kb")
-        self.dataQuantityLabel.grid(row=0, column=2)
-        self.dataQuantityCombobox.grid(row=1, column=2)
-
         # Symbol rate
         self.symbolRateLabel = tk.Label(self.generalFrame, text="Symbol rate [symbols/s]")
         self.symbolRateEntry = tk.Entry(self.generalFrame)
-        self.symbolRateEntry.insert(0, "1")
+        self.symbolRateEntry.insert(0, "1000")
         self.symbolRateLabel.grid(row=0, column=3)
         self.symbolRateEntry.grid(row=1, column=3)
 
@@ -151,12 +144,12 @@ class Gui:
         # Tx plots
         self.infTxButton = tk.Button(self.plotsTxFrame, text="Show modulation signal", command=lambda: self.showGraph(self.infTxButton))
         self.conTxButton = tk.Button(self.plotsTxFrame, text="Show Tx constellation diagram", command=lambda: self.showGraph(self.conTxButton))
-        self.psdTxButton = tk.Button(self.plotsTxFrame, text="Show Tx PSD", command=lambda: self.showGraph(self.psdTxButton))
+        self.spectrumTxButton = tk.Button(self.plotsTxFrame, text="Show Tx spectrum", command=lambda: self.showGraph(self.spectrumTxButton))
         self.sigTxButton = tk.Button(self.plotsTxFrame, text="Show Tx signal in time", command=lambda: self.showGraph(self.sigTxButton))
         self.eyeTxButton = tk.Button(self.plotsTxFrame, text="Show Tx eyediagram", command=lambda: self.showGraph(self.eyeTxButton))
         
         self.infTxButton.pack()
-        self.psdTxButton.pack()
+        self.spectrumTxButton.pack()
         self.conTxButton.pack()
         self.sigTxButton.pack()
         self.eyeTxButton.pack()
@@ -164,12 +157,12 @@ class Gui:
         # Rx plots
         self.infRxButton = tk.Button(self.plotsRxFrame, text="Show detected signal", command=lambda: self.showGraph(self.infRxButton))
         self.conRxButton = tk.Button(self.plotsRxFrame, text="Show Rx constellation diagram", command=lambda: self.showGraph(self.conRxButton))
-        self.psdRxButton = tk.Button(self.plotsRxFrame, text="Show Rx PSD", command=lambda: self.showGraph(self.psdRxButton))
+        self.spectrumRxButton = tk.Button(self.plotsRxFrame, text="Show Rx spectrum", command=lambda: self.showGraph(self.spectrumRxButton))
         self.sigRxButton = tk.Button(self.plotsRxFrame, text="Show Rx signal in time", command=lambda: self.showGraph(self.sigRxButton))
         self.eyeRxButton = tk.Button(self.plotsRxFrame, text="Show Rx eyediagram", command=lambda: self.showGraph(self.eyeRxButton))
 
         self.infRxButton.pack()
-        self.psdRxButton.pack()
+        self.spectrumRxButton.pack()
         self.conRxButton.pack()
         self.sigRxButton.pack()
         self.eyeRxButton.pack()
@@ -193,7 +186,7 @@ class Gui:
         # self.generalParameters = {"SpS": 8, "Rs": 10 ** 3}
 
         # Inicial parameters
-        self.sourceParameters = {"Power": 0, "Frequency": 0, "Linewidth": 0, "RIN": 0, "Ideal": False}
+        self.sourceParameters = {"Power": 0, "Frequency": 0, "Linewidth": 0, "PowerNoise": 0, "PhaseNoise": 0, "Ideal": False}
         self.modulatorParameters = {"Type": "MZM"}
         self.channelParameters = {"Length": 0, "Attenuation": 0, "Dispersion": 0, "Ideal": False}
         self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 0, "Resolution": 0, "Ideal": False}
@@ -203,6 +196,14 @@ class Gui:
                                   "Channel": self.channelParameters, "Reciever": self.recieverParameters, "Amplifier": self.amplifierParameters}
 
         self.generalParameters = {"SpS":8}
+
+        # Default parameters (testing)
+        self.sourceParameters = {"Power": 10, "Frequency": 191.7, "Linewidth": 1, "PowerNoise": 0, "PhaseNoise": 0, "Ideal": True}
+        self.modulatorParameters = {"Type": "MZM"}
+        self.channelParameters = {"Length": 40, "Attenuation": 0, "Dispersion": 0, "Ideal": True}
+        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 1000, "Resolution": 0.5, "Ideal": False}
+        self.amplifierParameters = {"Gain": 0, "Noise": 0, "Ideal": False}
+
 
 
         # Simulation results variables
@@ -406,8 +407,6 @@ class Gui:
         """
         # Modulation format and order
         self.generalParameters.update({"Format": self.mFormatComboBox.get().lower(), "Order": int(self.mOrderCombobox.get())})
-        # Data quantity
-        self.generalParameters.update({"Data":self.dataQuantityCombobox.get()})
 
         # OOK is created same as 2 order PAM
         if self.mFormatComboBox.get() == "OOK":
@@ -421,11 +420,11 @@ class Gui:
         elif Rs is None and not isEmpty:
             messagebox.showerror("Symbol rate input error", "Symbol rate must be a number!")
             return False
-        elif Rs < 0:
-            messagebox.showerror("Symbol rate input error", "Symbol rate must be a possitive number!")
+        elif Rs != int(Rs):
+            messagebox.showerror("Symbol rate input error", "Symbol rate must whole number!")
             return False
-        elif Rs == 0:
-            messagebox.showerror("Symbol rate input error", "Symbol rate cannot be 0!")
+        elif Rs < 1000:
+            messagebox.showerror("Symbol rate input error", "Symbol rate must be atleast 1000")
             return False
         # Rs is ok
         else:
@@ -463,6 +462,7 @@ class Gui:
             self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed / 10**6} Mb/s")
         elif transmissionSpeed >= 10**3:
             self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed / 10**3} kb/s")
+        # Should not happen
         else:
             self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed} b/s")
 
@@ -489,12 +489,12 @@ class Gui:
         elif clickedButton == self.conRxButton:
             type = "constellationRx"
             title = "Rx constellation diagram"
-        elif clickedButton == self.psdTxButton:
-            type = "psdTx"
-            title = "Tx power spectral density"
-        elif clickedButton == self.psdRxButton:
-            type = "psdRx"
-            title = "Rx power spectral density"
+        elif clickedButton == self.spectrumTxButton:
+            type = "spectrumTx"
+            title = "Tx optical spectrum"
+        elif clickedButton == self.spectrumRxButton:
+            type = "spectrumRx"
+            title = "Rx optical spectrum"
         elif clickedButton == self.sigTxButton:
             type = "signalTx"
             title = "Tx signal in time"
@@ -516,7 +516,7 @@ class Gui:
 
         # Graph will be shown for the first time
         else:
-            plot = getPlot(type, title,  self.simulationResults, self.generalParameters)
+            plot = getPlot(type, title,  self.simulationResults, self.generalParameters, self.sourceParameters)
             self.displayPlot(plot, title)
             self.plots.update({type:plot})
 

@@ -72,20 +72,26 @@ class ParametersWindow:
             self.linewidthEntry = tk.Entry(self.popup)
             self.linewidthEntry.grid(row=3, column=1)
 
-            # RIN noise
-            self.rinLabel = tk.Label(self.popup, text="RIN noise")
-            self.rinLabel.grid(row=4, column=0)
-            self.rinEntry = tk.Entry(self.popup)
-            self.rinEntry.grid(row=4, column=1)
+            # Power noise
+            self.powerNoiseLabel = tk.Label(self.popup, text="Power noise")
+            self.powerNoiseLabel.grid(row=4, column=0)
+            self.powerNoiseEntry = tk.Entry(self.popup)
+            self.powerNoiseEntry.grid(row=4, column=1)
+
+            # Phase noise
+            self.phaseNoiseLabel = tk.Label(self.popup, text="Phase noise")
+            self.phaseNoiseLabel.grid(row=5, column=0)
+            self.phaseNoiseEntry = tk.Entry(self.popup)
+            self.phaseNoiseEntry.grid(row=5, column=1)
 
             # Ideal parameters checkbutton
             self.sourceCheckVar = tk.BooleanVar()
             self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.sourceCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton.grid(row=5, column=0, columnspan=2)
+            self.idealCheckbutton.grid(row=6, column=0, columnspan=2)
     
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=6, column=0, columnspan=2)
+            self.setButton.grid(row=7, column=0, columnspan=2)
 
             self.setDefaultParameters()
 
@@ -227,9 +233,9 @@ class ParametersWindow:
         """
         if self.type == "source":
             # Showing in main gui
-            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
+            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nPower noise: {self.powerNoiseEntry.get()}\nPhase noise: {self.phaseNoiseEntry.get()}"
             # Getting initial values
-            parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "RIN":self.rinEntry.get()}
+            parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "PowerNoise":self.powerNoiseEntry.get(), "PhaseNoise":self.phaseNoiseEntry.get()}
             
             parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
@@ -304,15 +310,20 @@ class ParametersWindow:
         """
         if self.type == "source":
             if self.sourceCheckVar.get():
-                self.rinEntry.delete(0, tk.END)
-                self.rinEntry.insert(0, "0")
-                self.rinEntry.config(state="disabled")
+                self.powerNoiseEntry.delete(0, tk.END)
+                self.powerNoiseEntry.insert(0, "0")
+                self.powerNoiseEntry.config(state="disabled")
+
+                self.phaseNoiseEntry.delete(0, tk.END)
+                self.phaseNoiseEntry.insert(0, "0")
+                self.phaseNoiseEntry.config(state="disabled")
 
                 self.linewidthEntry.delete(0, tk.END)
                 self.linewidthEntry.insert(0, "1")
                 self.linewidthEntry.config(state="disabled")
             else:
-                self.rinEntry.config(state="normal")
+                self.powerNoiseEntry.config(state="normal")
+                self.phaseNoiseEntry.config(state="normal")
                 self.linewidthEntry.config(state="normal")
                 
         elif self.type == "channel":
@@ -375,7 +386,8 @@ class ParametersWindow:
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
                 self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
                 self.linewidthEntry.insert(0, str(self.defaultParameters.get("Linewidth")))
-                self.rinEntry.insert(0, str(self.defaultParameters.get("RIN")))
+                self.powerNoiseEntry.insert(0, str(self.defaultParameters.get("PowerNoise")))
+                self.phaseNoiseEntry.insert(0, str(self.defaultParameters.get("PhaseNoise")))
         
         elif self.type == "modulator":
             # No default parameters
@@ -435,7 +447,7 @@ class ParametersWindow:
         """
         if self.type == "source":
             # Maunaly set ideal parameters
-            if parameters.get("Linewidth") == 1 and parameters.get("RIN") == 0:
+            if parameters.get("Linewidth") == 1 and parameters.get("PowerNoise") == 0 and parameters.get("PhaseNoise") == 0:
                 return {"Ideal":True}
             # Set value based on the ideal checkbox
             else:

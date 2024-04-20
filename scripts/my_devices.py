@@ -9,21 +9,6 @@ import scipy.constants as const
 from optic.utils import dBm2W
 from optic.dsp.core import gaussianComplexNoise, gaussianNoise
 
-def idealLaserModel(param) -> np.array:
-    """
-    Laser model without any noise.
-
-    Parameters
-    -----
-    param: parameters of laser
-    """
-    P = getattr(param, "P")  # Laser power in dBm
-    Ns = getattr(param, "Ns")  # Number of samples of the signal
-
-    # Return optical signal
-    return np.full(Ns, np.sqrt(dBm2W(P)))
-
-
 def edfa(Ei, ideal: bool, param=None) -> np.array:
     """
     Implement simple EDFA model.

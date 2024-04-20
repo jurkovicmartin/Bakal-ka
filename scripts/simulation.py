@@ -16,8 +16,8 @@ except ImportError:
 from optic.utils import parameters
 import matplotlib.pyplot as plt
 
-from scripts.my_devices import idealLaserModel, edfa
-from scripts.my_plot import eyediagram, pconst, powerSpectralDensity, signalInTime
+from scripts.my_devices import edfa, laserSource
+from scripts.my_plot import eyediagram, pconst, opticalSpectrum, signalInTime
 from scripts.output_functions import calculateTransSpeed
 
 def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict) -> dict:
@@ -33,11 +33,11 @@ def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameter
     simulationResults: bitsTx, symbolsTx, modulationSignal, carrierSignal, modulatedSignal, recieverSignal, detectedSignal, symbolsRx, bitsRx
     """
 
-    np.random.seed(seed=123) # fixing the seed to get reproducible results
+    # Each time random numbers
+    np.random.seed(seed=123)
 
     # Not returning values
     Fs = generalParameters.get("Fs")
-    Rs = generalParameters.get("Rs")
     frequency = sourceParameters.get("Frequency")*10**12 # Manage units (THz -> Hz)
 
     # Output dictionary
@@ -70,10 +70,9 @@ def modulationSignal(generalParameters: dict) -> dict:
     SpS = generalParameters.get("SpS")  # Samples per symbol
     modulationOrder = generalParameters.get("Order")
     modulationFormat = generalParameters.get("Format")
-    data = convertDataQuantity(generalParameters.get("Data"))
     
     # generate pseudo-random bit sequence
-    bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*data))
+    bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
 
     # generate modulated symbol sequence
     symbolsTx = modulateGray(bitsTx, modulationOrder, modulationFormat)
@@ -110,14 +109,13 @@ def carrierSignal(sourceParameters: dict, Fs: int, modulationSignal) -> dict:
     paramLaser = parameters()
     paramLaser.P = sourceParameters.get("Power")   # laser power [dBm] [default: 10 dBm]
     paramLaser.lw = sourceParameters.get("Linewidth")    # laser linewidth [Hz] [default: 1 kHz]
-    paramLaser.RIN_var = sourceParameters.get("RIN")  # variance of the RIN noise [default: 1e-20]
     paramLaser.Fs = Fs  # sampling rate [samples/s]
     paramLaser.Ns = len(modulationSignal)   # number of signal samples [default: 1e3]
+    paramLaser.pwn = sourceParameters.get("PowerNoise") # Gaussian power noise
+    paramLaser.phn = sourceParameters.get("PhaseNoise") # Gaussian phase noise
 
-    if sourceParameters.get("Ideal"):
-        return {"carrierSignal":idealLaserModel(paramLaser)}
-    else:
-        return {"carrierSignal":basicLaserModel(paramLaser)}
+
+    return {"carrierSignal":laserSource(paramLaser)}
 
 def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict:
     """
@@ -274,7 +272,7 @@ def restoreInformation(detectedSignal, generalParameters: dict) -> dict:
     return {"symbolsRx":symbolsRx, "bitsRx":bitsRx}
 
 
-def getPlot(type: str, title: str, simulationResults: dict, generalParameters: dict)  -> tuple[plt.Figure, plt.Axes]:
+def getPlot(type: str, title: str, simulationResults: dict, generalParameters: dict, sourceParameters: dict)  -> tuple[plt.Figure, plt.Axes]:
     """
     Shows graph in separate window and returns (Figure, Axes) tuple
 
@@ -287,6 +285,8 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
     Rs = generalParameters.get("Rs")
     Fs = generalParameters.get("Fs")
     SpS = generalParameters.get("SpS")
+
+    centralFrequency = sourceParameters.get("Frequency") * 10**12
 
     informationSignal = simulationResults.get("modulationSignal")
     modulatedSignal = simulationResults.get("modulatedSignal")
@@ -307,11 +307,12 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
     elif type == "constellationRx":
         # Rx constellation diagram
         return pconst(symbolsRx, whiteb=True)
-    elif type == "psdTx":
-        # Tx PSD
-        return powerSpectralDensity(Rs, Fs, modulatedSignal, title)
-    elif type == "psdRx":
-        return powerSpectralDensity(Rs, Fs, recieverSignal, title)
+    elif type == "spectrumTx":
+        # Tx optical spectrum
+        return opticalSpectrum(modulatedSignal, Fs, centralFrequency, title)
+        # Rx optical spectrum
+    elif type == "spectrumRx":
+        return opticalSpectrum(recieverSignal, Fs, centralFrequency, title)
     elif type == "signalTx":
         # Modulated signal in time (Tx signal)
         return signalInTime(Ts, modulatedSignal, title, "optical")
@@ -357,7 +358,7 @@ def getValues(simulationResults: dict, generalParameters: dict) -> dict:
     values = {"BER":ber, "SER":ser, "SNR":snr}
 
     # Transmission speed
-    values.update({"Speed":calculateTransSpeed(bitsTx, symbolsTx, Rs)})
+    values.update({"Speed":calculateTransSpeed(Rs, modulationOrder)})
 
     # Tx power [W]
     power = signal_power(modulatedSignal)/1e-3
@@ -373,14 +374,3 @@ def getValues(simulationResults: dict, generalParameters: dict) -> dict:
     values.update({"powerRxdBm":power})
 
     return values
-
-def convertDataQuantity(data: str) -> int:
-    """
-    Converts string "kb" / "Mb" / "Gb" to int number
-    """
-    if data == "kb":
-        return 10**3
-    elif data == "Mb":
-        return 10**6
-    elif data == "Gb":
-        return 10**9

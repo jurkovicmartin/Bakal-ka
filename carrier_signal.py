@@ -4,8 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from optic.models.devices import mzm, pm
 
-from scripts.my_devices import idealLaserModel
-
 from optic.comm.modulation import modulateGray, GrayMapping
 from optic.dsp.core import pulseShape, pnorm
 from commpy.utilities  import upsample
@@ -19,6 +17,8 @@ from optic.dsp.core import gaussianComplexNoise, gaussianNoise
 
 from optic.plot import plotPSD
 from optic.models.amplification import OSA, get_spectrum
+
+from scripts.my_plot import opticalSpectrum
 
 
 
@@ -140,20 +140,12 @@ paramLaser.RIN_var = 1e-20  # variance of the RIN noise [default: 1e-20]
 paramLaser.Fs = 8  # sampling rate [samples/s]
 paramLaser.Ns = len(information)   # number of signal samples [default: 1e3]
 
-Fc = 191.7e12
+Fc = 191.7 * 10**12
 
 paramLaser.pn = 1e-2
-
-ideal = False
-
-if ideal:
-
-    signal = idealLaserModel(paramLaser)
-
-else:
     
-    # signal = basicLaserModel(paramLaser)
-    signal = laser(paramLaser)
+# signal = basicLaserModel(paramLaser)
+signal = laser(paramLaser)
 
 
 # t = np.linspace(0, 1, len(modulated))
@@ -236,6 +228,6 @@ plt.suptitle("Modulated (Magnitude and Phase)")
 
 mOSA(modulated, Fs, Fc)
 
-
+# opticalSpectrum(modulated, Fs, Fc, "From my lib")
 
 plt.show()

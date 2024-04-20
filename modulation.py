@@ -52,19 +52,19 @@ OOK - photodiode (only with mzm, not iqm)
 
 # INFORMATION SIGNAL
 SpS = 8 # Samples per symbol
-Rs = 10e9
+Rs = 1000
 Fs = SpS * Rs
 Ts = 1/Fs
 modulationOrder = 2 
-modulationFormat = "psk"
+modulationFormat = "pam"
 
 idealSource = True
-modulator = "pm"
+modulator = "mzm"
 idealChannel = True
 detector = "photodiode"
 
 # generate pseudo-random bit sequence
-bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e2))
+bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
 
 # generate modulated symbol sequence
 grayMap = GrayMapping(modulationOrder, modulationFormat)
@@ -303,9 +303,9 @@ if detector == "photodiode":
     paramPD = parameters()
     paramPD.ideal = False
     paramPD.Fs = Fs
-    paramPD.B = 100
-    paramPD.R = 1
-    paramPD.N = 100 # Number of filter coeficients ( < Fs)
+    paramPD.B = 1000
+    paramPD.R = 0.2
+    paramPD.N = 8001 # Number of filter coeficients ( < Fs)
     detected = photodiode(recieved, paramPD)
 
 elif detector == "coherent":
@@ -387,6 +387,9 @@ print(f"SymbolsRx: {symbolsRx}")
 print(f"Tx bits:{bitsTx}")
 print(f"Rx bits:{bitsRx}")
 print(f"BER: {ber}")
+
+discard = 100
+eyediagram(detected[discard:-discard], detected.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy")
 
 
 

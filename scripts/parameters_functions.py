@@ -129,8 +129,8 @@ def checkLimit(parameterName: str, parameterValue: float, generalParameters: dic
         return False
     
     # Parameter set too high
-    if not checkUpLimit(parameterName, parameterValue, generalParameters, parentWindow):
-        return False
+    # if not checkUpLimit(parameterName, parameterValue, generalParameters, parentWindow):
+    #     return False
     
     return True
 
@@ -154,7 +154,8 @@ def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> b
         "Power":(True , -150), # >=
         "Frequency":(False, 0), # >
         "Linewidth":(True, 1), # >=
-        "RIN":(True, 0), # >=
+        "PowerNoise":(True, 0), # >=
+        "PhaseNoise":(True, 0), # >=
         # Modulator
 
         # Channel
@@ -207,7 +208,8 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
         "Power":(True , -150), 
         "Frequency":(False, 0), 
         "Linewidth":(True, 1), 
-        "RIN":(True, 0),
+        "PowerNoise":(True, 0),
+        "PhaseNoise":(True, 0),
         # Modulator
 
         # Channel

@@ -366,7 +366,7 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
     ax.set_ylim([yMin, yMax])   
     ax.set_xlabel("Wavelength [nm]")
     ax.set_ylabel("Magnitude [dBm]")
-    ax.minorticks_on()
+    # ax.minorticks_on()
     ax.grid(True)
 
     plt.suptitle(title)
