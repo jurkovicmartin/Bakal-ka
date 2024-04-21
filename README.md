@@ -10,6 +10,7 @@
 - signal power with modulators
 - limits
 - my Laser (no Linewidth)
+- channel
 
 # 2
 - constellations (kinda fixed)

@@ -424,7 +424,10 @@ class Gui:
             messagebox.showerror("Symbol rate input error", "Symbol rate must whole number!")
             return False
         elif Rs < 1000:
-            messagebox.showerror("Symbol rate input error", "Symbol rate must be atleast 1000")
+            messagebox.showerror("Symbol rate input error", "Symbol rate must be 1000 or greater")
+            return False
+        elif Rs > 10**12:
+            messagebox.showerror("Symbol rate input error", "Symbol rate must lower than 1 THz")
             return False
         # Rs is ok
         else:

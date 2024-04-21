@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from optic.models.devices import mzm, pm
 
 from optic.comm.modulation import modulateGray, GrayMapping
-from optic.dsp.core import pulseShape, pnorm
+from optic.dsp.core import pulseShape, pnorm, signal_power
 from commpy.utilities  import upsample
 try:
     from optic.dsp.coreGPU import firFilter    
@@ -19,6 +19,7 @@ from optic.plot import plotPSD
 from optic.models.amplification import OSA, get_spectrum
 
 from scripts.my_plot import opticalSpectrum
+from optic.models.channels import linearFiberChannel
 
 
 
@@ -140,14 +141,14 @@ information = firFilter(pulse, symbolsUp)
 # Laser parameters
 paramLaser = parameters()
 paramLaser.P = 10  # laser power [dBm] [default: 10 dBm]
-paramLaser.lw = 1000    # laser linewidth [Hz] [default: 1 kHz]
-paramLaser.RIN_var = 1e-20  # variance of the RIN noise [default: 1e-20]
+paramLaser.lw = 1    # laser linewidth [Hz] [default: 1 kHz]
+paramLaser.RIN_var = 0  # variance of the RIN noise [default: 1e-20]
 paramLaser.Fs = 8  # sampling rate [samples/s]
 paramLaser.Ns = len(information)   # number of signal samples [default: 1e3]
 
 Fc = 191.7 * 10**12
 
-paramLaser.pn = 1e-2
+paramLaser.pn = 0
     
 # signal = basicLaserModel(paramLaser)
 signal = laser(paramLaser)
@@ -220,6 +221,51 @@ axs[1].legend(loc='upper left')
 plt.suptitle("Modulated (Magnitude and Phase)")
 
 
+# Linear optical channel
+paramCh = parameters()
+paramCh.L = 60       # total link distance [km]
+paramCh.α = 0       # fiber loss parameter [dB/km]
+paramCh.D = 0        # fiber dispersion parameter [ps/nm/km]
+paramCh.Fc = Fc # central optical frequency [Hz]
+paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
+
+recieved = linearFiberChannel(modulated, paramCh)
+
+
+
+interval = np.arange(100,500)
+t = interval*(1/Fs)
+
+
+# Calculate magnitude and phase
+magnitude = np.abs(recieved[interval])
+phase = np.angle(recieved[interval], deg=True)
+
+# Plotting magnitude and phase in two subplots
+fig, axs = plt.subplots(2, 1, figsize=(8, 8))
+
+# Plot magnitude
+axs[0].plot(t, magnitude, label='Magnitude', linewidth=2, color='blue')
+axs[0].set_ylabel('Magnitude')
+axs[0].legend(loc='upper left')
+
+# Plot phase
+axs[1].plot(t, phase, label='Phase', linewidth=2, color='red')
+axs[1].set_ylabel('Phase (°)')
+axs[1].set_xlabel('Time (s)')  # Adjust the unit based on your data
+axs[1].legend(loc='upper left')
+
+plt.suptitle("Recieved (Magnitude and Phase)")
+
+
+
+modulatedP = signal_power(modulated)/1e-3
+modulatedP = 10*np.log10(modulatedP)
+print(modulatedP)
+
+recievedP = signal_power(recieved)/1e-3
+recievedP = 10*np.log10(recievedP)
+print(recievedP)
 
 
 # fig, axs = plt.subplots(figsize=(8,4))
@@ -231,7 +277,7 @@ plt.suptitle("Modulated (Magnitude and Phase)")
 
 # plotPSD(modulated, Fs, Fc, label="PSD")
 
-mOSA(modulated, Fs, Fc)
+# mOSA(modulated, Fs, Fc)
 
 # opticalSpectrum(modulated, Fs, Fc, "From my lib")
 

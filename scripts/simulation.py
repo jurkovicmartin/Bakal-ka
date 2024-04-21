@@ -17,7 +17,7 @@ from optic.utils import parameters
 import matplotlib.pyplot as plt
 
 from scripts.my_devices import edfa, laserSource
-from scripts.my_plot import eyediagram, pconst, opticalSpectrum, signalInTime
+from scripts.my_plot import eyediagram, constellation, opticalSpectrum, signalInTime
 from scripts.output_functions import calculateTransSpeed
 
 def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict) -> dict:
@@ -303,10 +303,10 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
         return signalInTime(Ts, detectedSignal, title, "electrical")
     elif type == "constellationTx":
         # Tx constellation diagram
-        return pconst(symbolsTx, whiteb=True)
+        return constellation(symbolsTx, whiteb=False, title="Tx symbols")
     elif type == "constellationRx":
         # Rx constellation diagram
-        return pconst(symbolsRx, whiteb=True)
+        return constellation(symbolsRx, whiteb=False, title="Rx symbols")
     elif type == "spectrumTx":
         # Tx optical spectrum
         return opticalSpectrum(modulatedSignal, Fs, centralFrequency, title)
@@ -322,11 +322,11 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
     elif type == "eyediagramTx":
         # Tx eyediagram
         discard = 100
-        return eyediagram(informationSignal[discard:-discard], informationSignal.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy")
+        return eyediagram(informationSignal[discard:-discard], informationSignal.size-2*discard, SpS, ptype="fancy", title="signal at Tx")
     elif type == "eyediagramRx":
         # Rx eyediagram
         discard = 100
-        return eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy")
+        return eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, ptype="fancy", title="signal at Rx")
     else: raise Exception("Unexpected error")
 
 

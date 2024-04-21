@@ -14,11 +14,12 @@ from scipy.ndimage.filters import gaussian_filter
 
 from optic.dsp.core import pnorm, signal_power
 from optic.models.amplification import get_spectrum
+from optic.plot import constHist
 import warnings
 
 warnings.filterwarnings("ignore", r"All-NaN (slice|axis) encountered")
 
-def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tuple[plt.Figure, plt.Axes]:
+def constellation(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True, title="") -> tuple[plt.Figure, plt.Axes]:
     """
     Plot signal constellations.
     
@@ -152,41 +153,13 @@ def pconst(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True) -> tup
             plt.xlim(-radius - 1, radius + 1)
             plt.ylim(-radius - 1, radius + 1)
 
+    plt.suptitle(title)
     plt.close()
 
     return fig, ax
 
 
-def constHist(symb, ax, radius, cmap="turbo", whiteb=True) -> plt.Axes:
-    """
-    Generate histogram-based constellation plot.
-
-    Parameters
-    ----------
-    symb : np.array
-        Complex-valued constellation symbols.
-    ax : axis object handle
-        axis of the plot.
-    radius : real scalar
-        Parameter to adjust the x,y-range of the plot.
-
-    Returns
-    -------
-    ax : axis object handle
-        axis of the plot.
-
-    """
-    cmap = copy.copy(cm.get_cmap(cmap))
-    if  whiteb:
-        cmap.set_under(alpha=0)
-    
-    ax.scatter_density(symb.real, symb.imag, cmap=cmap, 
-                             vmin=0.25, vmax=np.nanmax,
-                             dpi=72, downres_factor=2)
-    return ax
-
-
-def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None) -> tuple[plt.Figure, plt.Axes]:
+def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None, title="") -> tuple[plt.Figure, plt.Axes]:
     """
     Plot the eye diagram of a modulated signal waveform.
 
@@ -281,6 +254,7 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None) -> tuple
     axes.set_title(f"eye diagram {plotlabel_}")
     axes.grid(alpha=0.15)
 
+    plt.suptitle(title)
     plt.close()
 
     return fig, axes

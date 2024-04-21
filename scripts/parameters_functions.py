@@ -129,8 +129,8 @@ def checkLimit(parameterName: str, parameterValue: float, generalParameters: dic
         return False
     
     # Parameter set too high
-    # if not checkUpLimit(parameterName, parameterValue, generalParameters, parentWindow):
-    #     return False
+    if not checkUpLimit(parameterName, parameterValue, generalParameters, parentWindow):
+        return False
     
     return True
 
@@ -151,23 +151,23 @@ def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> b
     # False = parameter must be greater
     downLimits = {
         # Source
-        "Power":(True , -150), # >=
-        "Frequency":(False, 0), # >
-        "Linewidth":(True, 1), # >=
-        "PowerNoise":(True, 0), # >=
-        "PhaseNoise":(True, 0), # >=
+        "Power":(True , -50), # -50 dBm
+        "Frequency":(True, 170), # ~ 1760 nm
+        "Linewidth":(True, 1), # 1 Hz
+        "PowerNoise":(True, 0), # 0
+        "PhaseNoise":(True, 0), # 0
         # Modulator
 
         # Channel
-        "Length":(False, 0), # >
-        "Attenuation":(True, 0), # >=
-        "Dispersion":(True, 0), # >=
+        "Length":(False, 0), # > 0 km
+        "Attenuation":(True, 0), # 0 dBm/km
+        "Dispersion":(True, 0), # 0 ps/nm/km
         # Reciever
-        "Bandwidth":(False, 0), # >
-        "Resolution":(False, 0), # >
+        "Bandwidth":(False, 0), # > 0 Hz
+        "Resolution":(False, 0), # > 0 A/W
         # Amplifier
-        "Gain":(False, 0), # >
-        "Noise":(True, 0), # >=
+        "Gain":(False, 0), # > 0 dB
+        "Noise":(True, 0), # 0 dB
     }
 
     limitComp, limitValue = downLimits.get(parameterName)
@@ -205,23 +205,23 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
     # False = parameter must be lower
     upLimits = {
         # Source
-        "Power":(True , -150), 
-        "Frequency":(False, 0), 
-        "Linewidth":(True, 1), 
-        "PowerNoise":(True, 0),
-        "PhaseNoise":(True, 0),
+        "Power":(True , 50), # 50 dBm
+        "Frequency":(True, 250), # <= ~ 1200 nm
+        "Linewidth":(True, 10**10), # 10 GHz
+        "PowerNoise":(True, 1), # 1
+        "PhaseNoise":(True, 1), # 1
         # Modulator
 
         # Channel
-        "Length":(False, 0),
-        "Attenuation":(True, 0),
-        "Dispersion":(True, 0), 
+        "Length":(True, 1000), # 1000 km
+        "Attenuation":(True, 1), # 1 dB/km
+        "Dispersion":(True, 100), # ps/nm/km
         # Reciever
-        "Bandwidth":(True, generalParameters.get("Fs") / 2), # <=
-        "Resolution":(False, 0), 
+        "Bandwidth":(True, generalParameters.get("Fs") / 2), # <= Fs/2
+        "Resolution":(True, 100), # 100 A/W 
         # Amplifier
-        "Gain":(False, 0),
-        "Noise":(True, 0), 
+        "Gain":(True, 50), # 50 dB
+        "Noise":(True, 0), # 20 dB
     }
 
     limitComp, limitValue = upLimits.get(parameterName)
