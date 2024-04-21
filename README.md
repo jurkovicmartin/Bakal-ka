@@ -10,7 +10,6 @@
 - signal power with modulators
 - limits
 - my Laser (no Linewidth)
-- spectrum x ax units
 
 # 2
 - constellations (kinda fixed)
@@ -25,6 +24,7 @@
 - narocnost simulace (combobox with SpS + data quantity selection)
 - no need for bits (Tx, Rx)
 - SpS on spreads signal in time
+- spectrum ticks warning
 
 # Include
 - image of communication chain above the buttons

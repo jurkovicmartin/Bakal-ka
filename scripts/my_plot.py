@@ -358,16 +358,24 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
 
     Fc: central frequency
     """
-    frequency, spectrum = get_spectrum(signal, Fs, Fc, xunits="m")
-    yMin = -70
+    wavelength, spectrum = get_spectrum(signal, Fs, Fc, xunits="m")
+    # Convert to nm
+    wavelength = wavelength * 10**9
+    yMin = spectrum.min()
     yMax = spectrum.max() + 10
     fig, ax = plt.subplots(1)
-    ax.plot( 1e9*frequency, spectrum)
+    ax.plot( wavelength, spectrum)
     ax.set_ylim([yMin, yMax])   
     ax.set_xlabel("Wavelength [nm]")
     ax.set_ylabel("Magnitude [dBm]")
     # ax.minorticks_on()
     ax.grid(True)
+
+    # Set scattered ticks on the x-axis
+    num_ticks = 5  # Set the number of ticks you want to display
+    tick_indices = np.linspace(0, len(wavelength) - 1, num_ticks, dtype=int)
+    ax.set_xticks(wavelength[tick_indices])
+    ax.set_xticklabels([f"{freq_nm:.6f}" for freq_nm in wavelength[tick_indices]])
 
     plt.suptitle(title)
     plt.close()

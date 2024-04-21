@@ -59,18 +59,23 @@ def mOSA(x, Fs, Fc=193.1e12):
 
     """
     freqs, ZX = get_spectrum(x, Fs, Fc, xunits="m")
-    yMin = -70
+    yMin = ZX.min()
     yMax = ZX.max() + 10
     _,ax = plt.subplots(1)
-    ax.plot( 1e9*freqs, ZX, label="X Pol.")
-    # if (np.shape(x)[1] == 2):
-    #     freqs, ZY = get_spectrum(x[:,1], Fs, Fc)
-    #     ax.plot( 1e9*freqs, ZY, label="Y Pol.", alpha=0.5)
-    #     yMax = np.array([ZX.max(), ZY.max()]).max() + 10
-    #     ax.legend()
+    ax.plot(1e9*freqs, ZX)
     ax.set_ylim([yMin, yMax])   
     ax.set_xlabel("Wavelength [nm]")
     ax.set_ylabel("Magnitude [dBm]")
+    ax.set_xscale('linear')
+
+    freqs_nm = freqs*1e9
+   
+    # Set scattered ticks on the x-axis
+    num_ticks = 5  # Set the number of ticks you want to display
+    tick_indices = np.linspace(0, len(freqs) - 1, num_ticks, dtype=int)
+    ax.set_xticks(freqs_nm[tick_indices])
+    ax.set_xticklabels([f"{freq_nm:.6f}" for freq_nm in freqs_nm[tick_indices]])
+
     ax.minorticks_on()
     ax.grid(True)
     
@@ -79,7 +84,7 @@ def mOSA(x, Fs, Fc=193.1e12):
 
 # INFORMATION SIGNAL
 SpS = 8 # Samples per symbol
-Rs = 10e9
+Rs = 10e6
 Fs = SpS * Rs
 modulationOrder = 2
 modulationFormat = "pam"
