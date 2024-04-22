@@ -1,17 +1,14 @@
 ## Notes
 - information = detected (electrical signal after mapping to modulation)
-- instead of data quantity try setting transmission speed (based on that and bits/symbols (modulation) it will callculate Rs)
 
 - Parameters (popsat vliv)
+- image of communication chain above the buttons
+- numerical power values (average value) + obrazek v praci
 
 # 1
-- Effect of laser frequency, linewidth
-- Effect of photodiode bandwidth
 - signal power with modulators
-- limits
 - my Laser (no Linewidth)
 - channel
-- dBm in source doesnt work
 
 # 2
 - constellations (kinda fixed)
@@ -27,9 +24,6 @@
 - no need for bits (Tx, Rx)
 - SpS on spreads signal in time
 - spectrum ticks warning
-
-# Include
-- image of communication chain above the buttons
 
 # BIG
 - WDM
