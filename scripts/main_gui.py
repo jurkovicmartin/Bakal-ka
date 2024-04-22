@@ -447,7 +447,7 @@ class Gui:
         self.powerTxWLabel.config(text=f"Tx power: {outputValues.get('powerTxW'):.3} W")
         self.powerTxdBmLabel.config(text=f"Tx power: {outputValues.get('powerTxdBm'):.3} dBm")
         self.powerRxWLabel.config(text=f"Rx power: {outputValues.get('powerRxW'):.3} W")
-        self.powerRxdBmLabel.config(text=f"Tx power: {outputValues.get('powerRxdBm'):.3} dBm")
+        self.powerRxdBmLabel.config(text=f"Rx power: {outputValues.get('powerRxdBm'):.3} dBm")
         
         self.showTransSpeed(outputValues.get("Speed"))
         self.snrLabel.config(text=f"SNR: {outputValues.get('SNR'):.3} dB")

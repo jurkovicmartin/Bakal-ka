@@ -78,4 +78,6 @@ def laserSource(param) -> np.array:
     powerNoise = gaussianNoise(Ns, pwn)
     phaseNoise = gaussianNoise(Ns, phn)
 
-    return np.sqrt(dBm2W(P)) * np.exp(1j * phaseNoise) + powerNoise
+    # return np.sqrt(dBm2W(P)) * np.exp(1j * phaseNoise) + powerNoise
+    return dBm2W(P) * np.exp(1j * phaseNoise) + powerNoise
+    # return P * np.exp(1j * phaseNoise) + powerNoise

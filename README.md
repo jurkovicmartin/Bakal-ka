@@ -11,6 +11,7 @@
 - limits
 - my Laser (no Linewidth)
 - channel
+- dBm in source doesnt work
 
 # 2
 - constellations (kinda fixed)

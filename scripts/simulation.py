@@ -5,7 +5,7 @@ from commpy.utilities  import upsample
 from optic.models.devices import mzm, photodiode, basicLaserModel, iqm, coherentReceiver, pm
 from optic.models.channels import linearFiberChannel
 from optic.comm.modulation import modulateGray, GrayMapping, demodulateGray
-from optic.dsp.core import pulseShape, pnorm, signal_power
+from optic.dsp.core import pulseShape, pnorm, signal_power, sigPow
 from optic.comm.metrics import fastBERcalc
 
 try:
@@ -361,16 +361,16 @@ def getValues(simulationResults: dict, generalParameters: dict) -> dict:
     values.update({"Speed":calculateTransSpeed(Rs, modulationOrder)})
 
     # Tx power [W]
-    power = signal_power(modulatedSignal)/1e-3
+    power = signal_power(modulatedSignal)
     values.update({"powerTxW":power})
     # Tx power [dBm]
-    power = 10*np.log10(power)
+    power = 10*np.log10(power / 1e-3)
     values.update({"powerTxdBm":power})
     # Rx power [W]
-    power = signal_power(recieverSignal)/1e-3
+    power = signal_power(recieverSignal)
     values.update({"powerRxW":power})
     # Rx power [dBm]
-    power = 10*np.log10(power)
+    power = 10*np.log10(power / 1e-3)
     values.update({"powerRxdBm":power})
 
     return values
