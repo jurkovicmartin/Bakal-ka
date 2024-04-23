@@ -50,7 +50,7 @@ OOK - photodiode (only with mzm, not iqm)
 
 # INFORMATION SIGNAL
 SpS = 8 # Samples per symbol
-Rs = 1000000
+Rs = 1000
 Fs = SpS * Rs
 Ts = 1/Fs
 modulationOrder = 2 
@@ -62,7 +62,7 @@ idealChannel = False
 detector = "photodiode"
 
 # generate pseudo-random bit sequence
-bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
+bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e3))
 
 # generate modulated symbol sequence
 grayMap = GrayMapping(modulationOrder, modulationFormat)

@@ -128,7 +128,7 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict
 
     if modulatorParameters.get("Type") == "PM":
 
-        return {"modulatedSignal":pm(carrierSignal, modulationSignal, 2)}
+        return {"modulatedSignal":pm(np.sqrt(carrierSignal), modulationSignal, 2)}
     
     elif modulatorParameters.get("Type") == "MZM":
         # MZM parameters
@@ -136,7 +136,7 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict
         paramMZM.Vpi = 2
         paramMZM.Vb = -1
 
-        return {"modulatedSignal":mzm(carrierSignal, modulationSignal, paramMZM)}
+        return {"modulatedSignal":mzm(np.sqrt(carrierSignal), modulationSignal, paramMZM)}
     
     elif modulatorParameters.get("Type") == "IQM":
         # IQM parameters

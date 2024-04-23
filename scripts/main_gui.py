@@ -115,10 +115,10 @@ class Gui:
 
         # Values frame
 
-        self.powerTxWLabel = tk.Label(self.valuesFrame, text="Tx power:")
-        self.powerTxdBmLabel = tk.Label(self.valuesFrame, text="Tx power:")
-        self.powerRxWLabel = tk.Label(self.valuesFrame, text="Rx power:")
-        self.powerRxdBmLabel = tk.Label(self.valuesFrame, text="Rx power:")
+        self.powerTxWLabel = tk.Label(self.valuesFrame, text="Average Tx power:")
+        self.powerTxdBmLabel = tk.Label(self.valuesFrame, text="Average Tx power:")
+        self.powerRxWLabel = tk.Label(self.valuesFrame, text="Average Rx power:")
+        self.powerRxdBmLabel = tk.Label(self.valuesFrame, text="Average Rx power:")
         self.powerTxWLabel.grid(row=0, column=0)
         self.powerTxdBmLabel.grid(row=0, column=1)
         self.powerRxWLabel.grid(row=1, column=0)
@@ -444,10 +444,10 @@ class Gui:
         Show values from dictionary in the app.
         """
         # ' ' insted of " " because of f-string 
-        self.powerTxWLabel.config(text=f"Tx power: {outputValues.get('powerTxW'):.3} W")
-        self.powerTxdBmLabel.config(text=f"Tx power: {outputValues.get('powerTxdBm'):.3} dBm")
-        self.powerRxWLabel.config(text=f"Rx power: {outputValues.get('powerRxW'):.3} W")
-        self.powerRxdBmLabel.config(text=f"Rx power: {outputValues.get('powerRxdBm'):.3} dBm")
+        self.powerTxWLabel.config(text=f"Average Tx power: {outputValues.get('powerTxW') / 1e-3:.3} mW")
+        self.powerTxdBmLabel.config(text=f"Average Tx power: {outputValues.get('powerTxdBm'):.3} dBm")
+        self.powerRxWLabel.config(text=f"Average Rx power: {outputValues.get('powerRxW') / 1e-3 :.3} mW")
+        self.powerRxdBmLabel.config(text=f"Average Rx power: {outputValues.get('powerRxdBm'):.3} dBm")
         
         self.showTransSpeed(outputValues.get("Speed"))
         self.snrLabel.config(text=f"SNR: {outputValues.get('SNR'):.3} dB")

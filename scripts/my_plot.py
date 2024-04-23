@@ -270,7 +270,7 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
     """
     if type == "electrical":
         # interval for plot
-        interval = np.arange(100,500)
+        interval = np.arange(100,600)
         t = interval*Ts
 
         fig, axs = plt.subplots(2, 1, figsize=(8, 4))
@@ -293,13 +293,13 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
     
     elif type == "optical":
         # interval for plot
-        interval = np.arange(100,250)
+        interval = np.arange(100,600)
         t = interval*Ts
 
         # Calculate magnitude and phase
         # magnitude = np.abs(10 * np.log10(signal[interval]))
         # magnitude = 10 * np.log10(np.real(signal[interval]))
-        magnitude = np.real(signal[interval])
+        magnitude = np.abs(signal[interval]**2)
         phase = np.angle(signal[interval], deg=True)
 
 
@@ -308,7 +308,7 @@ def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, pl
 
         # Plot magnitude
         axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
-        axs[0].set_ylabel("Magnitude (W)")
+        axs[0].set_ylabel("Power (p.u.)")
         axs[0].legend(loc="upper left")
 
         # Plot phase

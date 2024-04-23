@@ -1,0 +1,407 @@
+from optic.utils import parameters
+from optic.models.devices import basicLaserModel
+import numpy as np
+import matplotlib.pyplot as plt
+from optic.models.devices import mzm, pm, iqm, photodiode, coherentReceiver, hybrid_2x4_90deg
+from optic.models.channels import linearFiberChannel
+from optic.comm.metrics import fastBERcalc
+from optic.plot import eyediagram
+
+from optic.comm.modulation import modulateGray, GrayMapping, demodulateGray
+from optic.dsp.core import pulseShape, pnorm, signal_power, sigPow
+from commpy.utilities  import upsample
+try:
+    from optic.dsp.coreGPU import firFilter    
+except ImportError:
+    from optic.dsp.core import firFilter
+
+from scripts.my_devices import laserSource
+
+
+def myiqm(Ai, u, param=None):
+    """
+    Optical In-Phase/Quadrature Modulator (IQM).
+
+    Parameters
+    ----------
+    Ai : scalar or np.array
+        Amplitude of the optical field at the input of the IQM.
+    u : complex-valued np.array
+        Modulator's driving signal (complex-valued baseband).
+    param : parameter object  (struct)
+        Object with physical/simulation parameters of the mzm.
+
+        - param.Vpi: MZM's Vpi voltage [V][default: 2 V]
+
+        - param.VbI: I-MZM's bias voltage [V][default: -2 V]
+
+        - param.VbQ: Q-MZM's bias voltage [V][default: -2 V]
+
+        - param.Vphi: PM bias voltage [V][default: 1 V]
+
+    Returns
+    -------
+    Ao : complex-valued np.array
+        Modulated optical field at the output of the IQM.
+
+    """
+    if param is None:
+        param = []
+
+    # check input parameters
+    Vpi = getattr(param, "Vpi", 2)
+    VbI = getattr(param, "VbI", -2)
+    VbQ = getattr(param, "VbQ", -2)
+    Vphi = getattr(param, "Vphi", 1)
+
+    try:
+        u.shape
+    except AttributeError:
+        u = np.array([u])
+
+    try:
+        if Ai.shape == () and u.shape != ():
+            Ai = Ai * np.ones(u.shape)
+        else:
+            assert Ai.shape == u.shape, "Ai and u need to have the same dimensions"
+    except AttributeError:
+        Ai = Ai * np.ones(u.shape)
+
+    # define parameters for the I-MZM:
+    paramI = parameters()
+    paramI.Vpi = Vpi
+    paramI.Vb = VbI
+
+    # define parameters for the Q-MZM:
+    paramQ = parameters()
+    paramQ.Vpi = Vpi
+    paramQ.Vb = VbQ
+
+    return mzm(Ai, u.real, paramI) + pm(
+        mzm(Ai, u.imag, paramQ), Vphi * np.ones(u.shape), Vpi
+    )
+
+
+
+# INFORMATION SIGNAL
+SpS = 16 # Samples per symbol
+Rs = 1000000
+Fs = SpS * Rs
+Ts = 1/Fs
+modulationOrder = 2
+modulationFormat = "pam"
+
+
+modulator = "mzm"
+idealChannel = False
+detector = "photodiode"
+
+# generate pseudo-random bit sequence
+bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
+
+# generate modulated symbol sequence
+grayMap = GrayMapping(modulationOrder, modulationFormat)
+#print(f"grayMap: {grayMap}")
+
+symbolsTx = modulateGray(bitsTx, modulationOrder, modulationFormat)
+#print(f"symbolsTx: {symbolsTx}")
+symbolsTx = pnorm(symbolsTx) # power normalization
+
+# upsampling
+symbolsUp = upsample(symbolsTx, SpS)
+
+# typical NRZ pulse
+pulse = pulseShape("nrz", SpS)
+pulse = pulse/max(abs(pulse))
+
+# pulse shaping
+information = firFilter(pulse, symbolsUp)
+
+# PLOT
+# interval = np.arange(100,500)
+# t = interval*Ts
+
+# fig, axs = plt.subplots(2, 1, figsize=(8, 4))
+
+# # Real
+# axs[0].plot(t, information[interval].real, label="Real Part", linewidth=2, color="blue")
+# axs[0].set_ylabel("Amplitude (a.u.)")
+# axs[0].legend(loc="upper left")
+
+# # Imaginary
+# axs[1].plot(t, information[interval].imag, label="Imaginary Part", linewidth=2, color="red")
+# axs[1].set_ylabel("Amplitude (a.u.)")
+# axs[1].set_xlabel("Time (s)")
+# axs[1].legend(loc="upper left")
+
+# plt.suptitle("Inforamtion signal")
+
+
+# CARRIER
+# Laser parameters
+paramLaser = parameters()
+paramLaser.P = 10  # laser power [dBm] [default: 10 dBm]
+paramLaser.lw = 1   # laser linewidth [Hz] [default: 1 kHz]
+paramLaser.Fs = Fs  # sampling rate [samples/s]
+paramLaser.Ns = len(information)   # number of signal samples [default: 1e3]
+paramLaser.pwn = 0
+paramLaser.phn = 0
+
+carrier = laserSource(paramLaser)
+
+
+# PLOT
+# interval = np.arange(100,250)
+# t = interval*Ts
+
+# # Calculate magnitude and phase
+# # magnitude = np.abs(10 * np.log10(signal[interval]))
+# # magnitude = 10 * np.log10(np.real(signal[interval]))
+# # magnitude = np.real(carrier[interval])
+# magnitude = np.abs(carrier[interval])
+# phase = np.angle(carrier[interval], deg=True)
+
+
+# # Plotting magnitude and phase in two subplots
+# fig, axs = plt.subplots(2, 1, figsize=(8, 4))
+
+# # Plot magnitude
+# axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
+# axs[0].set_ylabel("Magnitude (W)")
+# axs[0].legend(loc="upper left")
+
+# # Plot phase
+# axs[1].plot(t, phase, label="Phase", linewidth=2, color="red")
+# axs[1].set_ylabel("Phase (°)")
+# axs[1].set_xlabel("Time (s)")
+# axs[1].legend(loc="upper left")
+
+# plt.suptitle("Carrier signal")
+
+
+# MODULATION
+
+if modulator == "mzm":
+    paramMZM = parameters()
+    paramMZM.Vpi = 2 # frequency of cosinus
+    # paramMZM.Vb = -paramMZM.Vpi/2
+    paramMZM.Vb = -1 # phase shift of cosinus
+
+    modulated = mzm(np.sqrt(carrier), information, paramMZM)
+
+elif modulator == "pm":
+    Vpi = 2 # PM’s Vπ voltage
+
+    modulated = pm(np.sqrt(carrier), information, Vpi)
+
+
+elif modulator == "iqm":
+    paramIQM = parameters()
+    paramIQM.Vpi = 2 # MZM’s Vpi voltage
+    paramIQM.VbI = -2 # I-MZM’s bias voltage
+    paramIQM.VbQ = -2 # Q-MZM’s bias voltage
+    paramIQM.Vphi = 1 # PM bias voltage
+
+    modulated = iqm(np.sqrt(carrier), information, paramIQM)
+
+elif modulator == "myiqm":
+    paramIQM = parameters()
+    paramIQM.Vpi = 2 # MZM’s Vpi voltage
+    paramIQM.VbI = -2 # I-MZM’s bias voltage
+    paramIQM.VbQ = -2 # Q-MZM’s bias voltage
+    paramIQM.Vphi = 1 # PM bias voltage
+
+    modulated = myiqm(carrier, information, paramIQM)
+
+else: pass
+
+# PLOT
+interval = np.arange(100,600)
+t = interval*Ts
+
+# Calculate magnitude and phase
+# magnitude = np.abs(10 * np.log10(signal[interval]))
+# magnitude = 10 * np.log10(np.real(signal[interval]))
+# magnitude = np.real(modulated[interval])
+magnitude = np.abs(modulated[interval]**2)
+# magnitude = np.abs(np.real(modulated[interval]))
+phase = np.angle(modulated[interval], deg=True)
+
+
+# Plotting magnitude and phase in two subplots
+fig, axs = plt.subplots(2, 1, figsize=(8, 4))
+
+# Plot magnitude
+axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
+axs[0].set_ylabel("Magnitude (W)")
+axs[0].legend(loc="upper left")
+
+# Plot phase
+axs[1].plot(t, phase, label="Phase", linewidth=2, color="red")
+axs[1].set_ylabel("Phase (°)")
+axs[1].set_xlabel("Time (s)")
+axs[1].legend(loc="upper left")
+
+plt.suptitle("Modulated signal")
+
+
+# CHANNEL
+
+# if idealChannel:
+#     recieved = modulated
+# else:
+#     # Linear optical channel
+#     paramCh = parameters()
+#     paramCh.L = 60       # total link distance [km]
+#     paramCh.α = 0.2       # fiber loss parameter [dB/km]
+#     paramCh.D = 1        # fiber dispersion parameter [ps/nm/km]
+#     paramCh.Fc = 193.1 * (10**12) # central optical frequency [Hz]
+#     paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
+
+#     recieved = linearFiberChannel(modulated, paramCh)
+
+
+# PLOT
+# interval = np.arange(100,250)
+# t = interval*Ts
+
+# # Calculate magnitude and phase
+# # magnitude = np.abs(10 * np.log10(signal[interval]))
+# # magnitude = 10 * np.log10(np.real(signal[interval]))
+# magnitude = np.real(recieved[interval])
+# phase = np.angle(recieved[interval], deg=True)
+
+
+# # Plotting magnitude and phase in two subplots
+# fig, axs = plt.subplots(2, 1, figsize=(8, 4))
+
+# # Plot magnitude
+# axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
+# axs[0].set_ylabel("Magnitude (W)")
+# axs[0].legend(loc="upper left")
+
+# # Plot phase
+# axs[1].plot(t, phase, label="Phase", linewidth=2, color="red")
+# axs[1].set_ylabel("Phase (°)")
+# axs[1].set_xlabel("Time (s)")
+# axs[1].legend(loc="upper left")
+
+# plt.suptitle("Recieved signal")
+
+
+
+# DETECTION
+
+# if detector == "photodiode":
+#     paramPD = parameters()
+#     paramPD.ideal = False
+#     paramPD.Fs = Fs
+#     paramPD.B = 1000
+#     paramPD.R = 0.2
+#     paramPD.N = 8001 # Number of filter coeficients ( < Fs)
+#     detected = photodiode(recieved, paramPD)
+
+# elif detector == "coherent":
+#     paramPD = parameters()
+#     paramPD.ideal = True
+
+#     detected = coherentReceiver(recieved, carrier, paramPD)
+
+# else: pass
+
+    
+# carrierP = signal_power(carrier)/1e-3
+# carrierP = 10*np.log10(carrierP)
+# print(carrierP)
+
+# modulatedP = signal_power(modulated)/1e-3
+# modulatedP = 10*np.log10(modulatedP)
+# print(modulatedP)
+
+# recievedP = signal_power(recieved)/1e-3
+# recievedP = 10*np.log10(recievedP)
+# print(recievedP)
+
+
+
+# PLOT
+# interval = np.arange(100,500)
+# t = interval*Ts
+
+# fig, axs = plt.subplots(2, 1, figsize=(8, 4))
+
+# # Real
+# axs[0].plot(t, detected[interval].real, label="Real Part", linewidth=2, color="blue")
+# axs[0].set_ylabel("Amplitude (a.u.)")
+# axs[0].legend(loc="upper left")
+
+# # Imaginary
+# axs[1].plot(t, detected[interval].imag, label="Imaginary Part", linewidth=2, color="red")
+# axs[1].set_ylabel("Amplitude (a.u.)")
+# axs[1].set_xlabel("Time (s)")
+# axs[1].legend(loc="upper left")
+
+# plt.suptitle("Inforamtion signal")
+
+
+
+
+print(f"information: {information}")
+print(f"information max: {np.max(information)}")
+print(f"information min: {np.min(information)}")
+
+
+print(f"carrier max: {np.max(carrier)}")
+print(f"carrier min: {np.min(carrier)}")
+
+print(f"modulated max: {np.max(modulated)}")
+print(f"modulated min: {np.min(modulated)}")
+
+
+print(f"average: {sigPow(modulated)}")
+print(f"total: {signal_power(modulated)}")
+
+# normModulated = pnorm(modulated)
+# print(f"norm average: {sigPow(normModulated)}")
+# print(f"norm total: {signal_power(normModulated)}")
+
+
+# print(f"modulated: {modulated[10:20]}")
+# print(f"norm modulated: {normModulated[10:20]}")
+
+
+
+# discard = 100
+# eyediagram(information[discard:-discard], information.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy")
+# eyediagram(detected[discard:-discard], information.size-2*discard, SpS, plotlabel="signal at Rx", ptype="fancy")
+
+# RESTORE
+# detected = detected/np.std(detected)
+
+# # capture samples in the middle of signaling intervals
+# symbolsRx = detected[0::SpS]
+
+# # subtract DC level and normalize power
+# symbolsRx = symbolsRx - symbolsRx.mean()
+# symbolsRx = pnorm(symbolsRx)
+
+# # demodulate symbols to bits with minimum Euclidean distance 
+# const = GrayMapping(modulationOrder, modulationFormat) # get constellation
+# Es = signal_power(const) # calculate the average energy per symbol of the constellation
+
+# # demodulated bits
+# bitsRx = demodulateGray(np.sqrt(Es)*symbolsRx, modulationOrder, modulationFormat)
+
+
+# ber = fastBERcalc(symbolsRx, symbolsTx, modulationOrder, modulationFormat)[0]
+
+# print(f"SymbolsTx: {symbolsTx}")
+# print(f"SymbolsRx: {symbolsRx}")
+# print(f"Tx bits:{bitsTx}")
+# print(f"Rx bits:{bitsRx}")
+# print(f"BER: {ber}")
+
+# discard = 100
+# eyediagram(detected[discard:-discard], detected.size-2*discard, SpS, plotlabel="signal at Tx", ptype="fancy")
+
+plt.show()
