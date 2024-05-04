@@ -10,6 +10,11 @@
 - my Laser (no Linewidth)
 - channel
 - PM
+- output graphs in 1 window (checkboxes what to show) (include carrier)
+- amplifier gain from - to (check the signal power - not enough = dont start the simulation)
+- power calculation
+- spectrum - add f ax (labels), rozsah, priblizeni
+
 
 # 2
 - constellations (kinda fixed)
@@ -25,6 +30,7 @@
 - no need for bits (Tx, Rx)
 - SpS on spreads signal in time
 - spectrum ticks warning
+- nápověda bublinky
 
 # BIG
 - WDM

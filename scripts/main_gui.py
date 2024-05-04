@@ -52,7 +52,7 @@ class Gui:
         self.channelButton = tk.Button(self.schemeFrame, text="Fiber channel", command=lambda: self.showParametersPopup(self.channelButton))
         self.recieverButton = tk.Button(self.schemeFrame, text="Reciever", command=lambda: self.showParametersPopup(self.recieverButton))
         # Aplifier button initially hidden
-        self.amplifierButton = tk.Button(self.schemeFrame, text="Pre-amplifier", command=lambda: self.showParametersPopup(self.amplifierButton))
+        self.amplifierButton = tk.Button(self.schemeFrame, text="Amplifier", command=lambda: self.showParametersPopup(self.amplifierButton))
 
         self.sourceButton.grid(row=0, column=0)
         self.modulatorButton.grid(row=0, column=1)
@@ -85,7 +85,7 @@ class Gui:
 
         # Checkbutton for including / excluding channel pre-amplifier
         self.amplifierCheckVar = tk.BooleanVar()
-        self.amplifierCheckbutton = tk.Checkbutton(self.generalFrame, text="Add channel pre-amplifier", variable=self.amplifierCheckVar, command=self.amplifierCheckbuttonChange)
+        self.amplifierCheckbutton = tk.Checkbutton(self.generalFrame, text="Add amplifier", variable=self.amplifierCheckVar, command=self.amplifierCheckbuttonChange)
         self.amplifierCheckbutton.grid(row=2, column=0)
 
         # Attention label for adding pre-amplifier
@@ -190,7 +190,7 @@ class Gui:
         self.modulatorParameters = {"Type": "MZM"}
         self.channelParameters = {"Length": 0, "Attenuation": 0, "Dispersion": 0, "Ideal": False}
         self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 0, "Resolution": 0, "Ideal": False}
-        self.amplifierParameters = {"Gain": 0, "Noise": 0, "Ideal": False}
+        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Ideal": False}
         # Store initial parameters to check for simulation start
         self.initialParameters = {"Source": self.sourceParameters, "Modulator": self.modulatorParameters, 
                                   "Channel": self.channelParameters, "Reciever": self.recieverParameters, "Amplifier": self.amplifierParameters}
@@ -202,7 +202,7 @@ class Gui:
         self.modulatorParameters = {"Type": "MZM"}
         self.channelParameters = {"Length": 40, "Attenuation": 0, "Dispersion": 0, "Ideal": True}
         self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 1000, "Resolution": 0.5, "Ideal": False}
-        self.amplifierParameters = {"Gain": 0, "Noise": 0, "Ideal": False}
+        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Ideal": False}
 
 
 
@@ -231,7 +231,7 @@ class Gui:
         Main function button.
         """
         # Get values of general parameters
-        self.updateGeneralParameters()
+        if not self.updateGeneralParameters(): return
 
         # Not all parameters provided
         if not self.checkSimulationStart(): return
@@ -424,10 +424,13 @@ class Gui:
             messagebox.showerror("Symbol rate input error", "Symbol rate must whole number!")
             return False
         elif Rs < 1000:
-            messagebox.showerror("Symbol rate input error", "Symbol rate must be 1000 or greater")
+            messagebox.showerror("Symbol rate input error", "Symbol rate is too low")
             return False
-        elif Rs > 10**12:
-            messagebox.showerror("Symbol rate input error", "Symbol rate must lower than 1 THz")
+        elif self.generalParameters.get("Format") == "pam" and self.generalParameters.get("Order") == 2 and Rs >= 10**11: # 100G OOK
+            messagebox.showerror("Symbol rate input error", "Symbol rate for OOK is too high")
+            return False
+        elif Rs > 10**12: # 1T
+            messagebox.showerror("Symbol rate input error", "Symbol rate is too high")
             return False
         # Rs is ok
         else:
@@ -550,9 +553,9 @@ class Gui:
     
     def attentionCheck(self):
         """
-        Checks for attention for combination of ideal channel and pre-amplifier. Also updates the attention label.
+        Checks for attention for combination of ideal channel and amplifier. Also updates the attention label.
         """
         if self.channelParameters.get("Ideal") and self.amplifierCheckVar.get():
-            self.attentionLabel.config(text="Attention, when using ideal channel the pre-amplifier will be ignored!")
+            self.attentionLabel.config(text="Attention, when using ideal channel the amplifier will be ignored!")
         else:
             self.attentionLabel.config(text="")

@@ -52,7 +52,7 @@ def validateParameters(type: str, parameters: dict, generalParameters: dict, par
     ideal = parameters.pop("Ideal")
 
     # Remove valid string values
-    if type == "modulator" or type == "reciever":
+    if type == "modulator" or type == "reciever" or type == "amplifier":
         numberParameters, stringParameters = removeStringValues(parameters, type, ideal)
     else:
         numberParameters = parameters
@@ -221,7 +221,7 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
         "Resolution":(True, 100), # 100 A/W 
         # Amplifier
         "Gain":(True, 50), # 50 dB
-        "Noise":(True, 0), # 20 dB
+        "Noise":(True, 20), # 20 dB
     }
 
     limitComp, limitValue = upLimits.get(parameterName)
@@ -255,6 +255,7 @@ def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, 
 
     if type == "modulator":
         pass
+
     elif type == "reciever":
         # Type of reciever
         stringDict = {"Type":parameters.pop("Type")}
@@ -263,6 +264,11 @@ def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, 
         if ideal:
             stringDict.update({"Bandwidth":parameters.pop("Bandwidth"), "Resolution":parameters.pop("Resolution")})
         
+
+        return parameters, stringDict
+    
+    elif type == "amplifier":
+        stringDict = {"Position":parameters.pop("Position")}
 
         return parameters, stringDict
         

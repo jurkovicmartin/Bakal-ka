@@ -162,13 +162,13 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
 
     Returns
     -----
-    recieverSignal: signal at the end of fiber
+    recieverSignal: signal at reciever (dictionary)
     """
     # Directly pass modulated signal without changes (Ideal channel)
     if fiberParameters.get("Ideal"):
         return {"recieverSignal":modulatedSignal}
     
-    # Linear optical channel
+    # Linear optical channel without amplifier
     paramCh = parameters()
     paramCh.L = fiberParameters.get("Length")         # total link distance [km]
     paramCh.α = fiberParameters.get("Attenuation")        # fiber loss parameter [dB/km]
@@ -180,16 +180,63 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
 
     # Channel has amplifier = doesnt has initial 0 gain
     if amplifierParameters.get("Gain") != 0:
-        # receiver pre-amplifier
-        paramEDFA = parameters()
-        paramEDFA.G = amplifierParameters.get("Gain")    # edfa gain
-        paramEDFA.NF = amplifierParameters.get("Noise")   # edfa noise figure 
-        paramEDFA.Fc = frequency
-        paramEDFA.Fs = Fs
 
-        recieverSignal = edfa(recieverSignal, amplifierParameters.get("Ideal"), paramEDFA)
+        recieverSignal = amplifierTransmition(paramCh, amplifierParameters, modulatedSignal, Fs, frequency)
+
 
     return {"recieverSignal":recieverSignal}
+
+
+def amplifierTransmition(fiberParameters, amplifierParameters: dict, modulatedSignal: dict, Fs: int, frequency: float) -> np.ndarray:
+    """
+    Simulates signal thru fiber with amplifier.
+
+    Parameters
+    -----
+    fiberParameters: parameters() object
+
+    Fs: sampling frequency
+
+    frequency: central frequency of optical signal [Hz]
+
+    Returns
+    -----
+    recieverSignal: signal at reciever (array)
+    """
+
+    # Amplifier parameters
+    paramEDFA = parameters()
+    paramEDFA.G = amplifierParameters.get("Gain")    # edfa gain
+    paramEDFA.NF = amplifierParameters.get("Noise")   # edfa noise figure 
+    paramEDFA.Fc = frequency
+    paramEDFA.Fs = Fs
+
+    # Position of amplifier
+    amplifierPosition = amplifierParameters.get("Position")
+    if amplifierPosition == "start":
+        modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+
+        recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+
+    elif amplifierPosition == "middle":
+        # Lenght needs to be halfed
+        fiberParameters.L = fiberParameters.L / 2
+        # First half
+        modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+        # Amplifier
+        modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+        # Second half
+        recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+
+    elif amplifierPosition == "end":
+        modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+
+        recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+    
+    else: raise Exception("Unexpected error")
+
+    return recieverSignal
+
 
 def detection(recieverParameters: dict, recieverSignal, referentSignal, generalParameters: dict) -> dict:
     """

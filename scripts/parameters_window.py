@@ -148,7 +148,7 @@ class ParametersWindow:
 
             # Ideal parameters checkbutton
             self.channelCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters\nNote that ideal channel doesnt include pre-amplifier!", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters\nNote that ideal channel will ignore amplifier!", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
             self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
 
             # Set button
@@ -193,26 +193,33 @@ class ParametersWindow:
 
             # Setting parameters
 
+            # Position
+            self.positionLabel = tk.Label(self.popup, text="Position in channel")
+            self.positionLabel.grid(row=1, column=0)
+            self.positionCombobox = ttk.Combobox(self.popup, values=["start", "middle", "end"], state="readonly")
+            self.positionCombobox.set("start")
+            self.positionCombobox.grid(row=1, column=1)
+
             # Gain
             self.gainLabel = tk.Label(self.popup, text="Gain [dB]")
-            self.gainLabel.grid(row=1, column=0)
+            self.gainLabel.grid(row=2, column=0)
             self.gainEntry = tk.Entry(self.popup)
-            self.gainEntry.grid(row=1, column=1)
+            self.gainEntry.grid(row=2, column=1)
 
             # Noise
             self.noiseLabel = tk.Label(self.popup, text="Noise figure [dB]")
-            self.noiseLabel.grid(row=2, column=0)
+            self.noiseLabel.grid(row=3, column=0)
             self.noiseEntry = tk.Entry(self.popup)
-            self.noiseEntry.grid(row=2, column=1)
+            self.noiseEntry.grid(row=3, column=1)
 
             # Ideal parameters checkbutton
             self.amplifierCheckVar = tk.BooleanVar()
             self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.amplifierCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton.grid(row=3, column=0, columnspan=2)
+            self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
 
             # Set button
             self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=4, column=0, columnspan=2)
+            self.setButton.grid(row=5, column=0, columnspan=2)
 
             self.setDefaultParameters()
 
@@ -282,9 +289,9 @@ class ParametersWindow:
         
         elif self.type == "amplifier":
             # Showing in main gui
-            parametersString = f"Pre-amplifier\n\nGain: {self.gainEntry.get()} dB\nNoise figure: {self.noiseEntry.get()} dB"
+            parametersString = f"Amplifier\n\nPosition in channel: {self.positionCombobox.get()}\nGain: {self.gainEntry.get()} dB\nNoise figure: {self.noiseEntry.get()} dB"
             # Getting initial values
-            parameters = {"Gain":self.gainEntry.get(), "Noise":self.noiseEntry.get()}
+            parameters = {"Position":self.positionCombobox.get(), "Gain":self.gainEntry.get(), "Noise":self.noiseEntry.get()}
             
             parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
@@ -426,11 +433,13 @@ class ParametersWindow:
             if self.defaultParameters is None: return
 
             if self.defaultParameters.get("Ideal"):
+                self.positionCombobox.set(self.defaultParameters.get("Position"))
                 self.gainEntry.insert(0, str(self.defaultParameters.get("Gain")))
                 # Change check button state
                 self.idealCheckbutton.invoke() # Trigger command function
             
             else:
+                self.positionCombobox.set(self.defaultParameters.get("Position"))
                 self.gainEntry.insert(0, str(self.defaultParameters.get("Gain")))
                 self.noiseEntry.insert(0, str(self.defaultParameters.get("Noise")))
                     
