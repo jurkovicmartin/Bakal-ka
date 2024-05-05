@@ -342,10 +342,10 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
     symbolsTx = simulationResults.get("symbolsTx")
     symbolsRx = simulationResults.get("symbolsRx")
 
-    if type == "informationTx":
+    if type == "electricalTx":
         # Modulation signal
         return signalInTime(Ts, informationSignal, title, "electrical")
-    elif type == "informationRx":
+    elif type == "electricalRx":
         # Detected signal
         return signalInTime(Ts, detectedSignal, title, "electrical")
     elif type == "constellationTx":
@@ -360,17 +360,17 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
         # Rx optical spectrum
     elif type == "spectrumRx":
         return opticalSpectrum(recieverSignal, Fs, centralFrequency, title)
-    elif type == "signalTx":
+    elif type == "opticalTx":
         # Modulated signal in time (Tx signal)
         return signalInTime(Ts, modulatedSignal, title, "optical")
-    elif type == "signalRx":
+    elif type == "opticalRx":
         # Reciever signal in time (Rx signal)
         return signalInTime(Ts, recieverSignal, title, "optical")
-    elif type == "eyediagramTx":
+    elif type == "eyeTx":
         # Tx eyediagram
         discard = 100
         return eyediagram(informationSignal[discard:-discard], informationSignal.size-2*discard, SpS, ptype="fancy", title="signal at Tx")
-    elif type == "eyediagramRx":
+    elif type == "eyeRx":
         # Rx eyediagram
         discard = 100
         return eyediagram(detectedSignal[discard:-discard], detectedSignal.size-2*discard, SpS, ptype="fancy", title="signal at Rx")

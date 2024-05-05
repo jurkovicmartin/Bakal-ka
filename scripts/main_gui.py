@@ -8,8 +8,10 @@ from tkinter import ttk, messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from scripts.parameters_window import ParametersWindow
+from scripts.plots_window import PlotWindow
 from scripts.simulation import simulate, getValues, getPlot
 from scripts.parameters_functions import convertNumber
+import matplotlib.pyplot as plt
 
 class Gui:
     def __init__(self):
@@ -133,46 +135,57 @@ class Gui:
         self.berLabel.grid(row=3, column=0)
         self.serLabel.grid(row=3, column=1)
 
-        # plots frame
-
-        self.plotsTxFrame = tk.Frame(self.plotsFrame)
-        self.plotsRxFrame = tk.Frame(self.plotsFrame)
-
-        self.plotsTxFrame.grid(row=0, column=0)
-        self.plotsRxFrame.grid(row=0, column=1)
+        # Plots Frame
 
         # Tx plots
-        self.infTxButton = tk.Button(self.plotsTxFrame, text="Show modulation signal", command=lambda: self.showGraph(self.infTxButton))
-        self.conTxButton = tk.Button(self.plotsTxFrame, text="Show Tx constellation diagram", command=lambda: self.showGraph(self.conTxButton))
-        self.spectrumTxButton = tk.Button(self.plotsTxFrame, text="Show Tx spectrum", command=lambda: self.showGraph(self.spectrumTxButton))
-        self.sigTxButton = tk.Button(self.plotsTxFrame, text="Show Tx signal in time", command=lambda: self.showGraph(self.sigTxButton))
-        self.eyeTxButton = tk.Button(self.plotsTxFrame, text="Show Tx eyediagram", command=lambda: self.showGraph(self.eyeTxButton))
+        # self.infTxButton = tk.Button(self.plotsTxFrame, text="Show modulation signal", command=lambda: self.showGraph(self.infTxButton))
+        # self.conTxButton = tk.Button(self.plotsTxFrame, text="Show Tx constellation diagram", command=lambda: self.showGraph(self.conTxButton))
+        # self.spectrumTxButton = tk.Button(self.plotsTxFrame, text="Show Tx spectrum", command=lambda: self.showGraph(self.spectrumTxButton))
+        # self.sigTxButton = tk.Button(self.plotsTxFrame, text="Show Tx signal in time", command=lambda: self.showGraph(self.sigTxButton))
+        # self.eyeTxButton = tk.Button(self.plotsTxFrame, text="Show Tx eyediagram", command=lambda: self.showGraph(self.eyeTxButton))
         
-        self.infTxButton.pack()
-        self.spectrumTxButton.pack()
-        self.conTxButton.pack()
-        self.sigTxButton.pack()
-        self.eyeTxButton.pack()
+        # self.infTxButton.pack()
+        # self.spectrumTxButton.pack()
+        # self.conTxButton.pack()
+        # self.sigTxButton.pack()
+        # self.eyeTxButton.pack()
 
-        # Rx plots
-        self.infRxButton = tk.Button(self.plotsRxFrame, text="Show detected signal", command=lambda: self.showGraph(self.infRxButton))
-        self.conRxButton = tk.Button(self.plotsRxFrame, text="Show Rx constellation diagram", command=lambda: self.showGraph(self.conRxButton))
-        self.spectrumRxButton = tk.Button(self.plotsRxFrame, text="Show Rx spectrum", command=lambda: self.showGraph(self.spectrumRxButton))
-        self.sigRxButton = tk.Button(self.plotsRxFrame, text="Show Rx signal in time", command=lambda: self.showGraph(self.sigRxButton))
-        self.eyeRxButton = tk.Button(self.plotsRxFrame, text="Show Rx eyediagram", command=lambda: self.showGraph(self.eyeRxButton))
+        # # Rx plots
+        # self.infRxButton = tk.Button(self.plotsRxFrame, text="Show detected signal", command=lambda: self.showGraph(self.infRxButton))
+        # self.conRxButton = tk.Button(self.plotsRxFrame, text="Show Rx constellation diagram", command=lambda: self.showGraph(self.conRxButton))
+        # self.spectrumRxButton = tk.Button(self.plotsRxFrame, text="Show Rx spectrum", command=lambda: self.showGraph(self.spectrumRxButton))
+        # self.sigRxButton = tk.Button(self.plotsRxFrame, text="Show Rx signal in time", command=lambda: self.showGraph(self.sigRxButton))
+        # self.eyeRxButton = tk.Button(self.plotsRxFrame, text="Show Rx eyediagram", command=lambda: self.showGraph(self.eyeRxButton))
 
-        self.infRxButton.pack()
-        self.spectrumRxButton.pack()
-        self.conRxButton.pack()
-        self.sigRxButton.pack()
-        self.eyeRxButton.pack()
+        # self.infRxButton.pack()
+        # self.spectrumRxButton.pack()
+        # self.conRxButton.pack()
+        # self.sigRxButton.pack()
+        # self.eyeRxButton.pack()
 
-        # Close plots button
-        self.closeplotsButton = tk.Button(self.plotsFrame, text="Close all showed plots", command=self.closeGraphsWindows)
-        self.closeplotsButton.grid(row=1, column=0, columnspan=2)
+        # # Close plots button
+        # self.closeplotsButton = tk.Button(self.plotsFrame, text="Close all showed plots", command=self.closeGraphsWindows)
+        # self.closeplotsButton.grid(row=1, column=0, columnspan=2)
+
+        # Electrical
+        self.electricalButton = tk.Button(self.plotsFrame, text="Show information signals", command=lambda: self.showPlots(self.electricalButton))
+        self.electricalButton.grid(row=0, column=0)
+        # Optical
+        self.opticalButton = tk.Button(self.plotsFrame, text="Show optical signals", command=lambda: self.showPlots(self.opticalButton))
+        self.opticalButton.grid(row=1, column=0)
+        # Spectrum
+        self.spectrumButton = tk.Button(self.plotsFrame, text="Show spectum of signals", command=lambda: self.showPlots(self.spectrumButton))
+        self.spectrumButton.grid(row=2, column=0)
+        # Constellation diagrams
+        self.constellationButton = tk.Button(self.plotsFrame, text="Show constellation diagrams", command=lambda: self.showPlots(self.constellationButton))
+        self.constellationButton.grid(row=3, column=0)
+        # Eye diagrams
+        self.eyeButton = tk.Button(self.plotsFrame, text="Show eye diagrams", command=lambda: self.showPlots(self.eyeButton))
+        self.eyeButton.grid(row=4, column=0)
+
 
         # Frames with buttons that will be disabled when doing configuration
-        self.buttonFrames = [self.schemeFrame, self.optionsFrame, self.plotsFrame, self.plotsTxFrame, self.plotsRxFrame]
+        self.buttonFrames = [self.schemeFrame, self.optionsFrame, self.plotsFrame]
  
         ### VARIABLES
         
@@ -473,9 +486,9 @@ class Gui:
             self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed} b/s")
 
 
-    def showGraph(self, clickedButton):
+    def showPlots(self, clickedButton):
         """
-        Show graph in the app. Graph is defined by clickedButton.
+        Show plots in popup windows. Plots are defined by clickedButton.
         """
         # Trying to show plots without simulation data
         if self.simulationResults is None:
@@ -483,72 +496,157 @@ class Gui:
             return
 
         # Define which button was clicked to get rigth plot
-        if clickedButton == self.infTxButton:
-            type = "informationTx"
-            title = "Modulation signal"
-        elif clickedButton == self.infRxButton:
-            type = "informationRx"
-            title = "Detected signal"
-        elif clickedButton == self.conTxButton:
-            type ="constellationTx"
-            title = "Tx constellation diagram"
-        elif clickedButton == self.conRxButton:
-            type = "constellationRx"
-            title = "Rx constellation diagram"
-        elif clickedButton == self.spectrumTxButton:
-            type = "spectrumTx"
-            title = "Tx optical spectrum"
-        elif clickedButton == self.spectrumRxButton:
-            type = "spectrumRx"
-            title = "Rx optical spectrum"
-        elif clickedButton == self.sigTxButton:
-            type = "signalTx"
-            title = "Tx signal in time"
-        elif clickedButton == self.sigRxButton:
-            type = "signalRx"
-            title = "Rx signal in time"
-        elif clickedButton == self.eyeTxButton:
-            type = "eyediagramTx"
-            title = "Tx eyediagram"
-        elif clickedButton == self.eyeRxButton:
-            type = "eyediagramRx"
-            title = "Rx eyediagram"
-        else: raise Exception("Unexcpected error")
+        if clickedButton == self.electricalButton:
+            type = "electrical"
+            title = "Infromation signals"
+        elif clickedButton == self.opticalButton:
+            type = "optical"
+            title = "Optical signals"
+        elif clickedButton == self.spectrumButton:
+            type = "spectrum"
+            title = "Spectrum of signals"
+        elif clickedButton == self.constellationButton:
+            type = "constellation"
+            title = "Constellation diagrams"
+        elif clickedButton == self.eyeButton:
+            type = "eye"
+            title = "Eye diagrams"
+        else: raise Exception("Unexpected error")
 
-        # Graph was showed once before
-        if type in self.plots:
-            plot = self.plots.get(type)
-            self.displayPlot(plot, title)
+        plots = self.loadPlot(type)
 
-        # Graph will be shown for the first time
+        plotWindow = PlotWindow(title, plots)
+
+
+    def loadPlot(self, type: str) -> tuple[plt.Figure, plt.Figure]:
+        """
+        Get figure objects to display.
+
+        Returns
+        ----
+        tuple with figure (Tx, Rx)
+        """
+        if type == "electrical":
+            keyTx = "electricalTx"
+            keyRx = "electricalRx"
+            titleTx = "Modulation signal"
+            titleRx = "Detected signal"            
+        elif type == "optical":
+            keyTx = "opticalTx"
+            keyRx = "opticalRx"
+            titleTx = "Modulated signal"
+            titleRx = "Reciever signal"  
+        elif type == "spectrum":
+            keyTx = "spectrumTx"
+            keyRx = "spectrumRx"
+            titleTx = "Tx spectrum signal"
+            titleRx = "Rx spectrum signal" 
+        elif type == "constellation":
+            keyTx = "constellationTx"
+            keyRx = "constellationRx"
+            titleTx = "Tx constellation diagram"
+            titleRx = "Rx constellation diagram" 
+        elif type == "eye":
+            keyTx = "eyeTx"
+            keyRx = "eyeRx"
+            titleTx = "Tx eyediagram"
+            titleRx = "Rx eyediagram" 
+        else: raise Exception("Unexpected error")
+
+        # Tx graph was once showed before
+        if keyTx in self.plots:
+            plotTx = self.plots.get(keyTx)
         else:
-            plot = getPlot(type, title,  self.simulationResults, self.generalParameters, self.sourceParameters)
-            self.displayPlot(plot, title)
-            self.plots.update({type:plot})
+            plotTx = getPlot(keyTx, titleTx, self.simulationResults, self.generalParameters, self.sourceParameters)[0]
+            self.plots.update({keyTx: plotTx})
+        # Rx graph was once showed before
+        if keyRx in self.plots:
+            plotRx = self.plots.get(keyRx)
+        else:
+            plotRx = getPlot(keyRx, titleRx, self.simulationResults, self.generalParameters, self.sourceParameters)[0]
+            self.plots.update({keyRx: plotRx})
+
+        return plotTx, plotRx
 
 
-    def displayPlot(self, plot, title: str):
-        """
-        Creates Toplevel popup window to show plot.
-        """
-        # Creates the window
-        popupGraph = tk.Toplevel()
-        popupGraph.geometry("1000x600")
-        popupGraph.title(title)
+    # def showGraph(self, clickedButton):
+    #     """
+    #     Show graph in the app. Graph is defined by clickedButton.
+    #     """
+    #     # Trying to show plots without simulation data
+    #     if self.simulationResults is None:
+    #         messagebox.showerror("Showing error", "You must start simulation first.")
+    #         return
 
-        # Shows the plot
-        canvas = FigureCanvasTkAgg(plot[0], master=popupGraph)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side="top", fill="both", expand=1)
+    #     # Define which button was clicked to get rigth plot
+    #     if clickedButton == self.infTxButton:
+    #         type = "informationTx"
+    #         title = "Modulation signal"
+    #     elif clickedButton == self.infRxButton:
+    #         type = "informationRx"
+    #         title = "Detected signal"
+    #     elif clickedButton == self.conTxButton:
+    #         type ="constellationTx"
+    #         title = "Tx constellation diagram"
+    #     elif clickedButton == self.conRxButton:
+    #         type = "constellationRx"
+    #         title = "Rx constellation diagram"
+    #     elif clickedButton == self.spectrumTxButton:
+    #         type = "spectrumTx"
+    #         title = "Tx optical spectrum"
+    #     elif clickedButton == self.spectrumRxButton:
+    #         type = "spectrumRx"
+    #         title = "Rx optical spectrum"
+    #     elif clickedButton == self.sigTxButton:
+    #         type = "signalTx"
+    #         title = "Tx signal in time"
+    #     elif clickedButton == self.sigRxButton:
+    #         type = "signalRx"
+    #         title = "Rx signal in time"
+    #     elif clickedButton == self.eyeTxButton:
+    #         type = "eyediagramTx"
+    #         title = "Tx eyediagram"
+    #     elif clickedButton == self.eyeRxButton:
+    #         type = "eyediagramRx"
+    #         title = "Rx eyediagram"
+    #     else: raise Exception("Unexcpected error")
+
+    #     # Graph was showed once before
+    #     if type in self.plots:
+    #         plot = self.plots.get(type)
+    #         self.displayPlot(plot, title)
+
+    #     # Graph will be shown for the first time
+    #     else:
+    #         plot = getPlot(type, title,  self.simulationResults, self.generalParameters, self.sourceParameters)
+    #         self.displayPlot(plot, title)
+    #         self.plots.update({type:plot})
+
+        
 
 
-    def closeGraphsWindows(self):
-        """
-        Closes all opened Toplevel windows.
-        """
-        for window in self.root.winfo_children():
-            if isinstance(window, tk.Toplevel):
-                window.destroy()
+    # def displayPlot(self, plot, title: str):
+    #     """
+    #     Creates Toplevel popup window to show plot.
+    #     """
+    #     # Creates the window
+    #     popupGraph = tk.Toplevel()
+    #     popupGraph.geometry("1000x600")
+    #     popupGraph.title(title)
+
+    #     # Shows the plot
+    #     canvas = FigureCanvasTkAgg(plot[0], master=popupGraph)
+    #     canvas.draw()
+    #     canvas.get_tk_widget().pack(side="top", fill="both", expand=1)
+
+
+    # def closeGraphsWindows(self):
+    #     """
+    #     Closes all opened Toplevel windows.
+    #     """
+    #     for window in self.root.winfo_children():
+    #         if isinstance(window, tk.Toplevel):
+    #             window.destroy()
 
     
     def attentionCheck(self):

@@ -28,20 +28,16 @@ class ParametersWindow:
         self.callback = callback
         self.defaultParameters = defaultParameters
         self.generalParameters = generalParameters
-        self.popup = self.popupGui()
+        self.popupGui()
 
         # Bind the popup window's closing event to the parent's method
         self.popup.protocol("WM_DELETE_WINDOW", self.closePopup)
 
     ### METHODS
 
-    def popupGui(self) -> tk.Toplevel:
+    def popupGui(self):
         """
         Creates popup gui for setting parameters.
-
-        Returns
-        -----
-        popup window: tkinter Toplevel object
         """
         self.popup = tk.Toplevel()
         self.popup.geometry("400x400")
@@ -94,8 +90,6 @@ class ParametersWindow:
             self.setButton.grid(row=7, column=0, columnspan=2)
 
             self.setDefaultParameters()
-
-            return self.popup
         
         elif self.type == "modulator":
             self.popup.title("Parameters of modulator")
@@ -117,8 +111,6 @@ class ParametersWindow:
             self.setButton.grid(row=2, column=0, columnspan=2)
 
             self.setDefaultParameters()
-
-            return self.popup
         
         elif self.type == "channel":
             self.popup.title("Parameters of fiber channel")
@@ -156,8 +148,6 @@ class ParametersWindow:
             self.setButton.grid(row=5, column=0, columnspan=2)
 
             self.setDefaultParameters()
-
-            return self.popup
         
         elif self.type == "reciever":
             self.popup.title("Parameters of reciever")
@@ -182,8 +172,6 @@ class ParametersWindow:
             self.setButton.grid(row=5, column=0, columnspan=2)
 
             self.setDefaultParameters()
-
-            return self.popup
         
         elif self.type == "amplifier":
             self.popup.title("Parameters of amplifier")
@@ -222,8 +210,6 @@ class ParametersWindow:
             self.setButton.grid(row=5, column=0, columnspan=2)
 
             self.setDefaultParameters()
-
-            return self.popup
         
         else: raise Exception("Unexpected if statement")
 
