@@ -154,8 +154,7 @@ def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> b
         "Power":(True , -50), # -50 dBm
         "Frequency":(True, 170), # ~ 1760 nm
         "Linewidth":(True, 1), # 1 Hz
-        "PowerNoise":(True, 0), # 0
-        "PhaseNoise":(True, 0), # 0
+        "RIN": (True, 0), # 0
         # Modulator
 
         # Channel
@@ -168,6 +167,7 @@ def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> b
         # Amplifier
         "Gain":(False, 0), # > 0 dB
         "Noise":(True, 0), # 0 dB
+        "Detection":(True, -100) # -100 dBm
     }
 
     limitComp, limitValue = downLimits.get(parameterName)
@@ -207,9 +207,8 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
         # Source
         "Power":(True , 50), # 50 dBm
         "Frequency":(True, 250), # <= ~ 1200 nm
-        "Linewidth":(True, 10**10), # 10 GHz
-        "PowerNoise":(True, 1), # 1
-        "PhaseNoise":(True, 1), # 1
+        "Linewidth":(True, 10**9), # 10 GHz
+        "RIN":(True, 1), # 1
         # Modulator
 
         # Channel
@@ -222,6 +221,7 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
         # Amplifier
         "Gain":(True, 50), # 50 dB
         "Noise":(True, 20), # 20 dB
+        "Detection":(True, 100) # 100 dBm
     }
 
     limitComp, limitValue = upLimits.get(parameterName)
@@ -270,6 +270,10 @@ def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, 
     elif type == "amplifier":
         stringDict = {"Position":parameters.pop("Position")}
 
+        # Detection has as ideal value "-inf"
+        if ideal:
+            stringDict.update({"Detection":parameters.pop("Detection")})
+        
         return parameters, stringDict
         
     else: raise Exception("Unexpected error")     

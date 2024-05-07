@@ -16,7 +16,10 @@ except ImportError:
     from optic.dsp.core import firFilter
 
 from scripts.my_devices import laserSource
-
+from scripts.my_plot import opticalSpectrum
+from optic.models.devices import basicLaserModel
+from optic.models.amplification import get_spectrum
+from optic.utils import dBm2W
 
 def myiqm(Ai, u, param=None):
     """
@@ -139,44 +142,90 @@ information = firFilter(pulse, symbolsUp)
 
 # CARRIER
 # Laser parameters
-paramLaser = parameters()
-paramLaser.P = 10  # laser power [dBm] [default: 10 dBm]
-paramLaser.lw = 1   # laser linewidth [Hz] [default: 1 kHz]
-paramLaser.Fs = Fs  # sampling rate [samples/s]
-paramLaser.Ns = len(information)   # number of signal samples [default: 1e3]
-paramLaser.pwn = 0
-paramLaser.phn = 0
+# paramLaser = parameters()
+# paramLaser.P = 10  # laser power [dBm] [default: 10 dBm]
+# paramLaser.lw = 1   # laser linewidth [Hz] [default: 1 kHz]
+# paramLaser.Fs = Fs  # sampling rate [samples/s]
+# paramLaser.Ns = len(information)   # number of signal samples [default: 1e3]
+# paramLaser.pwn = 0.5
+# paramLaser.phn = 0
 
-carrier = laserSource(paramLaser)
+# carrier = laserSource(paramLaser)
+ideal = True
+if ideal:
+    power = 20 # dBm
+    carrier = np.full(len(information), dBm2W(20))
+    Fc = 193.1 * (10**12)
+else:
+    paramLaser = parameters()
+    paramLaser.P = 20  # laser power [dBm] [default: 10 dBm]
+    paramLaser.lw = 1 # laser linewidth [Hz] [default: 1 kHz]
+    paramLaser.Fs = Fs  # sampling rate [samples/s]
+    paramLaser.Ns = len(information)   # number of signal samples [default: 1e3]
+    paramLaser.RIN_var = 0
+    Fc = 193.1 * (10**12)
+
+    carrier = basicLaserModel(paramLaser)
 
 
 # PLOT
-# interval = np.arange(100,250)
-# t = interval*Ts
+interval = np.arange(100,250)
+t = interval*Ts
 
-# # Calculate magnitude and phase
-# # magnitude = np.abs(10 * np.log10(signal[interval]))
-# # magnitude = 10 * np.log10(np.real(signal[interval]))
-# # magnitude = np.real(carrier[interval])
-# magnitude = np.abs(carrier[interval])
-# phase = np.angle(carrier[interval], deg=True)
+# Calculate magnitude and phase
+# magnitude = np.abs(10 * np.log10(signal[interval]))
+# magnitude = 10 * np.log10(np.real(signal[interval]))
+# magnitude = np.real(carrier[interval])
+magnitude = np.abs(carrier[interval]**2)
+phase = np.angle(carrier[interval], deg=True)
 
 
-# # Plotting magnitude and phase in two subplots
-# fig, axs = plt.subplots(2, 1, figsize=(8, 4))
+# Plotting magnitude and phase in two subplots
+fig, axs = plt.subplots(2, 1, figsize=(8, 4))
 
-# # Plot magnitude
-# axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
-# axs[0].set_ylabel("Magnitude (W)")
-# axs[0].legend(loc="upper left")
+# Plot magnitude
+axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
+axs[0].set_ylabel("Magnitude (W)")
+axs[0].legend(loc="upper left")
 
-# # Plot phase
-# axs[1].plot(t, phase, label="Phase", linewidth=2, color="red")
-# axs[1].set_ylabel("Phase (°)")
-# axs[1].set_xlabel("Time (s)")
-# axs[1].legend(loc="upper left")
+# Plot phase
+axs[1].plot(t, phase, label="Phase", linewidth=2, color="red")
+axs[1].set_ylabel("Phase (°)")
+axs[1].set_xlabel("Time (s)")
+axs[1].legend(loc="upper left")
 
-# plt.suptitle("Carrier signal")
+plt.suptitle("Carrier signal")
+
+
+
+
+wavelength, spectrum = get_spectrum(carrier, Fs, Fc, xunits="m")
+# Convert to nm
+wavelength = wavelength * 10**9
+
+fig, ax = plt.subplots(1)
+
+yMin = spectrum.min()
+yMax = spectrum.max() + 10
+if yMin == -np.inf:
+    yMin = -100
+    ax.plot( wavelength, spectrum, linewidth=5)
+else:
+    ax.plot( wavelength, spectrum)
+    
+ax.set_ylim([yMin, yMax])   
+ax.set_xlabel("Wavelength [nm]")
+ax.set_ylabel("Magnitude [dBm]")
+# ax.minorticks_on()
+ax.grid(True)
+
+# Set scattered ticks on the x-axis
+num_ticks = 5  # Set the number of ticks you want to display
+tick_indices = np.linspace(0, len(wavelength) - 1, num_ticks, dtype=int)
+ax.set_xticks(wavelength[tick_indices])
+ax.set_xticklabels([f"{freq_nm:.6f}" for freq_nm in wavelength[tick_indices]])
+
+plt.suptitle("Carrier spectrum")
 
 
 # MODULATION
@@ -187,12 +236,12 @@ if modulator == "mzm":
     # paramMZM.Vb = -paramMZM.Vpi/2
     paramMZM.Vb = -1 # phase shift of cosinus
 
-    modulated = mzm(np.sqrt(carrier), information, paramMZM)
+    modulated = mzm(carrier, information, paramMZM)
 
 elif modulator == "pm":
     Vpi = 2 # PM’s Vπ voltage
 
-    modulated = pm(np.sqrt(carrier), information, Vpi)
+    modulated = pm(carrier, information, Vpi)
 
 
 elif modulator == "iqm":
@@ -202,7 +251,7 @@ elif modulator == "iqm":
     paramIQM.VbQ = -2 # Q-MZM’s bias voltage
     paramIQM.Vphi = 1 # PM bias voltage
 
-    modulated = iqm(np.sqrt(carrier), information, paramIQM)
+    modulated = iqm(carrier, information, paramIQM)
 
 elif modulator == "myiqm":
     paramIQM = parameters()

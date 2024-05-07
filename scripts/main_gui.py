@@ -17,8 +17,8 @@ class Gui:
     def __init__(self):
         self.root = tk.Tk()
 
-        # self.root.wm_state("zoomed")
-        self.root.geometry("1000x600")
+        self.root.wm_state("zoomed")
+        #self.root.geometry("1000x600")
         self.root.title("Optical modulaton simulation application")
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
@@ -137,36 +137,6 @@ class Gui:
 
         # Plots Frame
 
-        # Tx plots
-        # self.infTxButton = tk.Button(self.plotsTxFrame, text="Show modulation signal", command=lambda: self.showGraph(self.infTxButton))
-        # self.conTxButton = tk.Button(self.plotsTxFrame, text="Show Tx constellation diagram", command=lambda: self.showGraph(self.conTxButton))
-        # self.spectrumTxButton = tk.Button(self.plotsTxFrame, text="Show Tx spectrum", command=lambda: self.showGraph(self.spectrumTxButton))
-        # self.sigTxButton = tk.Button(self.plotsTxFrame, text="Show Tx signal in time", command=lambda: self.showGraph(self.sigTxButton))
-        # self.eyeTxButton = tk.Button(self.plotsTxFrame, text="Show Tx eyediagram", command=lambda: self.showGraph(self.eyeTxButton))
-        
-        # self.infTxButton.pack()
-        # self.spectrumTxButton.pack()
-        # self.conTxButton.pack()
-        # self.sigTxButton.pack()
-        # self.eyeTxButton.pack()
-
-        # # Rx plots
-        # self.infRxButton = tk.Button(self.plotsRxFrame, text="Show detected signal", command=lambda: self.showGraph(self.infRxButton))
-        # self.conRxButton = tk.Button(self.plotsRxFrame, text="Show Rx constellation diagram", command=lambda: self.showGraph(self.conRxButton))
-        # self.spectrumRxButton = tk.Button(self.plotsRxFrame, text="Show Rx spectrum", command=lambda: self.showGraph(self.spectrumRxButton))
-        # self.sigRxButton = tk.Button(self.plotsRxFrame, text="Show Rx signal in time", command=lambda: self.showGraph(self.sigRxButton))
-        # self.eyeRxButton = tk.Button(self.plotsRxFrame, text="Show Rx eyediagram", command=lambda: self.showGraph(self.eyeRxButton))
-
-        # self.infRxButton.pack()
-        # self.spectrumRxButton.pack()
-        # self.conRxButton.pack()
-        # self.sigRxButton.pack()
-        # self.eyeRxButton.pack()
-
-        # # Close plots button
-        # self.closeplotsButton = tk.Button(self.plotsFrame, text="Close all showed plots", command=self.closeGraphsWindows)
-        # self.closeplotsButton.grid(row=1, column=0, columnspan=2)
-
         # Electrical
         self.electricalButton = tk.Button(self.plotsFrame, text="Show information signals", command=lambda: self.showPlots(self.electricalButton))
         self.electricalButton.grid(row=0, column=0)
@@ -188,22 +158,13 @@ class Gui:
         self.buttonFrames = [self.schemeFrame, self.optionsFrame, self.plotsFrame]
  
         ### VARIABLES
-        
-        # Testing values
-        # self.sourceParameters = {"Power":10, "Frequency":193.1, "Ideal":True}
-        # self.modulatorParameters = {"Type":"MZM"}
-        # self.channelParameters = {"Length":20, "Ideal":True}
-        # self.recieverParameters = {"Type":"Photodiode", "Bandwidth":1000, "Resolution":1, "Ideal":False}
-        # self.amplifierParameters = None
-
-        # self.generalParameters = {"SpS": 8, "Rs": 10 ** 3}
 
         # Inicial parameters
-        self.sourceParameters = {"Power": 0, "Frequency": 0, "Linewidth": 0, "PowerNoise": 0, "PhaseNoise": 0, "Ideal": False}
+        self.sourceParameters = {"Power": 0, "Frequency": 0, "Linewidth": 0, "RIN": 0, "Ideal": False}
         self.modulatorParameters = {"Type": "MZM"}
         self.channelParameters = {"Length": 0, "Attenuation": 0, "Dispersion": 0, "Ideal": False}
         self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 0, "Resolution": 0, "Ideal": False}
-        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Ideal": False}
+        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
         # Store initial parameters to check for simulation start
         self.initialParameters = {"Source": self.sourceParameters, "Modulator": self.modulatorParameters, 
                                   "Channel": self.channelParameters, "Reciever": self.recieverParameters, "Amplifier": self.amplifierParameters}
@@ -211,11 +172,11 @@ class Gui:
         self.generalParameters = {"SpS":8}
 
         # Default parameters (testing)
-        self.sourceParameters = {"Power": 10, "Frequency": 191.7, "Linewidth": 1, "PowerNoise": 0, "PhaseNoise": 0, "Ideal": True}
+        self.sourceParameters = {"Power": 10, "Frequency": 191.7, "Linewidth": 1, "RIN": 0, "Ideal": True}
         self.modulatorParameters = {"Type": "MZM"}
         self.channelParameters = {"Length": 40, "Attenuation": 0, "Dispersion": 0, "Ideal": True}
         self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 1000, "Resolution": 0.5, "Ideal": False}
-        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Ideal": False}
+        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
 
 
 
@@ -247,7 +208,11 @@ class Gui:
         if not self.updateGeneralParameters(): return
 
         # Not all parameters provided
-        if not self.checkSimulationStart(): return
+        if not self.checkParameters(): return
+
+        # Amplifier with ideal channel
+        if self.amplifierCheckVar.get() and self.channelParameters.get("Ideal"):
+            messagebox.showwarning("Simulation warning", "Amplifier will be ignored because of ideal channel.")
         
         # Clear plots for new simulation (othervise old graphs would be shown)
         self.plots.clear()
@@ -256,13 +221,21 @@ class Gui:
         self.simulationResults = simulate(self.generalParameters, self.sourceParameters, self.modulatorParameters,
                                            self.channelParameters, self.recieverParameters, self.amplifierParameters)
         
-        # Showing results
-        # Values to show
-        outputValues = getValues(self.simulationResults, self.generalParameters)
-        # Actual showing in the app
-        self.showValues(outputValues)
+        # Signal power is too low for amplifier detection
+        if self.simulationResults.get("recieverSignal") is None:
+            messagebox.showerror("Simulation error", "Signal power is too low to be detected by amplifier !")
+            # Clear simulation results (bcs of graphs)
+            self.simulationResults = None
 
-        messagebox.showinfo("Simulation status", "Simulation succesfully completed")
+            return
+        # Showing results
+        else:
+            # Values to show
+            outputValues = getValues(self.simulationResults, self.generalParameters)
+            # Actual showing in the app
+            self.showValues(outputValues)
+
+            messagebox.showinfo("Simulation status", "Simulation succesfully completed")
 
 
     def amplifierCheckbuttonChange(self):
@@ -353,7 +326,7 @@ class Gui:
         else: raise Exception("Unexpected error")
 
 
-    def checkSimulationStart(self) -> bool:
+    def checkParameters(self) -> bool:
         """
         Checks if all needed parameters are set
         """
@@ -515,7 +488,7 @@ class Gui:
 
         plots = self.loadPlot(type)
 
-        plotWindow = PlotWindow(title, plots)
+        plotWindow = PlotWindow(type, title, plots)
 
 
     def loadPlot(self, type: str) -> tuple[plt.Figure, plt.Figure]:
@@ -524,7 +497,9 @@ class Gui:
 
         Returns
         ----
-        tuple with figure (Tx, Rx)
+        tuple with figure (Tx, Rx, Source)
+        ! source figure is returned only for optical and spectrum
+        in other cases Source is None
         """
         if type == "electrical":
             keyTx = "electricalTx"
@@ -534,13 +509,17 @@ class Gui:
         elif type == "optical":
             keyTx = "opticalTx"
             keyRx = "opticalRx"
+            keySc = "opticalSc"
             titleTx = "Modulated signal"
-            titleRx = "Reciever signal"  
+            titleRx = "Reciever signal"
+            titleSc = "Source signal"  
         elif type == "spectrum":
             keyTx = "spectrumTx"
             keyRx = "spectrumRx"
+            keySc = "spectrumSc"
             titleTx = "Tx spectrum signal"
-            titleRx = "Rx spectrum signal" 
+            titleRx = "Rx spectrum signal"
+            titleSc = "Source spectrum" 
         elif type == "constellation":
             keyTx = "constellationTx"
             keyRx = "constellationRx"
@@ -565,8 +544,17 @@ class Gui:
         else:
             plotRx = getPlot(keyRx, titleRx, self.simulationResults, self.generalParameters, self.sourceParameters)[0]
             self.plots.update({keyRx: plotRx})
+        # Source graphs
+        if type == "optical" or type == "spectrum":
+            if keySc in self.plots:
+                plotSc = self.plots.get(keySc)
+            else:
+                plotSc = getPlot(keySc, titleSc, self.simulationResults, self.generalParameters, self.sourceParameters)[0]
+                self.plots.update({keySc: plotSc})
+        else:
+            plotSc = None
 
-        return plotTx, plotRx
+        return plotTx, plotRx, plotSc
 
 
     # def showGraph(self, clickedButton):
@@ -640,13 +628,13 @@ class Gui:
     #     canvas.get_tk_widget().pack(side="top", fill="both", expand=1)
 
 
-    # def closeGraphsWindows(self):
-    #     """
-    #     Closes all opened Toplevel windows.
-    #     """
-    #     for window in self.root.winfo_children():
-    #         if isinstance(window, tk.Toplevel):
-    #             window.destroy()
+    def closeGraphsWindows(self):
+        """
+        Closes all opened Toplevel windows.
+        """
+        for window in self.root.winfo_children():
+            if isinstance(window, tk.Toplevel):
+                window.destroy()
 
     
     def attentionCheck(self):

@@ -6,14 +6,13 @@
 - numerical power values (average value) + obrazek v praci
 
 # 1
-- signal power with modulators
-- my Laser (no Linewidth)
-- channel
-- PM
-- output graphs in 1 window (checkboxes what to show) (include carrier)
-- amplifier gain from - to (check the signal power - not enough = dont start the simulation)
-- power calculation
-- spectrum - add f ax (labels), rozsah, priblizeni
+- ideal laser (spectrum)
+- dispersion
+- limits (linewidth, detection)
+- 10** policka (symbols, bandwidth, RIN)
+- spectrum - add f ax (labels), rozsah, priblizeni, destinne mista
+- spectrum - amplifier, other modulations
+- fix iqm and detection output values (sqr(carrier))
 
 
 # 2

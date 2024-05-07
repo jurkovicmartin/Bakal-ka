@@ -31,6 +31,8 @@ def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameter
     Returns
     -----
     simulationResults: bitsTx, symbolsTx, modulationSignal, carrierSignal, modulatedSignal, recieverSignal, detectedSignal, symbolsRx, bitsRx
+
+    ! error with detection of amplifier and signal power => recieverSignal is None
     """
 
     # Each time random numbers
@@ -51,6 +53,11 @@ def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameter
     simulationResults.update(modulate(modulatorParameters, simulationResults.get("modulationSignal"), simulationResults.get("carrierSignal")))
     # Adds recieverSignal
     simulationResults.update(fiberTransmition(channelParameters, amplifierParameters, simulationResults.get("modulatedSignal"), Fs, frequency))
+    
+    # Error with amplifier detection (signal is too low)
+    if simulationResults.get("recieverSignal") is None:
+        return simulationResults
+    
     # Adds detectedSignal
     simulationResults.update(detection(recieverParameters, simulationResults.get("recieverSignal"), simulationResults.get("carrierSignal"), generalParameters))
     # Adds symbolsRx, bitsRx
@@ -111,11 +118,10 @@ def carrierSignal(sourceParameters: dict, Fs: int, modulationSignal) -> dict:
     paramLaser.lw = sourceParameters.get("Linewidth")    # laser linewidth [Hz] [default: 1 kHz]
     paramLaser.Fs = Fs  # sampling rate [samples/s]
     paramLaser.Ns = len(modulationSignal)   # number of signal samples [default: 1e3]
-    paramLaser.pwn = sourceParameters.get("PowerNoise") # Gaussian power noise
-    paramLaser.phn = sourceParameters.get("PhaseNoise") # Gaussian phase noise
+    paramLaser.RIN_var = sourceParameters.get("RIN") # RIN [1e-20]
 
 
-    return {"carrierSignal":laserSource(paramLaser)}
+    return {"carrierSignal":basicLaserModel(paramLaser)}
 
 def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict:
     """
@@ -128,7 +134,7 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict
 
     if modulatorParameters.get("Type") == "PM":
 
-        return {"modulatedSignal":pm(np.sqrt(carrierSignal), modulationSignal, 2)}
+        return {"modulatedSignal":pm(carrierSignal, modulationSignal, 2)}
     
     elif modulatorParameters.get("Type") == "MZM":
         # MZM parameters
@@ -136,7 +142,7 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict
         paramMZM.Vpi = 2
         paramMZM.Vb = -1
 
-        return {"modulatedSignal":mzm(np.sqrt(carrierSignal), modulationSignal, paramMZM)}
+        return {"modulatedSignal":mzm(carrierSignal, modulationSignal, paramMZM)}
     
     elif modulatorParameters.get("Type") == "IQM":
         # IQM parameters
@@ -187,7 +193,7 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
     return {"recieverSignal":recieverSignal}
 
 
-def amplifierTransmition(fiberParameters, amplifierParameters: dict, modulatedSignal: dict, Fs: int, frequency: float) -> np.ndarray:
+def amplifierTransmition(fiberParameters, amplifierParameters: dict, modulatedSignal: dict, Fs: int, frequency: float) -> np.ndarray | None:
     """
     Simulates signal thru fiber with amplifier.
 
@@ -202,6 +208,8 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, modulatedSi
     Returns
     -----
     recieverSignal: signal at reciever (array)
+
+    None: in case there was a error with detection limit of amplifier and signal power
     """
 
     # Amplifier parameters
@@ -211,29 +219,70 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, modulatedSi
     paramEDFA.Fc = frequency
     paramEDFA.Fs = Fs
 
-    # Position of amplifier
+    detectionLimit = amplifierParameters.get("Detection")
     amplifierPosition = amplifierParameters.get("Position")
-    if amplifierPosition == "start":
-        modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
 
-        recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+    if amplifierParameters.get("Ideal"):
 
-    elif amplifierPosition == "middle":
-        # Lenght needs to be halfed
-        fiberParameters.L = fiberParameters.L / 2
-        # First half
-        modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
-        # Amplifier
-        modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
-        # Second half
-        recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+        if amplifierPosition == "start":
+            modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
 
-    elif amplifierPosition == "end":
-        modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
-        recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
-    
-    else: raise Exception("Unexpected error")
+        elif amplifierPosition == "middle":
+            # Lenght needs to be halfed
+            fiberParameters.L = fiberParameters.L / 2
+            # First half
+            modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            # Amplifier
+            modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+            # Second half
+            recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+
+        elif amplifierPosition == "end":
+            modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+
+            recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+        
+        else: raise Exception("Unexpected error")
+
+    else:
+
+        if amplifierPosition == "start":
+            # Signal power is too low
+            if not(checkPower(modulatedSignal, detectionLimit)):
+                return
+            
+            modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+
+            recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+
+        elif amplifierPosition == "middle":
+            # Lenght needs to be halfed
+            fiberParameters.L = fiberParameters.L / 2
+
+            # Signal power is too low
+            if not(checkPower(modulatedSignal, detectionLimit)):
+                return
+            
+            # First half
+            modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            # Amplifier
+            modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+            # Second half
+            recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+
+        elif amplifierPosition == "end":
+            modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+
+            # Signal power is too low
+            if not(checkPower(modulatedSignal, detectionLimit)):
+                return
+
+            recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+        
+        else: raise Exception("Unexpected error")
+
 
     return recieverSignal
 
@@ -335,6 +384,7 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
 
     centralFrequency = sourceParameters.get("Frequency") * 10**12
 
+    carrierSignal =simulationResults.get("carrierSignal")
     informationSignal = simulationResults.get("modulationSignal")
     modulatedSignal = simulationResults.get("modulatedSignal")
     recieverSignal = simulationResults.get("recieverSignal")
@@ -360,12 +410,18 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
         # Rx optical spectrum
     elif type == "spectrumRx":
         return opticalSpectrum(recieverSignal, Fs, centralFrequency, title)
+        # Source signal spectrum
+    elif type == "spectrumSc":
+        return opticalSpectrum(carrierSignal, Fs, centralFrequency, title)
     elif type == "opticalTx":
         # Modulated signal in time (Tx signal)
         return signalInTime(Ts, modulatedSignal, title, "optical")
     elif type == "opticalRx":
         # Reciever signal in time (Rx signal)
         return signalInTime(Ts, recieverSignal, title, "optical")
+    elif type == "opticalSc":
+        # Source signal in time
+        return signalInTime(Ts, carrierSignal, title, "optical")
     elif type == "eyeTx":
         # Tx eyediagram
         discard = 100
@@ -421,3 +477,19 @@ def getValues(simulationResults: dict, generalParameters: dict) -> dict:
     values.update({"powerRxdBm":power})
 
     return values
+
+
+def checkPower(signal, limit) -> bool:
+        """
+        In case of using amplifier checks the signal power and compares it to setted amplifier detection limit.
+
+        Returns
+        ----
+        True: ok
+
+        False: signal power is too low
+        """
+
+        signalPower = 10*np.log10(signal_power(signal) / 1e-3)
+
+        return signalPower < limit
