@@ -81,9 +81,12 @@ class Gui:
         # Symbol rate
         self.symbolRateLabel = tk.Label(self.generalFrame, text="Symbol rate [symbols/s]")
         self.symbolRateEntry = tk.Entry(self.generalFrame)
-        self.symbolRateEntry.insert(0, "1000")
+        self.symbolRateEntry.insert(0, "1")
+        self.symbolRateCombobox = ttk.Combobox(self.generalFrame, values=["M (10^6)", "G (10^9)"], state="readonly")
+        self.symbolRateCombobox.set("M (10^6)")
         self.symbolRateLabel.grid(row=0, column=3)
         self.symbolRateEntry.grid(row=1, column=3)
+        self.symbolRateCombobox.grid(row=1, column=4)
 
         # Checkbutton for including / excluding channel pre-amplifier
         self.amplifierCheckVar = tk.BooleanVar()
@@ -91,8 +94,8 @@ class Gui:
         self.amplifierCheckbutton.grid(row=2, column=0)
 
         # Attention label for adding pre-amplifier
-        self.attentionLabel = tk.Label(self.generalFrame, text="")
-        self.attentionLabel.grid(row=2, column=1, columnspan=2)
+        # self.attentionLabel = tk.Label(self.generalFrame, text="")
+        # self.attentionLabel.grid(row=2, column=1, columnspan=2)
 
         # Other
 
@@ -175,7 +178,7 @@ class Gui:
         self.sourceParameters = {"Power": 10, "Frequency": 191.7, "Linewidth": 1, "RIN": 0, "Ideal": True}
         self.modulatorParameters = {"Type": "MZM"}
         self.channelParameters = {"Length": 40, "Attenuation": 0, "Dispersion": 0, "Ideal": True}
-        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 1000, "Resolution": 0.5, "Ideal": False}
+        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": "inf", "Resolution": "inf", "Ideal": True}
         self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
 
 
@@ -211,8 +214,8 @@ class Gui:
         if not self.checkParameters(): return
 
         # Amplifier with ideal channel
-        if self.amplifierCheckVar.get() and self.channelParameters.get("Ideal"):
-            messagebox.showwarning("Simulation warning", "Amplifier will be ignored because of ideal channel.")
+        # if self.amplifierCheckVar.get() and self.channelParameters.get("Ideal"):
+        #    messagebox.showwarning("Simulation warning", "Amplifier will be ignored because of ideal channel.")
         
         # Clear plots for new simulation (othervise old graphs would be shown)
         self.plots.clear()
@@ -247,13 +250,13 @@ class Gui:
             self.amplifierButton.grid(row=0, column=3)
             self.recieverButton.grid(row=0, column=4)
             
-            self.attentionCheck()
+            # self.attentionCheck()
         else:
             # Remove amplifier button
             self.amplifierButton.grid_forget()
             self.recieverButton.grid(row=0, column=3)
 
-            self.attentionCheck()
+            # self.attentionCheck()
 
 
     def showParametersPopup(self, clickedButton):
@@ -398,7 +401,21 @@ class Gui:
         if self.mFormatComboBox.get() == "OOK":
             self.generalParameters.update({"Format": "pam"})
 
-        # Check symbol rate
+        if not(self.checkSymbolRate()):
+            # Symbol rate is not ok
+            return False
+        
+        self.generalParameters.update({"Fs":self.generalParameters.get("SpS") * self.generalParameters.get("Rs")})
+        self.generalParameters.update({"Ts":1 / self.generalParameters.get("Fs")})
+
+        return True
+    
+
+    def checkSymbolRate(self) -> bool:
+        """
+        Checks if inputed symbol rate is valid and sets its if yes.
+        """
+        # Checks if it is a number and covert it
         Rs, isEmpty = convertNumber(self.symbolRateEntry.get())
         if Rs is None and isEmpty:
             messagebox.showerror("Symbol rate input error", "You must input symbol rate!")
@@ -409,23 +426,31 @@ class Gui:
         elif Rs != int(Rs):
             messagebox.showerror("Symbol rate input error", "Symbol rate must whole number!")
             return False
-        elif Rs < 1000:
+        # Rs is number
+        else: pass
+        
+        # Set the rigth value
+        if self.symbolRateCombobox.get() == "M (10^6)":
+            Rs = Rs * 10**6
+        elif self.symbolRateCombobox.get() == "G (10^9)":
+            Rs = Rs * 10**9
+        else:
+            raise Exception("Unexpected error")
+
+        # Checks size of the number
+        if Rs < 1000000: # 1 M
             messagebox.showerror("Symbol rate input error", "Symbol rate is too low")
             return False
         elif self.generalParameters.get("Format") == "pam" and self.generalParameters.get("Order") == 2 and Rs >= 10**11: # 100G OOK
             messagebox.showerror("Symbol rate input error", "Symbol rate for OOK is too high")
             return False
-        elif Rs > 10**12: # 1T
+        elif Rs >= 10**12: # 1T
             messagebox.showerror("Symbol rate input error", "Symbol rate is too high")
             return False
-        # Rs is ok
+        # Symbol rate is ok
         else:
             self.generalParameters.update({"Rs":Rs})
-        
-        self.generalParameters.update({"Fs":self.generalParameters.get("SpS") * self.generalParameters.get("Rs")})
-        self.generalParameters.update({"Ts":1 / self.generalParameters.get("Fs")})
-
-        return True
+            return True
 
     
     def showValues(self, outputValues: dict):
@@ -637,6 +662,12 @@ class Gui:
                 window.destroy()
 
     
+
+
+
+
+
+
     def attentionCheck(self):
         """
         Checks for attention for combination of ideal channel and amplifier. Also updates the attention label.

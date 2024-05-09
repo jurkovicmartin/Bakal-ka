@@ -10,9 +10,10 @@
 - dispersion
 - limits (linewidth, detection)
 - 10** policka (symbols, bandwidth, RIN)
-- spectrum - add f ax (labels), rozsah, priblizeni, destinne mista
+- spectrum - rozsah, priblizeni
 - spectrum - amplifier, other modulations
-- fix iqm and detection output values (sqr(carrier))
+- fix iqm and detection output values (sqr(carrier)) (check only popisky)
+- spectrum
 
 
 # 2
@@ -22,14 +23,13 @@
 - signal_power warning (divide by zero)
 - huge attenuation (not aply)
 - source huge noises (bordel)
-- dont allow shit states
-- my PM
 - presets / config
 - narocnost simulace (combobox with SpS + data quantity selection)
 - no need for bits (Tx, Rx)
 - SpS on spreads signal in time
 - spectrum ticks warning
 - nápověda bublinky
+- uplimit for bandwidth showcase
 
 # BIG
 - WDM

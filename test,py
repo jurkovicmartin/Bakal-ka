@@ -91,11 +91,11 @@ SpS = 16 # Samples per symbol
 Rs = 1000000
 Fs = SpS * Rs
 Ts = 1/Fs
-modulationOrder = 2
-modulationFormat = "pam"
+modulationOrder = 4
+modulationFormat = "qam"
 
 
-modulator = "mzm"
+modulator = "myiqm"
 idealChannel = False
 detector = "photodiode"
 
@@ -151,7 +151,7 @@ information = firFilter(pulse, symbolsUp)
 # paramLaser.phn = 0
 
 # carrier = laserSource(paramLaser)
-ideal = True
+ideal = False
 if ideal:
     power = 20 # dBm
     carrier = np.full(len(information), dBm2W(20))

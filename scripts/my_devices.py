@@ -57,6 +57,24 @@ def edfa(Ei, ideal: bool, param=None) -> np.array:
         return Ei * np.sqrt(G_lin) + noise
     
 
+def idealLaser(power: float, samples: int) -> np.array:
+    """
+    Creates ideal optical signal.
+
+    Parameters
+    ----
+    power: laser power in dBm
+
+    samples: number of samples to be generated
+    """
+    length = np.full(samples, 1)
+    # carrier = np.sqrt(dBm2W(power)) * np.exp(1j*samples)
+    return np.sqrt(dBm2W(power)) * length
+
+
+
+
+
 def laserSource(param) -> np.array:
     """
     Generates optical carrier signal.

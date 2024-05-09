@@ -16,6 +16,7 @@ from optic.dsp.core import pnorm, signal_power
 from optic.models.amplification import get_spectrum
 from optic.plot import constHist
 import warnings
+from scipy.constants import c
 
 warnings.filterwarnings("ignore", r"All-NaN (slice|axis) encountered")
 
@@ -260,74 +261,82 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None, title=""
     return fig, axes
 
 
-def signalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, plt.Axes]:
+def electricalInTime(Ts: int, signal, title: str) -> tuple[plt.Figure, plt.Axes]:
     """
-    Plot optical / electrical signal in time. Electrical is showed as real and imaginary part, optical as magnitude and phase.
+    Plot electrical signal in time showed as real and imaginary part
+    """
+    # interval for plot
+    interval = np.arange(100,600)
+    t = interval*Ts
+
+    fig, axs = plt.subplots(2, 1, figsize=(8, 4))
+
+    # Real
+    axs[0].plot(t, signal[interval].real, label="Real Part", linewidth=2, color="blue")
+    axs[0].set_ylabel("Amplitude (a.u.)")
+    axs[0].legend(loc="upper left")
+
+    # Imaginary
+    axs[1].plot(t, signal[interval].imag, label="Imaginary Part", linewidth=2, color="red")
+    axs[1].set_ylabel("Amplitude (a.u.)")
+    axs[1].set_xlabel("Time (s)")
+    axs[1].legend(loc="upper left")
+
+    plt.suptitle(title)
+    plt.close()
+
+    return fig, axs
+
+
+
+def opticalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, plt.Axes]:
+    """
+    Plot optical signal in time showed as magnitude and phase.
 
     Parameters
-    -----
-    type: "optical" / "electrical" signal
+    ----
+    type: carrier / modulated
     """
-    if type == "electrical":
-        # interval for plot
-        interval = np.arange(100,600)
-        t = interval*Ts
 
-        fig, axs = plt.subplots(2, 1, figsize=(8, 4))
+    # interval for plot
+    interval = np.arange(100,600)
+    t = interval*Ts
 
-        # Real
-        axs[0].plot(t, signal[interval].real, label="Real Part", linewidth=2, color="blue")
-        axs[0].set_ylabel("Amplitude (a.u.)")
-        axs[0].legend(loc="upper left")
+    magnitude = np.abs(signal[interval]**2)
+    phase = np.angle(signal[interval], deg=True)
 
-        # Imaginary
-        axs[1].plot(t, signal[interval].imag, label="Imaginary Part", linewidth=2, color="red")
-        axs[1].set_ylabel("Amplitude (a.u.)")
-        axs[1].set_xlabel("Time (s)")
-        axs[1].legend(loc="upper left")
+    if type == "carrier":
+        yMin = 0
+        yMax = magnitude.max()*2
+    # modulated
+    else:
+        yMin = -1e-6
+        yMax = magnitude.max() + 0.05 * magnitude.max()
 
-        plt.suptitle(title)
-        plt.close()
+    # Plotting magnitude and phase in two subplots
+    fig, axs = plt.subplots(2, 1, figsize=(8, 4))
 
-        return fig, axs
-    
-    elif type == "optical":
-        # interval for plot
-        interval = np.arange(100,600)
-        t = interval*Ts
+    # Plot magnitude
+    axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
+    axs[0].set_ylabel("Power (W)")
+    axs[0].legend(loc="upper left")
+    axs[0].set_ylim([yMin, yMax])
 
-        # Calculate magnitude and phase
-        # magnitude = np.abs(10 * np.log10(signal[interval]))
-        # magnitude = 10 * np.log10(np.real(signal[interval]))
-        magnitude = np.abs(signal[interval]**2)
-        phase = np.angle(signal[interval], deg=True)
+    # Plot phase
+    axs[1].plot(t, phase, label="Phase", linewidth=2, color="red")
+    axs[1].set_ylabel("Phase (°)")
+    axs[1].set_xlabel("Time (s)")
+    axs[1].legend(loc="upper left")
 
+    plt.suptitle(title)
+    plt.close()
 
-        # Plotting magnitude and phase in two subplots
-        fig, axs = plt.subplots(2, 1, figsize=(8, 4))
-
-        # Plot magnitude
-        axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
-        axs[0].set_ylabel("Power (p.u.)")
-        axs[0].legend(loc="upper left")
-
-        # Plot phase
-        axs[1].plot(t, phase, label="Phase", linewidth=2, color="red")
-        axs[1].set_ylabel("Phase (°)")
-        axs[1].set_xlabel("Time (s)")
-        axs[1].legend(loc="upper left")
-
-        plt.suptitle(title)
-        plt.close()
-
-        return fig, axs
-    
-    else: raise Exception("Unexpected error")
+    return fig, axs
 
 
 def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure, plt.Axes]:
     """
-    Plot optical spectrum with wavelength.
+    Plot optical spectrum with wavelength and frequency.
 
     Parameters:
     -----
@@ -335,29 +344,51 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
 
     Fc: central frequency
     """
-    wavelength, spectrum = get_spectrum(signal, Fs, Fc, xunits="m")
-    # Convert to nm
+    frequency, spectrum = get_spectrum(signal, Fs, Fc, xunits="Hz")
+    # Wavelength
+    wavelength = c / frequency
+    # To nm
     wavelength = wavelength * 10**9
+    # Frequency to THz
+    frequency = frequency / 10**12
+
     yMin = spectrum.min()
     yMax = spectrum.max() + 10
-    fig, ax = plt.subplots(1)
-    ax.plot( wavelength, spectrum)
-    ax.set_ylim([yMin, yMax])   
-    ax.set_xlabel("Wavelength [nm]")
-    ax.set_ylabel("Magnitude [dBm]")
-    # ax.minorticks_on()
-    ax.grid(True)
+    # Case of ideal carrier
+    if yMin == -np.inf:
+        yMin = -150
+
+    # Plot spectrum with wavelength
+    fig, ax1 = plt.subplots(1)
+    ax1.plot( wavelength, spectrum)
+    ax1.set_ylim([yMin, yMax])   
+    ax1.set_xlabel("Wavelength [nm]")
+    ax1.set_ylabel("Magnitude [dBm]")
+
+    # ax1.minorticks_on()
+    ax1.grid(True)
 
     # Set scattered ticks on the x-axis
     num_ticks = 5  # Set the number of ticks you want to display
     tick_indices = np.linspace(0, len(wavelength) - 1, num_ticks, dtype=int)
-    ax.set_xticks(wavelength[tick_indices])
-    ax.set_xticklabels([f"{freq_nm:.6f}" for freq_nm in wavelength[tick_indices]])
+    ax1.set_xticks(wavelength[tick_indices])
+    ax1.set_xticklabels([f"{freq_nm:.2f}" for freq_nm in wavelength[tick_indices]])
+
+    # Add another x ax with frequency
+    ax2 = ax1.twiny()
+    # Make some room at the top
+    fig.subplots_adjust(top=0.8)
+    ax2.plot(frequency, wavelength)
+    ax2.set_xlabel('Frequency [THz]')
+
+    tick_indices = np.linspace(0, len(frequency) - 1, num_ticks, dtype=int)
+    ax2.set_xticks(frequency[tick_indices])
+    ax2.set_xticklabels([f"{freq_nm:.2f}" for freq_nm in frequency[tick_indices]])
 
     plt.suptitle(title)
     plt.close()
 
-    return fig, ax
+    return fig, (ax1, ax2)
 
 
 

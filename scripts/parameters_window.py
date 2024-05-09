@@ -73,6 +73,9 @@ class ParametersWindow:
             self.rinLabel.grid(row=4, column=0)
             self.rinEntry = tk.Entry(self.popup)
             self.rinEntry.grid(row=4, column=1)
+            self.rinCombobox = ttk.Combobox(self.popup, values=["* 10^-3", "* 10^-6", "* 10^-9", "* 10^-12", "* 10^-15", "* 10^-18"], state="readonly")
+            self.rinCombobox.set("* 10^-3")
+            self.rinCombobox.grid(row=4, column=2)
 
             # Ideal parameters checkbutton
             self.sourceCheckVar = tk.BooleanVar()
@@ -134,7 +137,8 @@ class ParametersWindow:
 
             # Ideal parameters checkbutton
             self.channelCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters\nNote that ideal channel will ignore amplifier!", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
+            # self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters\nNote that ideal channel will ignore amplifier!", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
+            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
             self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
 
             # Set button
@@ -226,13 +230,13 @@ class ParametersWindow:
         """
         if self.type == "source":
             # Showing in main gui
-            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
+            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}{self.rinCombobox.get()}"
             # Getting initial values
             parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "RIN":self.rinEntry.get()}
             
             parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
-            parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup)
+            parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup, units=self.rinCombobox)
 
             # Return if parameters are not valid
             if parameters is None: return
@@ -261,13 +265,14 @@ class ParametersWindow:
 
         elif self.type == "reciever":
             # Showing in main gui
-            parametersString = f"{self.recieverCombobox.get()}\nBandwidth: {self.bandwidthEntry.get()} Hz\nResolution: {self.resolutionEntry.get()} A/W"
+            parametersString = f"{self.recieverCombobox.get()}\nBandwidth: {self.bandwidthEntry.get()} {self.bandwidthCombobox.get()}\nResolution: {self.resolutionEntry.get()} A/W"
             # Getting initial values
             parameters = {"Type":self.recieverCombobox.get(), "Bandwidth":self.bandwidthEntry.get(), "Resolution":self.resolutionEntry.get()}
             
             parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
-            parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup)
+            parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup, units=self.bandwidthCombobox)
+
 
             # Return if parameters are not valid
             if parameters is None: return
@@ -292,7 +297,7 @@ class ParametersWindow:
         self.callback(parameters, self.type)
         # Check for combination of ideal channel + pre-amplifier
         # Only for channel parameters setting, is here because the Ideal state is passed only line above
-        self.parentGui.attentionCheck()
+        # self.parentGui.attentionCheck()
 
         self.closePopup()
 
@@ -310,9 +315,12 @@ class ParametersWindow:
                 self.rinEntry.delete(0, tk.END)
                 self.rinEntry.insert(0, "0")
                 self.rinEntry.config(state="disabled")
+                self.rinCombobox.config(state="disabled")
+
             else:
                 self.linewidthEntry.config(state="normal")
                 self.rinEntry.config(state="normal")
+                self.rinCombobox.config(state="readonly")
                 
         elif self.type == "channel":
             if self.channelCheckVar.get():
@@ -333,6 +341,7 @@ class ParametersWindow:
                 self.bandwidthEntry.delete(0, tk.END)
                 self.bandwidthEntry.insert(0, "inf")
                 self.bandwidthEntry.config(state="disabled")
+                self.bandwidthCombobox.config(state="disabled")
 
                 self.resolutionEntry.delete(0, tk.END)
                 self.resolutionEntry.insert(0, "inf")
@@ -341,9 +350,11 @@ class ParametersWindow:
             else:
                 self.bandwidthEntry.config(state="normal")
                 self.bandwidthEntry.delete(0, tk.END)
+                self.bandwidthCombobox.config(state="readonly")
 
                 self.resolutionEntry.config(state="normal")
                 self.resolutionEntry.delete(0, tk.END)
+
 
         elif self.type == "amplifier":
             if self.amplifierCheckVar.get():
@@ -380,7 +391,7 @@ class ParametersWindow:
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
                 self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
                 self.linewidthEntry.insert(0, str(self.defaultParameters.get("Linewidth")))
-                self.rinEntry.insert(0, str(self.defaultParameters.get("RIN")))
+                self.setDefaultRIN()
         
         elif self.type == "modulator":
             # No default parameters
@@ -411,7 +422,7 @@ class ParametersWindow:
                 self.idealCheckbutton.invoke() # Trigger command function
             else:
                 self.recieverCombobox.set(self.defaultParameters.get("Type"))
-                self.bandwidthEntry.insert(0, str(self.defaultParameters.get("Bandwidth")))
+                self.setDefaultBandwidth()
                 self.resolutionEntry.insert(0, str(self.defaultParameters.get("Resolution")))
 
         elif self.type == "amplifier":
@@ -472,16 +483,20 @@ class ParametersWindow:
 
         if reciever == "Photodiode":
             # Bandwidth
-            self.bandwidthLabel = tk.Label(self.popup, text="Bandwidth [Hz]")
+            self.bandwidthLabel = tk.Label(self.popup, text="Bandwidth")
             self.bandwidthLabel.grid(row=2, column=0)
             self.bandwidthEntry = tk.Entry(self.popup)
             self.bandwidthEntry.grid(row=2, column=1)
+            self.bandwidthCombobox = ttk.Combobox(self.popup, values=["Hz", "kHz", "MHz", "GHz"], state="readonly")
+            self.bandwidthCombobox.set("Hz")
+            self.bandwidthCombobox.grid(row=2, column=2)
 
             # Resolution
             self.resolutionLabel = tk.Label(self.popup, text="Resolution [A/W]")
             self.resolutionLabel.grid(row=3, column=0)
             self.resolutionEntry = tk.Entry(self.popup)
             self.resolutionEntry.grid(row=3, column=1)
+            
 
             # Ideal parameters checkbutton
             self.recieverCheckVar = tk.BooleanVar()
@@ -490,10 +505,13 @@ class ParametersWindow:
 
         elif reciever == "Coherent":
             # Bandwidth
-            self.bandwidthLabel = tk.Label(self.popup, text="Bandwidth [Hz]")
+            self.bandwidthLabel = tk.Label(self.popup, text="Bandwidth")
             self.bandwidthLabel.grid(row=2, column=0)
             self.bandwidthEntry = tk.Entry(self.popup)
             self.bandwidthEntry.grid(row=2, column=1)
+            self.bandwidthCombobox = ttk.Combobox(self.popup, values=["Hz", "kHz", "MHz", "GHz"], state="readonly")
+            self.bandwidthCombobox.set("Hz")
+            self.bandwidthCombobox.grid(row=2, column=2)
 
             # Resolution
             self.resolutionLabel = tk.Label(self.popup, text="Resolution [A/W]")
@@ -507,3 +525,50 @@ class ParametersWindow:
             self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
 
         else: raise Exception("Unexpected error")
+
+
+    def setDefaultBandwidth(self):
+        """
+        Sets default value of bandwidth with corresponding units.
+        """
+        bandwidth = self.defaultParameters.get("Bandwidth")
+
+        if bandwidth >= 10**9:
+            self.bandwidthEntry.insert(0, str(bandwidth / 10**9))
+            self.bandwidthCombobox.set("GHz")
+        elif bandwidth >= 10**6:
+            self.bandwidthEntry.insert(0, str(bandwidth / 10**6))
+            self.bandwidthCombobox.set("MHz")
+        elif bandwidth >= 10**3:
+            self.bandwidthEntry.insert(0, str(bandwidth / 10**3))
+            self.bandwidthCombobox.set("kHz")
+        else:
+            raise Exception("Unexpected error")
+        
+
+    def setDefaultRIN(self):
+        """
+        Sets default value of RIN with corresponding order.
+        """
+        rin = self.defaultParameters.get("RIN")
+
+        if rin <= 10**-18:
+            self.rinEntry.insert(0, str(rin * 10**18))
+            self.rinCombobox.set("* 10^-18")
+        elif rin <= 10**-15:
+            self.rinEntry.insert(0, str(rin * 10**15))
+            self.rinCombobox.set("* 10^-15")
+        elif rin <= 10**-12:
+            self.rinEntry.insert(0, str(rin * 10**12))
+            self.rinCombobox.set("* 10^-12")
+        elif rin <= 10**-9:
+            self.rinEntry.insert(0, str(rin * 10**9))
+            self.rinCombobox.set("* 10^-9")
+        elif rin <= 10**-6:
+            self.rinEntry.insert(0, str(rin * 10**6))
+            self.rinCombobox.set("* 10^-6")
+        elif rin <= 10**-3:
+            self.rinEntry.insert(0, str(rin * 10**3))
+            self.rinCombobox.set("* 10^-3")
+        else:
+            raise Exception("Unexpected error")

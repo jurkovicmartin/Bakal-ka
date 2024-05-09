@@ -2,6 +2,7 @@
 
 import re
 from tkinter import messagebox
+from tkinter import ttk
     
 def convertNumber(input: str) -> tuple[float, bool]:
     """
@@ -28,7 +29,7 @@ def convertNumber(input: str) -> tuple[float, bool]:
         return None, True
     
 
-def validateParameters(type: str, parameters: dict, generalParameters: dict, parentWindow) -> dict | None:
+def validateParameters(type: str, parameters: dict, generalParameters: dict, parentWindow, units=None) -> dict | None:
     """
     Checks if the parameters has valid values and coverts numbers into float.
 
@@ -41,6 +42,8 @@ def validateParameters(type: str, parameters: dict, generalParameters: dict, par
     generalParameters: for some parameters limits
 
     parentWindow: object for showing messageboxes
+
+    units: Optional. ttk.Combobox (with units options)
 
     Returns
     -----
@@ -67,8 +70,14 @@ def validateParameters(type: str, parameters: dict, generalParameters: dict, par
         else:
             numberParameters.update({key:checked})
 
-    # Check the limits
+    # Correct bandwidth units (to Hz) in case of reciever parameters
+    if type == "reciever":
+        parameters.update({"Bandwidth": correctBandwidth(parameters.get("Bandwidth"), units)})
+    # Correct RIN value (order) in case of source parameters
+    if type == "source":
+        parameters.update({"RIN": correctRIN(parameters.get("RIN"), units)})
 
+    # Check the limits
     for key, value in numberParameters.items():
         checked = checkLimit(key, value, generalParameters, parentWindow)
         # Off limit parameter
@@ -220,7 +229,7 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
         "Resolution":(True, 100), # 100 A/W 
         # Amplifier
         "Gain":(True, 50), # 50 dB
-        "Noise":(True, 20), # 20 dB
+        "Noise":(True, 50), # 20 dB
         "Detection":(True, 100) # 100 dBm
     }
 
@@ -277,4 +286,40 @@ def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, 
         return parameters, stringDict
         
     else: raise Exception("Unexpected error")     
+
+
+def correctBandwidth(bandwidth: float, bandwidthUnits: ttk.Combobox) -> float:
+    """
+    Corrects reciever bandwidth value to correspondate with setted units.
+    """
+    if bandwidthUnits.get() == "Hz":
+        return bandwidth
+    elif bandwidthUnits.get() == "kHz":
+        return bandwidth * 10**3
+    elif bandwidthUnits.get() == "MHz":
+        return bandwidth * 10**6
+    elif bandwidthUnits.get() == "GHz":
+        return bandwidth * 10**9
+    else:
+        raise Exception("Unexpected error")
+    
+
+def correctRIN(rin: float, orders: ttk.Combobox) -> float:
+    """
+    Corrects rin value (order).
+    """
+    if orders.get() == "* 10^-3":
+        return rin / 10**3
+    if orders.get() == "* 10^-6":
+        return rin / 10**6
+    if orders.get() == "* 10^-9":
+        return rin / 10**9
+    if orders.get() == "* 10^-12":
+        return rin / 10**12
+    if orders.get() == "* 10^-15":
+        return rin / 10**15
+    if orders.get() == "* 10^-18":
+        return rin / 10**18
+    else:
+        raise Exception("Unexpected error")
     

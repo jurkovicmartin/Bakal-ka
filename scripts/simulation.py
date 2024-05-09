@@ -16,8 +16,8 @@ except ImportError:
 from optic.utils import parameters
 import matplotlib.pyplot as plt
 
-from scripts.my_devices import edfa, laserSource
-from scripts.my_plot import eyediagram, constellation, opticalSpectrum, signalInTime
+from scripts.my_devices import edfa, laserSource, idealLaser
+from scripts.my_plot import eyediagram, constellation, opticalSpectrum, electricalInTime, opticalInTime
 from scripts.output_functions import calculateTransSpeed
 
 def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict) -> dict:
@@ -111,17 +111,21 @@ def carrierSignal(sourceParameters: dict, Fs: int, modulationSignal) -> dict:
     -----
     carrierSignal
     """
+    if sourceParameters.get("Ideal"):
+        power = sourceParameters.get("Power")
+        samples = len(modulationSignal)
+        return{"carrierSignal":idealLaser(power, samples)}
+    
+    else:
+        # Laser parameters
+        paramLaser = parameters()
+        paramLaser.P = sourceParameters.get("Power")   # laser power [dBm] [default: 10 dBm]
+        paramLaser.lw = sourceParameters.get("Linewidth")    # laser linewidth [Hz] [default: 1 kHz]
+        paramLaser.Fs = Fs  # sampling rate [samples/s]
+        paramLaser.Ns = len(modulationSignal)   # number of signal samples [default: 1e3]
+        paramLaser.RIN_var = sourceParameters.get("RIN") # RIN [1e-20]
 
-    # Laser parameters
-    paramLaser = parameters()
-    paramLaser.P = sourceParameters.get("Power")   # laser power [dBm] [default: 10 dBm]
-    paramLaser.lw = sourceParameters.get("Linewidth")    # laser linewidth [Hz] [default: 1 kHz]
-    paramLaser.Fs = Fs  # sampling rate [samples/s]
-    paramLaser.Ns = len(modulationSignal)   # number of signal samples [default: 1e3]
-    paramLaser.RIN_var = sourceParameters.get("RIN") # RIN [1e-20]
-
-
-    return {"carrierSignal":basicLaserModel(paramLaser)}
+        return {"carrierSignal":basicLaserModel(paramLaser)}
 
 def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict:
     """
@@ -170,11 +174,7 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
     -----
     recieverSignal: signal at reciever (dictionary)
     """
-    # Directly pass modulated signal without changes (Ideal channel)
-    if fiberParameters.get("Ideal"):
-        return {"recieverSignal":modulatedSignal}
-    
-    # Linear optical channel without amplifier
+
     paramCh = parameters()
     paramCh.L = fiberParameters.get("Length")         # total link distance [km]
     paramCh.α = fiberParameters.get("Attenuation")        # fiber loss parameter [dB/km]
@@ -182,18 +182,21 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
     paramCh.Fc = frequency # central optical frequency [Hz]
     paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
 
-    recieverSignal = linearFiberChannel(modulatedSignal, paramCh)
-
     # Channel has amplifier = doesnt has initial 0 gain
     if amplifierParameters.get("Gain") != 0:
-
-        recieverSignal = amplifierTransmition(paramCh, amplifierParameters, modulatedSignal, Fs, frequency)
-
+        recieverSignal = amplifierTransmition(paramCh, amplifierParameters, fiberParameters.get("Ideal"), modulatedSignal, Fs, frequency)
+    # Channel without amplifier
+    else:
+        # Directly pass modulated signal without changes (Ideal channel)
+        if fiberParameters.get("Ideal"):
+            return {"recieverSignal":modulatedSignal}
+        
+        recieverSignal = linearFiberChannel(modulatedSignal, paramCh)
 
     return {"recieverSignal":recieverSignal}
 
 
-def amplifierTransmition(fiberParameters, amplifierParameters: dict, modulatedSignal: dict, Fs: int, frequency: float) -> np.ndarray | None:
+def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChannel: bool, modulatedSignal, Fs: int, frequency: float) -> np.ndarray | None:
     """
     Simulates signal thru fiber with amplifier.
 
@@ -222,7 +225,12 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, modulatedSi
     detectionLimit = amplifierParameters.get("Detection")
     amplifierPosition = amplifierParameters.get("Position")
 
-    if amplifierParameters.get("Ideal"):
+    # Ideal channel (= position of amplifier does not matter)
+    if idealChannel:
+        recieverSignal=edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+    
+    # Ideal amplifier with real channel
+    elif amplifierParameters.get("Ideal") and not(idealChannel):
 
         if amplifierPosition == "start":
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
@@ -246,11 +254,11 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, modulatedSi
         
         else: raise Exception("Unexpected error")
 
-    else:
-
+    # Real amplifier with real channel
+    elif not(amplifierParameters.get("Ideal")) and not(idealChannel):
         if amplifierPosition == "start":
             # Signal power is too low
-            if not(checkPower(modulatedSignal, detectionLimit)):
+            if checkPower(modulatedSignal, detectionLimit):
                 return
             
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
@@ -262,7 +270,7 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, modulatedSi
             fiberParameters.L = fiberParameters.L / 2
 
             # Signal power is too low
-            if not(checkPower(modulatedSignal, detectionLimit)):
+            if checkPower(modulatedSignal, detectionLimit):
                 return
             
             # First half
@@ -276,13 +284,13 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, modulatedSi
             modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
             # Signal power is too low
-            if not(checkPower(modulatedSignal, detectionLimit)):
+            if checkPower(modulatedSignal, detectionLimit):
                 return
 
             recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
         
         else: raise Exception("Unexpected error")
-
+    else: raise Exception("Unexpected error")
 
     return recieverSignal
 
@@ -394,10 +402,10 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
 
     if type == "electricalTx":
         # Modulation signal
-        return signalInTime(Ts, informationSignal, title, "electrical")
+        return electricalInTime(Ts, informationSignal, title)
     elif type == "electricalRx":
         # Detected signal
-        return signalInTime(Ts, detectedSignal, title, "electrical")
+        return electricalInTime(Ts, detectedSignal, title)
     elif type == "constellationTx":
         # Tx constellation diagram
         return constellation(symbolsTx, whiteb=False, title="Tx symbols")
@@ -415,13 +423,13 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
         return opticalSpectrum(carrierSignal, Fs, centralFrequency, title)
     elif type == "opticalTx":
         # Modulated signal in time (Tx signal)
-        return signalInTime(Ts, modulatedSignal, title, "optical")
+        return opticalInTime(Ts, modulatedSignal, title, "modulated")
     elif type == "opticalRx":
         # Reciever signal in time (Rx signal)
-        return signalInTime(Ts, recieverSignal, title, "optical")
+        return opticalInTime(Ts, recieverSignal, title, "modulated")
     elif type == "opticalSc":
         # Source signal in time
-        return signalInTime(Ts, carrierSignal, title, "optical")
+        return opticalInTime(Ts, carrierSignal, title, "carrier")
     elif type == "eyeTx":
         # Tx eyediagram
         discard = 100
@@ -492,4 +500,4 @@ def checkPower(signal, limit) -> bool:
 
         signalPower = 10*np.log10(signal_power(signal) / 1e-3)
 
-        return signalPower < limit
+        return signalPower <= limit
