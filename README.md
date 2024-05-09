@@ -9,7 +9,6 @@
 - ideal laser (spectrum)
 - dispersion
 - limits (linewidth, detection)
-- 10** policka (symbols, bandwidth, RIN)
 - spectrum - rozsah, priblizeni
 - spectrum - amplifier, other modulations
 - fix iqm and detection output values (sqr(carrier)) (check only popisky)

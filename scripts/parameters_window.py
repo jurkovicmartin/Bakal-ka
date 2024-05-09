@@ -230,7 +230,7 @@ class ParametersWindow:
         """
         if self.type == "source":
             # Showing in main gui
-            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}{self.rinCombobox.get()}"
+            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()} {self.rinCombobox.get()}"
             # Getting initial values
             parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "RIN":self.rinEntry.get()}
             
@@ -567,8 +567,6 @@ class ParametersWindow:
         elif rin <= 10**-6:
             self.rinEntry.insert(0, str(rin * 10**6))
             self.rinCombobox.set("* 10^-6")
-        elif rin <= 10**-3:
+        else:
             self.rinEntry.insert(0, str(rin * 10**3))
             self.rinCombobox.set("* 10^-3")
-        else:
-            raise Exception("Unexpected error")
