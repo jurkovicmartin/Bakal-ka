@@ -95,7 +95,7 @@ modulationOrder = 4
 modulationFormat = "qam"
 
 
-modulator = "myiqm"
+modulator = "iqm"
 idealChannel = False
 detector = "photodiode"
 

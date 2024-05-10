@@ -61,7 +61,12 @@ def validateParameters(type: str, parameters: dict, generalParameters: dict, par
         numberParameters = parameters
         stringParameters = {}
 
-    # Conevert to floats
+    # There are no number parameters to be converted or checked
+    if numberParameters == {}:
+        stringParameters.update({"Ideal":ideal})
+        return stringParameters
+
+    # Conevert parameters values to floats
     for key, value in numberParameters.items():
         checked = checkNumber(key, value, parentWindow)
         # Some number parameters was not inputed correctly

@@ -13,6 +13,7 @@
 - spectrum - amplifier, other modulations
 - fix iqm and detection output values (sqr(carrier)) (check only popisky)
 - spectrum
+- detection (modulation signal shows U, detected signal shows I)
 
 
 # 2

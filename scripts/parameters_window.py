@@ -350,10 +350,12 @@ class ParametersWindow:
             else:
                 self.bandwidthEntry.config(state="normal")
                 self.bandwidthEntry.delete(0, tk.END)
+                self.bandwidthEntry.insert(0, "0")
                 self.bandwidthCombobox.config(state="readonly")
 
                 self.resolutionEntry.config(state="normal")
                 self.resolutionEntry.delete(0, tk.END)
+                self.resolutionEntry.insert(0, "0")
 
 
         elif self.type == "amplifier":
@@ -486,6 +488,7 @@ class ParametersWindow:
             self.bandwidthLabel = tk.Label(self.popup, text="Bandwidth")
             self.bandwidthLabel.grid(row=2, column=0)
             self.bandwidthEntry = tk.Entry(self.popup)
+            self.bandwidthEntry.insert(0, "0")
             self.bandwidthEntry.grid(row=2, column=1)
             self.bandwidthCombobox = ttk.Combobox(self.popup, values=["Hz", "kHz", "MHz", "GHz"], state="readonly")
             self.bandwidthCombobox.set("Hz")
@@ -495,6 +498,7 @@ class ParametersWindow:
             self.resolutionLabel = tk.Label(self.popup, text="Resolution [A/W]")
             self.resolutionLabel.grid(row=3, column=0)
             self.resolutionEntry = tk.Entry(self.popup)
+            self.resolutionEntry.insert(0, "0")
             self.resolutionEntry.grid(row=3, column=1)
             
 
@@ -508,6 +512,7 @@ class ParametersWindow:
             self.bandwidthLabel = tk.Label(self.popup, text="Bandwidth")
             self.bandwidthLabel.grid(row=2, column=0)
             self.bandwidthEntry = tk.Entry(self.popup)
+            self.bandwidthEntry.insert(0, "0")
             self.bandwidthEntry.grid(row=2, column=1)
             self.bandwidthCombobox = ttk.Combobox(self.popup, values=["Hz", "kHz", "MHz", "GHz"], state="readonly")
             self.bandwidthCombobox.set("Hz")
@@ -517,6 +522,7 @@ class ParametersWindow:
             self.resolutionLabel = tk.Label(self.popup, text="Resolution [A/W]")
             self.resolutionLabel.grid(row=3, column=0)
             self.resolutionEntry = tk.Entry(self.popup)
+            self.resolutionEntry.insert(0, "0")
             self.resolutionEntry.grid(row=3, column=1)
 
             # Ideal parameters checkbutton
@@ -543,7 +549,8 @@ class ParametersWindow:
             self.bandwidthEntry.insert(0, str(bandwidth / 10**3))
             self.bandwidthCombobox.set("kHz")
         else:
-            raise Exception("Unexpected error")
+            self.bandwidthEntry.insert(0, str(bandwidth))
+            self.bandwidthCombobox.set("Hz")
         
 
     def setDefaultRIN(self):

@@ -267,19 +267,19 @@ def electricalInTime(Ts: int, signal, title: str) -> tuple[plt.Figure, plt.Axes]
     """
     # interval for plot
     interval = np.arange(100,600)
-    t = interval*Ts
+    time, unitsTime = fixTimeUnits(interval, Ts)
 
     fig, axs = plt.subplots(2, 1, figsize=(8, 4))
 
     # Real
-    axs[0].plot(t, signal[interval].real, label="Real Part", linewidth=2, color="blue")
+    axs[0].plot(time, signal[interval].real, label="Real Part", linewidth=2, color="blue")
     axs[0].set_ylabel("Amplitude (a.u.)")
     axs[0].legend(loc="upper left")
 
     # Imaginary
-    axs[1].plot(t, signal[interval].imag, label="Imaginary Part", linewidth=2, color="red")
+    axs[1].plot(time, signal[interval].imag, label="Imaginary Part", linewidth=2, color="red")
     axs[1].set_ylabel("Amplitude (a.u.)")
-    axs[1].set_xlabel("Time (s)")
+    axs[1].set_xlabel(f"Time ({unitsTime})")
     axs[1].legend(loc="upper left")
 
     plt.suptitle(title)
@@ -300,7 +300,7 @@ def opticalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, p
 
     # interval for plot
     interval = np.arange(100,600)
-    t = interval*Ts
+    time, unitsTime = fixTimeUnits(interval, Ts)
 
     magnitude = np.abs(signal[interval]**2)
     phase = np.angle(signal[interval], deg=True)
@@ -317,15 +317,15 @@ def opticalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, p
     fig, axs = plt.subplots(2, 1, figsize=(8, 4))
 
     # Plot magnitude
-    axs[0].plot(t, magnitude, label="Magnitude", linewidth=2, color="blue")
+    axs[0].plot(time, magnitude, label="Magnitude", linewidth=2, color="blue")
     axs[0].set_ylabel("Power (W)")
     axs[0].legend(loc="upper left")
     axs[0].set_ylim([yMin, yMax])
 
     # Plot phase
-    axs[1].plot(t, phase, label="Phase", linewidth=2, color="red")
+    axs[1].plot(time, phase, label="Phase", linewidth=2, color="red")
     axs[1].set_ylabel("Phase (°)")
-    axs[1].set_xlabel("Time (s)")
+    axs[1].set_xlabel(f"Time ({unitsTime})")
     axs[1].legend(loc="upper left")
 
     plt.suptitle(title)
@@ -389,6 +389,37 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
     plt.close()
 
     return fig, (ax1, ax2)
+
+
+def fixTimeUnits(interval: np.array,  Ts: int) -> tuple[np.array, str]:
+    """
+    Fixes time ax units for showing.
+
+    Parameters
+    ----
+    interval: interval of took samples
+
+    Ts: sampling period
+
+    Returns
+    -----
+    tuple: (time array, units)
+    """
+    if Ts <= 10**-9:
+        Ts = Ts / 10**-9
+        units = "ns"
+    elif Ts <= 10**6:
+        Ts = Ts / 10**-6
+        units = "us"
+    elif Ts <= 10**3:
+        Ts = Ts / 10**-3
+        units = "ms"
+    else:
+        units = "s"
+
+    return interval*Ts, units
+
+
 
 
 

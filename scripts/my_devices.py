@@ -9,6 +9,9 @@ import scipy.constants as const
 from optic.utils import dBm2W
 from optic.dsp.core import gaussianComplexNoise, gaussianNoise
 
+from optic.models.devices import mzm, pm
+from optic.utils import parameters
+
 def edfa(Ei, ideal: bool, param=None) -> np.array:
     """
     Implement simple EDFA model.
@@ -99,3 +102,65 @@ def laserSource(param) -> np.array:
     # return np.sqrt(dBm2W(P)) * np.exp(1j * phaseNoise) + powerNoise
     return dBm2W(P) * np.exp(1j * phaseNoise) + powerNoise
     # return P * np.exp(1j * phaseNoise) + powerNoise
+
+
+def myiqm(Ai, u, param=None):
+    """
+    Optical In-Phase/Quadrature Modulator (IQM).
+
+    Parameters
+    ----------
+    Ai : scalar or np.array
+        Amplitude of the optical field at the input of the IQM.
+    u : complex-valued np.array
+        Modulator's driving signal (complex-valued baseband).
+    param : parameter object  (struct)
+        Object with physical/simulation parameters of the mzm.
+
+        - param.Vpi: MZM's Vpi voltage [V][default: 2 V]
+
+        - param.VbI: I-MZM's bias voltage [V][default: -2 V]
+
+        - param.VbQ: Q-MZM's bias voltage [V][default: -2 V]
+
+        - param.Vphi: PM bias voltage [V][default: 1 V]
+
+    Returns
+    -------
+    Ao : complex-valued np.array
+        Modulated optical field at the output of the IQM.
+
+    """
+    if param is None:
+        param = []
+
+    # check input parameters
+    Vpi = getattr(param, "Vpi", 2)
+    VbI = getattr(param, "VbI", -2)
+    VbQ = getattr(param, "VbQ", -2)
+    Vphi = getattr(param, "Vphi", 1)
+
+    try:
+        u.shape
+    except AttributeError:
+        u = np.array([u])
+
+    try:
+        if Ai.shape == () and u.shape != ():
+            Ai = Ai * np.ones(u.shape)
+        else:
+            assert Ai.shape == u.shape, "Ai and u need to have the same dimensions"
+    except AttributeError:
+        Ai = Ai * np.ones(u.shape)
+
+    # define parameters for the I-MZM:
+    paramI = parameters()
+    paramI.Vpi = Vpi
+    paramI.Vb = VbI
+
+    # define parameters for the Q-MZM:
+    paramQ = parameters()
+    paramQ.Vpi = Vpi
+    paramQ.Vb = VbQ
+
+    return mzm(Ai, u.real, paramI) + pm(mzm(Ai, u.imag, paramQ), Vphi * np.ones(u.shape), Vpi)

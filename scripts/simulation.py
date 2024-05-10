@@ -16,7 +16,7 @@ except ImportError:
 from optic.utils import parameters
 import matplotlib.pyplot as plt
 
-from scripts.my_devices import edfa, laserSource, idealLaser
+from scripts.my_devices import edfa, laserSource, idealLaser, myiqm
 from scripts.my_plot import eyediagram, constellation, opticalSpectrum, electricalInTime, opticalInTime
 from scripts.output_functions import calculateTransSpeed
 
