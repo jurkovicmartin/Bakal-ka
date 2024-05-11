@@ -5,10 +5,17 @@ from scripts.my_devices import edfa
 from optic.utils import dBm2W
 import matplotlib.pyplot as plt
 # from optic.models.amplification import get_spectrum
-from optic.models.devices import basicLaserModel
+from optic.models.devices import basicLaserModel, mzm
 import matplotlib.mlab as mlab
 from scipy.constants import c
 
+from optic.comm.modulation import modulateGray, GrayMapping
+try:
+    from optic.dsp.coreGPU import firFilter    
+except ImportError:
+    from optic.dsp.core import firFilter
+from optic.dsp.core import pulseShape, pnorm, signal_power, sigPow
+from commpy.utilities  import upsample
 
 def opticalInTime(Ts: int, signal, title: str, type: str):
     """
@@ -48,23 +55,10 @@ def opticalInTime(Ts: int, signal, title: str, type: str):
     axs[1].set_ylabel("Phase (°)")
     axs[1].set_xlabel("Time (s)")
     axs[1].legend(loc="upper left")
+    axs[1].set_ylim([-180,180])
 
     plt.suptitle(title)
 
-
-
-
-def generate_sinusoidal(amplitude, frequency, duration, sampling_freq):
-    # Compute the number of samples
-    N = int(duration * sampling_freq)
-    
-    # Time vector
-    t = np.arange(N) / sampling_freq
-    
-    # Generate sinusoidal signal
-    x = amplitude * np.sin(2 * np.pi * frequency * t)
-    
-    return x
 
 
 
@@ -96,8 +90,6 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str):
 
     print(yMax)
     print(yMin)
-    print(wavelength.min())
-    print(wavelength.max())
 
     fig, ax1 = plt.subplots(1)
     ax1.plot( wavelength, spectrum)
@@ -125,6 +117,7 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str):
     # ax.set_xticklabels([f"{freq_nm:.3f}" for freq_nm in wavelength[tick_indices]])
 
     plt.suptitle(title)
+
 
 
 def get_spectrum(x, Fs, Fc, xunits = 'm', yunits = 'dBm', window=mlab.window_none, sides="twosided"):
@@ -159,52 +152,123 @@ def get_spectrum(x, Fs, Fc, xunits = 'm', yunits = 'dBm', window=mlab.window_non
     return frequency, spectrum
 
 
+
+def idealLaser(power: float, length: int) -> np.array:
+    """
+    Creates ideal optical signal.
+
+    Parameters
+    ----
+    power: laser power in dBm
+
+    samples: number of samples to be generated
+    """
+    # length = np.full(samples, 1)
+    # length = np.arange(0, samples)
+
+    # carrier = np.sqrt(dBm2W(power)) * np.exp(1j*samples)
+    # return np.sqrt(dBm2W(power)) * length
+    # return np.sqrt(dBm2W(power)) * np.exp(1j*length)
+
+    # Parameters
+    sampling_rate = Fs  # Sampling rate in Hz
+    duration = 1  # Duration of the signal in seconds
+    frequency = 10  # Frequency of the ideal signal in Hz
+
+    # Time array
+    t = np.arange(0, duration, 1/sampling_rate)
+
+    # Generate ideal signal
+    ideal_signal = np.sqrt(dBm2W(power)) * np.exp(2j * np.pi * t)
+
+
+    samples = np.zeros(length)
+    samples = np.arange(0, 1, 1/length)
+    return np.sqrt(dBm2W(power)) * np.exp(2j * np.pi * samples)
+
+
+
 """
 Sampling frequency really ovlivni kvalitu (spectrum)
 """
 
 
-ideal = False
-Fs = 8000000
+ideal = True
+SpS = 8
+Rs = 1000000
+Fs = SpS * Rs
 power = 20
-length = 2000000
+Fc = 193.7 * (10**12)
+
+modulationOrder = 2
+modulationFormat = "pam"
+
+
+# generate pseudo-random bit sequence
+bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
+# generate modulated symbol sequence
+grayMap = GrayMapping(modulationOrder, modulationFormat)
+#print(f"grayMap: {grayMap}")
+symbolsTx = modulateGray(bitsTx, modulationOrder, modulationFormat)
+#print(f"symbolsTx: {symbolsTx}")
+symbolsTx = pnorm(symbolsTx) # power normalization
+# upsampling
+symbolsUp = upsample(symbolsTx, SpS)
+# typical NRZ pulse
+pulse = pulseShape("nrz", SpS)
+pulse = pulse/max(abs(pulse))
+# pulse shaping
+information = firFilter(pulse, symbolsUp)
+
+
+
+
 
 if ideal:
-    Fc = 193.1 * (10**12)
     # carrier = np.full(length, dBm2W(power))
-    samples = np.full(length, 1)
-    # carrier = np.sqrt(dBm2W(power)) * np.exp(1j*samples)
-    carrier = np.sqrt(dBm2W(power)) * samples
+    samples = len(information)
+
+    carrier = idealLaser(power, len(information))
 
     #np.sqrt(dBm2W(P)) * np.exp(1j * pn) + deltaP
     #carrier = generate_sinusoidal(dBm2W(power), Fc, 1, Fs)
 else:
     paramLaser = parameters()
     paramLaser.P = power  # laser power [dBm] [default: 10 dBm]
-    paramLaser.lw = 1 # laser linewidth [Hz] [default: 1 kHz]
+    paramLaser.lw = 1000 # laser linewidth [Hz] [default: 1 kHz]
     paramLaser.Fs = Fs  # sampling rate [samples/s]
-    paramLaser.Ns = length  # number of signal samples [default: 1e3]
-    paramLaser.RIN_var = 1e-20
-    Fc = 193.1 * (10**12)
+    paramLaser.Ns = len(information)  # number of signal samples [default: 1e3]
+    paramLaser.RIN_var = 0
 
     carrier = basicLaserModel(paramLaser)
 
+spectrumFs = 10**12
 
-
-opticalSpectrum(carrier, 1000000000000, Fc, "spectrum")
+opticalSpectrum(carrier, spectrumFs, Fc, "Carrier spectrum")
+opticalInTime(1/Fs, carrier, "carrier", "carrier")
 
 # opticalInTime(1/Fs, carrier, "carrier", "carrier")
 
+
+# paramMZM = parameters()
+# paramMZM.Vpi = 2 # frequency of cosinus
+# # paramMZM.Vb = -paramMZM.Vpi/2
+# paramMZM.Vb = -1 # phase shift of cosinus
+
+# modulated = mzm(carrier, information, paramMZM)
+
+
+# opticalSpectrum(modulated, spectrumFs, Fc, "Modulated spectrum")
+
+
+# paramEDFA = parameters()
+# paramEDFA.G = 20   # edfa gain
+# paramEDFA.NF = 10 # edfa noise figure 
+# paramEDFA.Fc = Fc
+# paramEDFA.Fs = Fs
+
+# amplified = edfa(modulated, False, paramEDFA)
+
+# opticalSpectrum(amplified, spectrumFs, Fc, "Amplified spectrum")
+
 plt.show()
-
-
-
-
-
-paramEDFA = parameters()
-paramEDFA.G = 20   # edfa gain
-paramEDFA.NF = 4 # edfa noise figure 
-paramEDFA.Fc = 193.1e12
-paramEDFA.Fs = Fs
-
-amplified = edfa(carrier, False, paramEDFA)

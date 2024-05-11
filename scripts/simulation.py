@@ -414,13 +414,13 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
         return constellation(symbolsRx, whiteb=False, title="Rx symbols")
     elif type == "spectrumTx":
         # Tx optical spectrum
-        return opticalSpectrum(modulatedSignal, Fs, centralFrequency, title)
+        return opticalSpectrum(modulatedSignal, 10**12, centralFrequency, title)
         # Rx optical spectrum
     elif type == "spectrumRx":
-        return opticalSpectrum(recieverSignal, Fs, centralFrequency, title)
+        return opticalSpectrum(recieverSignal, 10**12, centralFrequency, title)
         # Source signal spectrum
     elif type == "spectrumSc":
-        return opticalSpectrum(carrierSignal, Fs, centralFrequency, title)
+        return opticalSpectrum(carrierSignal, 10**12, centralFrequency, title)
     elif type == "opticalTx":
         # Modulated signal in time (Tx signal)
         return opticalInTime(Ts, modulatedSignal, title, "modulated")

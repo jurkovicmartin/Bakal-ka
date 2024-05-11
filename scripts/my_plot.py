@@ -327,6 +327,7 @@ def opticalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, p
     axs[1].set_ylabel("Phase (°)")
     axs[1].set_xlabel(f"Time ({unitsTime})")
     axs[1].legend(loc="upper left")
+    axs[1].set_ylim([-180, 180])
 
     plt.suptitle(title)
     plt.close()
@@ -369,10 +370,10 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
     ax1.grid(True)
 
     # Set scattered ticks on the x-axis
-    num_ticks = 5  # Set the number of ticks you want to display
-    tick_indices = np.linspace(0, len(wavelength) - 1, num_ticks, dtype=int)
-    ax1.set_xticks(wavelength[tick_indices])
-    ax1.set_xticklabels([f"{freq_nm:.2f}" for freq_nm in wavelength[tick_indices]])
+    # num_ticks = 5  # Set the number of ticks you want to display
+    # tick_indices = np.linspace(0, len(wavelength) - 1, num_ticks, dtype=int)
+    # ax1.set_xticks(wavelength[tick_indices])
+    # ax1.set_xticklabels([f"{freq_nm:.2f}" for freq_nm in wavelength[tick_indices]])
 
     # Add another x ax with frequency
     ax2 = ax1.twiny()
@@ -381,9 +382,9 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
     ax2.plot(frequency, wavelength)
     ax2.set_xlabel('Frequency [THz]')
 
-    tick_indices = np.linspace(0, len(frequency) - 1, num_ticks, dtype=int)
-    ax2.set_xticks(frequency[tick_indices])
-    ax2.set_xticklabels([f"{freq_nm:.2f}" for freq_nm in frequency[tick_indices]])
+    # tick_indices = np.linspace(0, len(frequency) - 1, num_ticks, dtype=int)
+    # ax2.set_xticks(frequency[tick_indices])
+    # ax2.set_xticklabels([f"{freq_nm:.2f}" for freq_nm in frequency[tick_indices]])
 
     plt.suptitle(title)
     plt.close()

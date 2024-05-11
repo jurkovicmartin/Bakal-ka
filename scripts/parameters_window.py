@@ -230,7 +230,7 @@ class ParametersWindow:
         """
         if self.type == "source":
             # Showing in main gui
-            parametersString = f"Laser\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()} {self.rinCombobox.get()}"
+            parametersString = f"Optical source\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()} {self.rinCombobox.get()}"
             # Getting initial values
             parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "RIN":self.rinEntry.get()}
             
@@ -241,10 +241,15 @@ class ParametersWindow:
             # Return if parameters are not valid
             if parameters is None: return
 
+            if parameters.get("RIN") == 0:
+                # Showing only 0 for RIN without the order (10^x)
+                parametersString = f"Optical source\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
+
+
 
         elif self.type == "modulator":
             # Showing in main gui
-            parametersString = f"{self.modulatorCombobox.get()}"
+            parametersString = f"Modulator\n\n{self.modulatorCombobox.get()}"
             # Getting initial values
             parameters = {"Type":self.modulatorCombobox.get()}
 
@@ -265,7 +270,7 @@ class ParametersWindow:
 
         elif self.type == "reciever":
             # Showing in main gui
-            parametersString = f"{self.recieverCombobox.get()}\nBandwidth: {self.bandwidthEntry.get()} {self.bandwidthCombobox.get()}\nResolution: {self.resolutionEntry.get()} A/W"
+            parametersString = f"Detector\n\n{self.recieverCombobox.get()}\nBandwidth: {self.bandwidthEntry.get()} {self.bandwidthCombobox.get()}\nResolution: {self.resolutionEntry.get()} A/W"
             # Getting initial values
             parameters = {"Type":self.recieverCombobox.get(), "Bandwidth":self.bandwidthEntry.get(), "Resolution":self.resolutionEntry.get()}
             

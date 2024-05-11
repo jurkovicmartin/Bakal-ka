@@ -49,12 +49,12 @@ class Gui:
         # Scheme frame
 
         # Communication scheme buttons
-        self.sourceButton = tk.Button(self.schemeFrame, text="Optical source", command=lambda: self.showParametersPopup(self.sourceButton))
-        self.modulatorButton = tk.Button(self.schemeFrame, text="Modulator", command=lambda: self.showParametersPopup(self.modulatorButton))
-        self.channelButton = tk.Button(self.schemeFrame, text="Fiber channel", command=lambda: self.showParametersPopup(self.channelButton))
-        self.recieverButton = tk.Button(self.schemeFrame, text="Reciever", command=lambda: self.showParametersPopup(self.recieverButton))
+        self.sourceButton = tk.Button(self.schemeFrame, text="Optical source\n\nPower: 0 dBm\nFrequency: 0 THz\nLinewidth: 0 Hz\nRIN: 0", command=lambda: self.showParametersPopup(self.sourceButton))
+        self.modulatorButton = tk.Button(self.schemeFrame, text="Modulator\n\nPM", command=lambda: self.showParametersPopup(self.modulatorButton))
+        self.channelButton = tk.Button(self.schemeFrame, text="Fiber channel\n\nLength: 0 km\nAttenuation: 0 dB/km\nChromatic dispersion: 0 ps/nm/km", command=lambda: self.showParametersPopup(self.channelButton))
+        self.recieverButton = tk.Button(self.schemeFrame, text="Detector\n\nPhotodiode\nBandwidth: 0 Hz\nResolution: 0 A/W", command=lambda: self.showParametersPopup(self.recieverButton))
         # Aplifier button initially hidden
-        self.amplifierButton = tk.Button(self.schemeFrame, text="Amplifier", command=lambda: self.showParametersPopup(self.amplifierButton))
+        self.amplifierButton = tk.Button(self.schemeFrame, text="Amplifier\n\nPosition in channel: start\nGain: 0 dB\nNoise figure: 0 dB\n Detection limit: 0 dBm", command=lambda: self.showParametersPopup(self.amplifierButton))
 
         self.sourceButton.grid(row=0, column=0)
         self.modulatorButton.grid(row=0, column=1)
@@ -164,7 +164,7 @@ class Gui:
 
         # Inicial parameters
         self.sourceParameters = {"Power": 0, "Frequency": 0, "Linewidth": 0, "RIN": 0, "Ideal": False}
-        self.modulatorParameters = {"Type": "MZM"}
+        self.modulatorParameters = {"Type": "PM"}
         self.channelParameters = {"Length": 0, "Attenuation": 0, "Dispersion": 0, "Ideal": False}
         self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 0, "Resolution": 0, "Ideal": False}
         self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
