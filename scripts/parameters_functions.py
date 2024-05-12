@@ -234,7 +234,7 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
         "Resolution":(True, 100), # 100 A/W 
         # Amplifier
         "Gain":(True, 50), # 50 dB
-        "Noise":(True, 50), # 20 dB
+        "Noise":(True, 100), # 50 dB
         "Detection":(True, 100) # 100 dBm
     }
 
@@ -315,16 +315,14 @@ def correctRIN(rin: float, orders: ttk.Combobox) -> float:
     """
     if orders.get() == "* 10^-3":
         return rin / 10**3
-    if orders.get() == "* 10^-6":
+    elif orders.get() == "* 10^-6":
         return rin / 10**6
-    if orders.get() == "* 10^-9":
+    elif orders.get() == "* 10^-9":
         return rin / 10**9
-    if orders.get() == "* 10^-12":
+    elif orders.get() == "* 10^-12":
         return rin / 10**12
-    if orders.get() == "* 10^-15":
+    elif orders.get() == "* 10^-15":
         return rin / 10**15
-    if orders.get() == "* 10^-18":
-        return rin / 10**18
     else:
         raise Exception("Unexpected error")
     

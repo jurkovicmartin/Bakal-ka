@@ -23,89 +23,208 @@ class Gui:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
 
+        # Design
+        charset="Helvetica"
+        myGrey = "light grey"
+        myBlue = "#adadeb"
+        self.root.option_add("*Font", (charset, 14))
+
+        ### VARIABLES
+        
+        # Inicial parameters
+        self.sourceParameters = {"Power": 0, "Frequency": 0, "Linewidth": 0, "RIN": 0, "Ideal": False}
+        self.modulatorParameters = {"Type": "PM"}
+        self.channelParameters = {"Length": 0, "Attenuation": 0, "Dispersion": 0, "Ideal": False}
+        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 0, "Resolution": 0, "Ideal": False}
+        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
+        # Store initial parameters to check for simulation start
+        self.initialParameters = {"Source": self.sourceParameters, "Modulator": self.modulatorParameters, 
+                                  "Channel": self.channelParameters, "Reciever": self.recieverParameters, "Amplifier": self.amplifierParameters}
+
+        self.generalParameters = {"SpS":8}
+
+        # Default parameters (testing)
+        self.sourceParameters = {"Power": 10, "Frequency": 191.7, "Linewidth": 1, "RIN": 0, "Ideal": True}
+        self.modulatorParameters = {"Type": "MZM"}
+        self.channelParameters = {"Length": 40, "Attenuation": 0, "Dispersion": 0, "Ideal": True}
+        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": "inf", "Resolution": "inf", "Ideal": True}
+        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
+
+
+
+        # Simulation results variables
+        self.plots = {}
+        self.simulationResults = None
+
         # Notebook tabs frame
         self.notebookFrame = ttk.Notebook(self.root)
         self.notebookFrame.grid(row=0, column=0, sticky="nsew")
 
         # Tabs
-        self.optionsFrame = ttk.Frame(self.notebookFrame)
-        self.outputsFrame = ttk.Frame(self.notebookFrame)
+        self.optionsFrame = tk.Frame(self.notebookFrame, bg=myGrey)
+        self.outputsFrame = tk.Frame(self.notebookFrame)
 
-        self.optionsFrame.pack()
+        self.optionsFrame.pack(padx=10)
         self.outputsFrame.pack()
 
         self.notebookFrame.add(self.optionsFrame, text="Input options")
         self.notebookFrame.add(self.outputsFrame, text="Outputs")
 
+        
+
         ### OPTIONS TAB
 
+        # Create a custom style
+        style = ttk.Style()
+        style.theme_use("default")  # Use the default theme
+        style.configure("Custom.TCombobox", background=myGrey)  # Set the background color
+        
         # Options tab frames
-        self.generalFrame = tk.Frame(self.optionsFrame)
-        self.schemeFrame = tk.Frame(self.optionsFrame)
+        self.generalFrame = tk.Frame(self.optionsFrame, bg=myBlue, borderwidth=1, relief="solid")
+        self.schemeFrame = tk.Frame(self.optionsFrame, bg=myBlue, borderwidth=1, relief="solid")
 
-        self.generalFrame.pack(pady=10)
-        self.schemeFrame.pack(pady=10)
+        # Create a canvas to draw the rounded border
+        self.generalFrame.pack(fill="both", padx=10, pady=10)
+        self.schemeFrame.pack(fill="both", padx=10, pady=10, expand=True)
 
-        # Scheme frame
-
-        # Communication scheme buttons
-        self.sourceButton = tk.Button(self.schemeFrame, text="Optical source\n\nPower: 0 dBm\nFrequency: 0 THz\nLinewidth: 0 Hz\nRIN: 0", command=lambda: self.showParametersPopup(self.sourceButton))
-        self.modulatorButton = tk.Button(self.schemeFrame, text="Modulator\n\nPM", command=lambda: self.showParametersPopup(self.modulatorButton))
-        self.channelButton = tk.Button(self.schemeFrame, text="Fiber channel\n\nLength: 0 km\nAttenuation: 0 dB/km\nChromatic dispersion: 0 ps/nm/km", command=lambda: self.showParametersPopup(self.channelButton))
-        self.recieverButton = tk.Button(self.schemeFrame, text="Detector\n\nPhotodiode\nBandwidth: 0 Hz\nResolution: 0 A/W", command=lambda: self.showParametersPopup(self.recieverButton))
-        # Aplifier button initially hidden
-        self.amplifierButton = tk.Button(self.schemeFrame, text="Amplifier\n\nPosition in channel: start\nGain: 0 dB\nNoise figure: 0 dB\n Detection limit: 0 dBm", command=lambda: self.showParametersPopup(self.amplifierButton))
-
-        self.sourceButton.grid(row=0, column=0)
-        self.modulatorButton.grid(row=0, column=1)
-        self.channelButton.grid(row=0, column=2)
-        self.recieverButton.grid(row=0, column=3)
 
         # General frame
 
+        # General label
+        generalLabelFrame = tk.Frame(self.generalFrame, bg="white", borderwidth=1, relief="solid")
+        generalLabelFrame.grid(row=0, column=0, columnspan=4, padx=10, pady=10)
+        self.generalLabel = tk.Label(generalLabelFrame, text="General parameters", bg=myGrey, font=(charset, 20))
+        self.generalLabel.pack(padx=3, pady=3)
+
         # Choosing modulation format to map
-        self.mFormatLabel = tk.Label(self.generalFrame, text="Modulation formats")
-        self.mFormatComboBox = ttk.Combobox(self.generalFrame, values=["OOK", "PAM", "PSK", "QAM"], state="readonly")
+        self.mFormatLabel = tk.Label(self.generalFrame, text="Modulation format", bg=myBlue)
+        self.mFormatComboBox = ttk.Combobox(self.generalFrame, values=["OOK", "PAM", "PSK", "QAM"], state="readonly", width=10, justify="center")
         self.mFormatComboBox.set("OOK")
         self.mFormatComboBox.bind("<<ComboboxSelected>>", self.modulationFormatChange)
-        self.mFormatLabel.grid(row=0, column=0)
-        self.mFormatComboBox.grid(row=1, column=0)
+        self.mFormatLabel.grid(row=1, column=0, padx=10, pady=10)
+        self.mFormatComboBox.grid(row=2, column=0, padx=10, pady=10)
 
         # Choosing modulation order to map
-        self.mOrderLabel = tk.Label(self.generalFrame, text="Order of modulation")
-        self.mOrderCombobox = ttk.Combobox(self.generalFrame, values=["2"], state="disabled")
+        self.mOrderLabel = tk.Label(self.generalFrame, text="Order of modulation", bg=myBlue)
+        self.mOrderCombobox = ttk.Combobox(self.generalFrame, values=["2"], state="disabled", width=10, justify="center")
         self.mOrderCombobox.set("2")
-        self.mOrderLabel.grid(row=0, column=1)
-        self.mOrderCombobox.grid(row=1, column=1)
+        self.mOrderLabel.grid(row=1, column=1, padx=10, pady=10)
+        self.mOrderCombobox.grid(row=2, column=1, padx=10, pady=10)
 
         # Symbol rate
-        self.symbolRateLabel = tk.Label(self.generalFrame, text="Symbol rate [symbols/s]")
-        self.symbolRateEntry = tk.Entry(self.generalFrame)
+        self.symbolRateLabel = tk.Label(self.generalFrame, text="Symbol rate [symbols/s]", bg=myBlue)
+        self.symbolRateEntry = tk.Entry(self.generalFrame, bg=myGrey, width=10)
         self.symbolRateEntry.insert(0, "1")
-        self.symbolRateCombobox = ttk.Combobox(self.generalFrame, values=["M (10^6)", "G (10^9)"], state="readonly")
+        self.symbolRateCombobox = ttk.Combobox(self.generalFrame, values=["M (10^6)", "G (10^9)"], state="readonly", width=10, justify="center")
         self.symbolRateCombobox.set("M (10^6)")
-        self.symbolRateLabel.grid(row=0, column=3)
-        self.symbolRateEntry.grid(row=1, column=3)
-        self.symbolRateCombobox.grid(row=1, column=4)
+        self.symbolRateLabel.grid(row=1, column=2, columnspan=2, padx=10, pady=10)
+        self.symbolRateEntry.grid(row=2, column=2, padx=3, pady=10)
+        self.symbolRateCombobox.grid(row=2, column=3, pady=10)
+
+        
+
+        # Scheme frame
+        # Configure grid ro expand
+        self.schemeFrame.grid_columnconfigure(0, weight=1)  
+        self.schemeFrame.grid_columnconfigure(1, weight=1)  
+        self.schemeFrame.grid_columnconfigure(2, weight=1)  
+        self.schemeFrame.grid_columnconfigure(3, weight=1)  
+        self.schemeFrame.grid_columnconfigure(4, weight=1)  
+        self.schemeFrame.grid_columnconfigure(5, weight=1)
+
+        schemeLabelFrame = tk.Frame(self.schemeFrame, bg="white", borderwidth=1, relief="solid")
+        schemeLabelFrame.grid(row=0, column=0, columnspan=6, padx=10, pady=10)
+        self.schemeLabel = tk.Label(schemeLabelFrame, text="Optical communication chain parameters", bg=myGrey, font=(charset, 20))
+        self.schemeLabel.pack(padx=3, pady=3)
+
+        # Source
+        self.sourceFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+        self.sourceFrame.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
+
+        self.sourceLabel = tk.Label(self.sourceFrame, text="Optical source", bg=myGrey)
+        self.sourceLabel.pack(padx=5, pady=5)
+
+        self.sourceButton = tk.Button(self.sourceFrame, text="", command=lambda: self.showParametersPopup(self.sourceButton), bg=myGrey)
+        self.sourceButton.pack(padx=5, pady=5, fill="both", expand=True)
+
+        # Modulator
+        self.modulatorFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+        self.modulatorFrame.grid(row=2, column=1, padx=5, pady=5, sticky="nsew")
+
+        self.modulatorLabel = tk.Label(self.modulatorFrame, text="Modulator", bg=myGrey)
+        self.modulatorLabel.pack(padx=5, pady=5)
+
+        self.modulatorButton = tk.Button(self.modulatorFrame, text="", command=lambda: self.showParametersPopup(self.modulatorButton), bg=myGrey)
+        self.modulatorButton.pack(padx=5, pady=5, fill="both", expand=True)
+
+        # Channel
+        self.channelFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+        self.channelFrame.grid(row=2, column=2, padx=5, pady=5, sticky="nsew")
+
+        self.channelLabel = tk.Label(self.channelFrame, text="Communication channel", bg=myGrey)
+        self.channelLabel.pack(padx=5, pady=5)
+
+        self.channelButton = tk.Button(self.channelFrame, text="", command=lambda: self.showParametersPopup(self.channelButton), bg=myGrey)
+        self.channelButton.pack(padx=5, pady=5, fill="both", expand=True)
+
+        # Reciever
+        self.recieverFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+        self.recieverFrame.grid(row=2, column=3, padx=5, pady=5, sticky="nsew")
+
+        self.recieverLabel = tk.Label(self.recieverFrame, text="Detector", bg=myGrey)
+        self.recieverLabel.pack(padx=5, pady=5)
+
+        self.recieverButton = tk.Button(self.recieverFrame, text="", command=lambda: self.showParametersPopup(self.recieverButton), bg=myGrey)
+        self.recieverButton.pack(padx=5, pady=5, fill="both", expand=True)
+
+        # Amplifier button initially hidden
+        self.amplifierFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+
+        self.amplifierLabel = tk.Label(self.amplifierFrame, text="Optical amplifier", bg=myGrey)
+        self.amplifierLabel.pack(padx=5, pady=5)
+
+        self.amplifierButton = tk.Button(self.amplifierFrame, text="", command=lambda: self.showParametersPopup(self.amplifierButton), bg=myGrey)
+        self.amplifierButton.pack(padx=5, pady=5, fill="both", expand=True)
+
+        # Channel with amplifier
+        self.amplfierChannelFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+        self.amplfierChannelFrame.grid_columnconfigure(0, weight=1)  
+        self.amplfierChannelFrame.grid_columnconfigure(1, weight=1) 
+
+        self.channelLabel = tk.Label(self.amplfierChannelFrame, text="Communication channel", bg=myGrey)
+        self.channelLabel.grid(row=0, column=0, padx=10, pady=10) 
+        self.comboChannelButton = tk.Button(self.amplfierChannelFrame, text="", command=lambda: self.showParametersPopup(self.channelButton), bg=myGrey)
+        self.comboChannelButton.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+
+        self.amplifierLabel = tk.Label(self.amplfierChannelFrame, text="Optical amplifier", bg=myGrey)
+        self.amplifierLabel.grid(row=0, column=1, padx=10, pady=10)
+        self.comboAmplifierButton = tk.Button(self.amplfierChannelFrame, text="", command=lambda: self.showParametersPopup(self.amplifierButton), bg=myGrey)
+        self.comboAmplifierButton.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
+        
+
+        # Show default parameters
+        self.setButtonText("all")     
+
 
         # Checkbutton for including / excluding channel pre-amplifier
         self.amplifierCheckVar = tk.BooleanVar()
-        self.amplifierCheckbutton = tk.Checkbutton(self.generalFrame, text="Add amplifier", variable=self.amplifierCheckVar, command=self.amplifierCheckbuttonChange)
-        self.amplifierCheckbutton.grid(row=2, column=0)
+        self.amplifierCheckbutton = tk.Checkbutton(self.schemeFrame, text="Add amplifier", variable=self.amplifierCheckVar, command=self.amplifierCheckbuttonChange, bg=myBlue, activebackground=myBlue)
+        self.amplifierCheckbutton.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
 
         # Attention label for adding pre-amplifier
         # self.attentionLabel = tk.Label(self.generalFrame, text="")
         # self.attentionLabel.grid(row=2, column=1, columnspan=2)
 
+
         # Other
 
         # Start simulation
         self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.startSimulation)
-        self.simulateButton.pack()
+        self.simulateButton.pack(padx=10, pady=10)
 
         # Quit
         self.quitButton = tk.Button(self.optionsFrame, text="Quit", command=self.terminateApp)
-        self.quitButton.pack()
+        self.quitButton.pack(padx=10, pady=10)
 
 
         ### OUTPUTS TAB
@@ -158,41 +277,14 @@ class Gui:
 
 
         # Frames with buttons that will be disabled when doing configuration
-        self.buttonFrames = [self.schemeFrame, self.optionsFrame, self.plotsFrame]
- 
-        ### VARIABLES
-
-        # Inicial parameters
-        self.sourceParameters = {"Power": 0, "Frequency": 0, "Linewidth": 0, "RIN": 0, "Ideal": False}
-        self.modulatorParameters = {"Type": "PM"}
-        self.channelParameters = {"Length": 0, "Attenuation": 0, "Dispersion": 0, "Ideal": False}
-        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 0, "Resolution": 0, "Ideal": False}
-        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
-        # Store initial parameters to check for simulation start
-        self.initialParameters = {"Source": self.sourceParameters, "Modulator": self.modulatorParameters, 
-                                  "Channel": self.channelParameters, "Reciever": self.recieverParameters, "Amplifier": self.amplifierParameters}
-
-        self.generalParameters = {"SpS":8}
-
-        # Default parameters (testing)
-        self.sourceParameters = {"Power": 10, "Frequency": 191.7, "Linewidth": 1, "RIN": 0, "Ideal": True}
-        self.modulatorParameters = {"Type": "MZM"}
-        self.channelParameters = {"Length": 40, "Attenuation": 0, "Dispersion": 0, "Ideal": True}
-        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": "inf", "Resolution": "inf", "Ideal": True}
-        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
-
-
-
-        # Simulation results variables
-        self.plots = {}
-        self.simulationResults = None
+        self.buttonFrames = [self.optionsFrame, self.plotsFrame, self.sourceFrame, self.modulatorFrame, self.channelFrame, self.recieverFrame, self.amplifierFrame, self.amplfierChannelFrame]
 
         self.root.mainloop()
 
 
 
     ### METHODS
-    
+
     def terminateApp(self):
         """
         Terminate the app. Closes main window and all other opened windows.
@@ -245,18 +337,45 @@ class Gui:
         """
         Including / exluding amplifier from the scheme.
         """
+        # Show amplifier button
         if self.amplifierCheckVar.get():
-            # Show amplifier button
-            self.amplifierButton.grid(row=0, column=3)
-            self.recieverButton.grid(row=0, column=4)
+            # Postion
+            amplifierPosition = self.amplifierParameters.get("Position")
+
+            if amplifierPosition == "start":
+                self.amplfierChannelFrame.grid_forget()
+                self.amplifierFrame.grid(row=2, column=2, padx=5, pady=5, sticky="nsew")
+                self.channelFrame.grid(row=2, column=3, padx=5, pady=5, sticky="nsew")
+                self.recieverFrame.grid(row=2, column=4, padx=5, pady=5, sticky="nsew")
+
+            elif amplifierPosition == "middle":
+                self.channelFrame.grid_forget()
+                self.amplifierFrame.grid_forget()
+                self.amplfierChannelFrame.grid(row=2, column=2, padx=5, pady=5, sticky="nsew")
+                self.recieverFrame.grid(row=2, column=3, padx=5, pady=5, sticky="nsew")
+
+
+            elif amplifierPosition =="end":
+                self.amplfierChannelFrame.grid_forget()
+                self.channelFrame.grid(row=2, column=2, padx=5, pady=5, sticky="nsew")
+                self.amplifierFrame.grid(row=2, column=3, padx=5, pady=5, sticky="nsew")
+                self.recieverFrame.grid(row=2, column=4, padx=5, pady=5, sticky="nsew")
+
+            else:
+                raise Exception("Unexpected error")
             
             # self.attentionCheck()
         else:
             # Remove amplifier button
-            self.amplifierButton.grid_forget()
-            self.recieverButton.grid(row=0, column=3)
+            self.amplfierChannelFrame.grid_forget()
+            self.amplifierFrame.grid_forget()
+            self.channelFrame.grid(row=2, column=2, padx=5, pady=5, sticky="nsew")
+            self.recieverFrame.grid(row=2, column=3, padx=5, pady=5, sticky="nsew")
 
             # self.attentionCheck()
+
+        self.setButtonText("channel")
+        self.setButtonText("amplifier")
 
 
     def showParametersPopup(self, clickedButton):
@@ -326,7 +445,12 @@ class Gui:
             self.recieverParameters = parameters
         elif buttonType == "amplifier":
             self.amplifierParameters = parameters
+            # Update amplifier position
+            self.amplifierCheckbuttonChange()
         else: raise Exception("Unexpected error")
+
+        # Update showed parameters
+        self.setButtonText(buttonType)
 
 
     def checkParameters(self) -> bool:
@@ -582,77 +706,6 @@ class Gui:
         return plotTx, plotRx, plotSc
 
 
-    # def showGraph(self, clickedButton):
-    #     """
-    #     Show graph in the app. Graph is defined by clickedButton.
-    #     """
-    #     # Trying to show plots without simulation data
-    #     if self.simulationResults is None:
-    #         messagebox.showerror("Showing error", "You must start simulation first.")
-    #         return
-
-    #     # Define which button was clicked to get rigth plot
-    #     if clickedButton == self.infTxButton:
-    #         type = "informationTx"
-    #         title = "Modulation signal"
-    #     elif clickedButton == self.infRxButton:
-    #         type = "informationRx"
-    #         title = "Detected signal"
-    #     elif clickedButton == self.conTxButton:
-    #         type ="constellationTx"
-    #         title = "Tx constellation diagram"
-    #     elif clickedButton == self.conRxButton:
-    #         type = "constellationRx"
-    #         title = "Rx constellation diagram"
-    #     elif clickedButton == self.spectrumTxButton:
-    #         type = "spectrumTx"
-    #         title = "Tx optical spectrum"
-    #     elif clickedButton == self.spectrumRxButton:
-    #         type = "spectrumRx"
-    #         title = "Rx optical spectrum"
-    #     elif clickedButton == self.sigTxButton:
-    #         type = "signalTx"
-    #         title = "Tx signal in time"
-    #     elif clickedButton == self.sigRxButton:
-    #         type = "signalRx"
-    #         title = "Rx signal in time"
-    #     elif clickedButton == self.eyeTxButton:
-    #         type = "eyediagramTx"
-    #         title = "Tx eyediagram"
-    #     elif clickedButton == self.eyeRxButton:
-    #         type = "eyediagramRx"
-    #         title = "Rx eyediagram"
-    #     else: raise Exception("Unexcpected error")
-
-    #     # Graph was showed once before
-    #     if type in self.plots:
-    #         plot = self.plots.get(type)
-    #         self.displayPlot(plot, title)
-
-    #     # Graph will be shown for the first time
-    #     else:
-    #         plot = getPlot(type, title,  self.simulationResults, self.generalParameters, self.sourceParameters)
-    #         self.displayPlot(plot, title)
-    #         self.plots.update({type:plot})
-
-        
-
-
-    # def displayPlot(self, plot, title: str):
-    #     """
-    #     Creates Toplevel popup window to show plot.
-    #     """
-    #     # Creates the window
-    #     popupGraph = tk.Toplevel()
-    #     popupGraph.geometry("1000x600")
-    #     popupGraph.title(title)
-
-    #     # Shows the plot
-    #     canvas = FigureCanvasTkAgg(plot[0], master=popupGraph)
-    #     canvas.draw()
-    #     canvas.get_tk_widget().pack(side="top", fill="both", expand=1)
-
-
     def closeGraphsWindows(self):
         """
         Closes all opened Toplevel windows.
@@ -660,6 +713,99 @@ class Gui:
         for window in self.root.winfo_children():
             if isinstance(window, tk.Toplevel):
                 window.destroy()
+
+
+    def setButtonText(self, type: str) -> str:
+        """
+        Sets text of button represeting blocks of communication channel to its set parameters.
+
+        Parameters
+        -----
+        type: button type (can be all fo all buttons)
+        """
+        if type == "source":
+            rinText = self.correctRinOrder()
+            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {self.sourceParameters.get('Linewidth')} Hz\nRIN: {rinText}"
+            self.sourceButton.config(text=text)
+        elif type =="modulator":
+            text = f"{self.modulatorParameters.get('Type')}"
+            self.modulatorButton.config(text=text)
+        elif type == "channel":
+            text = f"Length: {self.channelParameters.get('Length')} km\nAttenuation: {self.channelParameters.get('Attenuation')} dB/km\nChromatic dispersion: {self.channelParameters.get('Dispersion')} ps/nm/km"
+            self.channelButton.config(text=text)
+            self.comboChannelButton.config(text=text)
+        elif type == "reciever":
+            bandwidthText = self.correctBandwidthUnits()
+            text = f"{self.recieverParameters.get('Type')}\nBandwidth: {bandwidthText}\nResolution: {self.recieverParameters.get('Resolution')} A/W"
+            self.recieverButton.config(text=text)
+        elif type == "amplifier":
+            text = f"Position in channel: {self.amplifierParameters.get('Position')}\nGain: {self.amplifierParameters.get('Gain')} dB\nNoise figure: {self.amplifierParameters.get('Noise')} dB\n Detection limit: {self.amplifierParameters.get('Detection')} dBm"
+            self.amplifierButton.config(text=text)
+            self.comboAmplifierButton.config(text=text)
+        elif type == "all":
+            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {self.sourceParameters.get('Linewidth')} Hz\nRIN: {self.sourceParameters.get('RIN')}"
+            self.sourceButton.config(text=text)
+
+            text = f"{self.modulatorParameters.get('Type')}"
+            self.modulatorButton.config(text=text)
+
+            text = f"Length: {self.channelParameters.get('Length')} km\nAttenuation: {self.channelParameters.get('Attenuation')} dB/km\nChromatic dispersion: {self.channelParameters.get('Dispersion')} ps/nm/km"
+            self.channelButton.config(text=text)
+
+            text = f"{self.recieverParameters.get('Type')}\nBandwidth: {self.recieverParameters.get('Bandwidth')} Hz\nResolution: {self.recieverParameters.get('Resolution')} A/W"
+            self.recieverButton.config(text=text)
+
+            text = f"Position in channel: {self.amplifierParameters.get('Position')}\nGain: {self.amplifierParameters.get('Gain')} dB\nNoise figure: {self.amplifierParameters.get('Noise')} dB\n Detection limit: {self.amplifierParameters.get('Detection')} dBm"
+            self.amplifierButton.config(text=text)
+        else:
+            raise Exception("Unexpected")
+        
+
+    def correctRinOrder(self) -> str:
+        """
+        Corrects RIN text to show a number * 10^x.
+
+        Returns
+        ----
+        rin: str value
+        """
+        rin = self.sourceParameters.get("RIN")
+
+        if rin == 0:
+            return rin
+        elif rin <= 10**-15:
+            return f"{rin * 10**15} * 10^-15"
+        elif rin <= 10**-12:
+            return f"{rin * 10**12} * 10^-12"
+        elif rin <= 10**-9:
+            return f"{rin * 10**9} * 10^-9"
+        elif rin <= 10**-6:
+            return f"{rin * 10**6} * 10^-6"
+        else:
+            return f"{rin * 10**3} * 10^-3"
+        
+
+    def correctBandwidthUnits(self) -> str:
+        """
+        Corrects reciever text to show correct bandwidth unist.
+
+        Returns
+        ----
+        bandwidth: str value
+        """
+        bandwidth = self.recieverParameters.get("Bandwidth")
+
+        if bandwidth >= 10**9:
+            return f"{bandwidth / 10**9} GHz"
+        elif bandwidth >= 10**6:
+            return f"{bandwidth / 10**6} MHz"
+        elif bandwidth >= 10**3:
+            return f"{bandwidth / 10**3} kHz"
+        else:
+            return f"{bandwidth} Hz"
+
+
+
 
     
 

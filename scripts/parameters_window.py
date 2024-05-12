@@ -40,7 +40,7 @@ class ParametersWindow:
         Creates popup gui for setting parameters.
         """
         self.popup = tk.Toplevel()
-        self.popup.geometry("400x400")
+        self.popup.geometry("800x400")
 
         if self.type == "source":
             self.popup.title("Parameters of optical source")
@@ -73,7 +73,7 @@ class ParametersWindow:
             self.rinLabel.grid(row=4, column=0)
             self.rinEntry = tk.Entry(self.popup)
             self.rinEntry.grid(row=4, column=1)
-            self.rinCombobox = ttk.Combobox(self.popup, values=["* 10^-3", "* 10^-6", "* 10^-9", "* 10^-12", "* 10^-15", "* 10^-18"], state="readonly")
+            self.rinCombobox = ttk.Combobox(self.popup, values=["* 10^-3", "* 10^-6", "* 10^-9", "* 10^-12", "* 10^-15"], state="readonly")
             self.rinCombobox.set("* 10^-3")
             self.rinCombobox.grid(row=4, column=2)
 
@@ -229,9 +229,7 @@ class ParametersWindow:
         Set inserted parameters.
         """
         if self.type == "source":
-            # Showing in main gui
-            parametersString = f"Optical source\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()} {self.rinCombobox.get()}"
-            # Getting initial values
+            # Getting inserted values
             parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "RIN":self.rinEntry.get()}
             
             parameters.update(self.setIdealParameter(parameters))
@@ -241,23 +239,15 @@ class ParametersWindow:
             # Return if parameters are not valid
             if parameters is None: return
 
-            if parameters.get("RIN") == 0:
-                # Showing only 0 for RIN without the order (10^x)
-                parametersString = f"Optical source\n\nPower: {self.powerEntry.get()} dBm\nFrequency: {self.frequencyEntry.get()} THz\nLinewidth: {self.linewidthEntry.get()} Hz\nRIN: {self.rinEntry.get()}"
-
 
 
         elif self.type == "modulator":
-            # Showing in main gui
-            parametersString = f"Modulator\n\n{self.modulatorCombobox.get()}"
-            # Getting initial values
+            # Getting inserted values
             parameters = {"Type":self.modulatorCombobox.get()}
 
 
         elif self.type == "channel":
-            # Showing in main gui
-            parametersString = f"Fiber channel\n\nLength: {self.lengthEntry.get()} km\nAttenuation: {self.attenuationEntry.get()} dB/km\nChromatic dispersion: {self.dispersionEntry.get()} ps/nm/km"
-            # Getting initial values
+            # Getting inserted values
             parameters = {"Length":self.lengthEntry.get(), "Attenuation":self.attenuationEntry.get(), "Dispersion":self.dispersionEntry.get()}
             
             parameters.update(self.setIdealParameter(parameters))
@@ -269,9 +259,7 @@ class ParametersWindow:
 
 
         elif self.type == "reciever":
-            # Showing in main gui
-            parametersString = f"Detector\n\n{self.recieverCombobox.get()}\nBandwidth: {self.bandwidthEntry.get()} {self.bandwidthCombobox.get()}\nResolution: {self.resolutionEntry.get()} A/W"
-            # Getting initial values
+            # Getting inserted values
             parameters = {"Type":self.recieverCombobox.get(), "Bandwidth":self.bandwidthEntry.get(), "Resolution":self.resolutionEntry.get()}
             
             parameters.update(self.setIdealParameter(parameters))
@@ -284,9 +272,7 @@ class ParametersWindow:
 
         
         elif self.type == "amplifier":
-            # Showing in main gui
-            parametersString = f"Amplifier\n\nPosition in channel: {self.positionCombobox.get()}\nGain: {self.gainEntry.get()} dB\nNoise figure: {self.noiseEntry.get()} dB\n Detection limit: {self.detectionEntry.get()} dBm"
-            # Getting initial values
+            # Getting inserted values
             parameters = {"Position":self.positionCombobox.get(), "Gain":self.gainEntry.get(), "Noise":self.noiseEntry.get(), "Detection":self.detectionEntry.get()}
             
             parameters.update(self.setIdealParameter(parameters))
@@ -297,7 +283,6 @@ class ParametersWindow:
         
         else: raise Exception("Unexpected error")
 
-        self.parentButton.config(text=parametersString)
         # Return parameters
         self.callback(parameters, self.type)
         # Check for combination of ideal channel + pre-amplifier
@@ -377,6 +362,7 @@ class ParametersWindow:
                 self.noiseEntry.config(state="normal")
                 self.detectionEntry.config(state="normal")
                 self.detectionEntry.delete(0, tk.END)
+                self.detectionEntry.insert(0, "0")
 
         else: raise Exception("Unexpected error")
 
@@ -564,10 +550,7 @@ class ParametersWindow:
         """
         rin = self.defaultParameters.get("RIN")
 
-        if rin <= 10**-18:
-            self.rinEntry.insert(0, str(rin * 10**18))
-            self.rinCombobox.set("* 10^-18")
-        elif rin <= 10**-15:
+        if rin <= 10**-15:
             self.rinEntry.insert(0, str(rin * 10**15))
             self.rinCombobox.set("* 10^-15")
         elif rin <= 10**-12:

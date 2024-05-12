@@ -92,12 +92,12 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str):
     print(yMin)
 
     fig, ax1 = plt.subplots(1)
-    ax1.plot( wavelength, spectrum)
+    ax1.plot( wavelength, frequency)
     ax1.set_ylim([yMin, yMax])   
     ax1.set_xlabel("Wavelength [nm]")
     ax1.set_ylabel("Magnitude [dBm]")
 
-    # ax.minorticks_on()
+    ax1.minorticks_on()
     ax1.grid(True)
 
 
@@ -107,8 +107,10 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str):
     fig.subplots_adjust(top=0.8)
 
     # Plot frequency vs wavelength
-    ax2.plot(frequency, wavelength, color='red')
+    ax2.plot(frequency, spectrum)
     ax2.set_xlabel('Frequency [THz]')
+    ax2.minorticks_on()
+    ax2.grid(True)
 
     # Set scattered ticks on the x-axis
     # num_ticks = 5  # Set the number of ticks you want to display
@@ -188,17 +190,78 @@ def idealLaser(power: float, length: int) -> np.array:
 
 
 
+def frequency_spectrum(signal, sample_rate, freq_range=None):
+    """
+    Compute the frequency spectrum of a signal.
+
+    Parameters:
+        signal (array-like): Array of complex values representing the signal.
+        sample_rate (float): Sampling rate of the signal.
+        freq_range (tuple, optional): Tuple specifying the range of frequencies to consider.
+                                       Defaults to None, which means the entire spectrum is computed.
+
+    Returns:
+        tuple: A tuple containing:
+               - Array of spectrum values
+               - Array of corresponding frequency values
+    """
+    # Compute FFT
+    spectrum = np.fft.fft(signal)
+    
+    # Compute frequency axis
+    n = len(signal)
+    freq_axis = np.fft.fftfreq(n, d=1/sample_rate)
+    
+    # Take only positive frequencies
+    positive_freq_mask = freq_axis >= 0
+    spectrum = spectrum[positive_freq_mask]
+    freq_axis = freq_axis[positive_freq_mask]
+    
+    # If freq_range is specified, filter the spectrum and frequency axis
+    if freq_range is not None:
+        freq_min, freq_max = freq_range
+        freq_mask = (freq_axis >= freq_min) & (freq_axis <= freq_max)
+        spectrum = spectrum[freq_mask]
+        freq_axis = freq_axis[freq_mask]
+    
+    return spectrum, freq_axis
+
+
+def newOpticalSpectrum(signal, Fs: int, Fc: int, title: str, range=None):
+    """
+    Plot optical spectrum with wavelength.
+
+    Parameters:
+    -----
+    Fs: sampling frequency
+
+    Fc: central frequency
+    """
+    frequency, spectrum = frequency_spectrum(signal, Fs, range)
+
+    print(frequency.min())
+    print(frequency.max())
+    print(spectrum.min())
+    print(spectrum.max())
+
+    plt.plot(frequency, np.abs(spectrum))
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Magnitude')
+    plt.title('Frequency Spectrum')
+    plt.show()
+
+
 """
 Sampling frequency really ovlivni kvalitu (spectrum)
 """
 
 
-ideal = True
+ideal = False
 SpS = 8
 Rs = 1000000
 Fs = SpS * Rs
 power = 20
-Fc = 193.7 * (10**12)
+Fc = 134.6 * (10**12)
 
 modulationOrder = 2
 modulationFormat = "pam"
@@ -245,7 +308,8 @@ else:
 spectrumFs = 10**12
 
 opticalSpectrum(carrier, spectrumFs, Fc, "Carrier spectrum")
-opticalInTime(1/Fs, carrier, "carrier", "carrier")
+# opticalInTime(1/Fs, carrier, "carrier", "carrier")
+# newOpticalSpectrum(carrier, 10**12, Fc, "New spectrum")
 
 # opticalInTime(1/Fs, carrier, "carrier", "carrier")
 

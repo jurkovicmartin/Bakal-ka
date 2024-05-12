@@ -361,12 +361,11 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
 
     # Plot spectrum with wavelength
     fig, ax1 = plt.subplots(1)
-    ax1.plot( wavelength, spectrum)
+    ax1.plot( wavelength, frequency)
     ax1.set_ylim([yMin, yMax])   
     ax1.set_xlabel("Wavelength [nm]")
     ax1.set_ylabel("Magnitude [dBm]")
-
-    # ax1.minorticks_on()
+    ax1.minorticks_on()
     ax1.grid(True)
 
     # Set scattered ticks on the x-axis
@@ -379,8 +378,10 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
     ax2 = ax1.twiny()
     # Make some room at the top
     fig.subplots_adjust(top=0.8)
-    ax2.plot(frequency, wavelength)
-    ax2.set_xlabel('Frequency [THz]')
+    ax2.plot(frequency, spectrum)
+    ax2.set_xlabel("Frequency [THz]")
+    ax2.minorticks_on()
+    ax2.grid(True)
 
     # tick_indices = np.linspace(0, len(frequency) - 1, num_ticks, dtype=int)
     # ax2.set_xticks(frequency[tick_indices])

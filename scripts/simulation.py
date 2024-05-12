@@ -227,7 +227,13 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
 
     # Ideal channel (= position of amplifier does not matter)
     if idealChannel:
-        recieverSignal=edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+        if amplifierParameters.get("Ideal"):
+            recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+        else:
+            if not(checkPower(modulatedSignal, detectionLimit)):
+                return
+            
+            recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
     
     # Ideal amplifier with real channel
     elif amplifierParameters.get("Ideal") and not(idealChannel):
@@ -258,7 +264,7 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
     elif not(amplifierParameters.get("Ideal")) and not(idealChannel):
         if amplifierPosition == "start":
             # Signal power is too low
-            if checkPower(modulatedSignal, detectionLimit):
+            if not(checkPower(modulatedSignal, detectionLimit)):
                 return
             
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
@@ -270,7 +276,7 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
             fiberParameters.L = fiberParameters.L / 2
 
             # Signal power is too low
-            if checkPower(modulatedSignal, detectionLimit):
+            if not(checkPower(modulatedSignal, detectionLimit)):
                 return
             
             # First half
@@ -284,7 +290,7 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
             modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
             # Signal power is too low
-            if checkPower(modulatedSignal, detectionLimit):
+            if not(checkPower(modulatedSignal, detectionLimit)):
                 return
 
             recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
@@ -500,4 +506,4 @@ def checkPower(signal, limit) -> bool:
 
         signalPower = 10*np.log10(signal_power(signal) / 1e-3)
 
-        return signalPower <= limit
+        return signalPower >= limit
