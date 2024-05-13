@@ -67,15 +67,15 @@ class ParametersWindow:
             self.linewidthLabel.grid(row=3, column=0)
             self.linewidthEntry = tk.Entry(self.popup)
             self.linewidthEntry.grid(row=3, column=1)
+            self.linewidthCombobox = ttk.Combobox(self.popup, values=["Hz", "kHz", "MHz"], state="readonly")
+            self.linewidthCombobox.set("Hz")
+            self.linewidthCombobox.grid(row=3, column=2)
 
             # RIN
-            self.rinLabel = tk.Label(self.popup, text="RIN noise")
+            self.rinLabel = tk.Label(self.popup, text="RIN [dB/Hz]")
             self.rinLabel.grid(row=4, column=0)
             self.rinEntry = tk.Entry(self.popup)
             self.rinEntry.grid(row=4, column=1)
-            self.rinCombobox = ttk.Combobox(self.popup, values=["* 10^-3", "* 10^-6", "* 10^-9", "* 10^-12", "* 10^-15"], state="readonly")
-            self.rinCombobox.set("* 10^-3")
-            self.rinCombobox.grid(row=4, column=2)
 
             # Ideal parameters checkbutton
             self.sourceCheckVar = tk.BooleanVar()
@@ -234,7 +234,7 @@ class ParametersWindow:
             
             parameters.update(self.setIdealParameter(parameters))
             # Validating parameters values
-            parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup, units=self.rinCombobox)
+            parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup, self.linewidthCombobox)
 
             # Return if parameters are not valid
             if parameters is None: return
@@ -301,16 +301,16 @@ class ParametersWindow:
                 self.linewidthEntry.delete(0, tk.END)
                 self.linewidthEntry.insert(0, "1")
                 self.linewidthEntry.config(state="disabled")
+                self.linewidthCombobox.config(state="disabled")
 
                 self.rinEntry.delete(0, tk.END)
                 self.rinEntry.insert(0, "0")
                 self.rinEntry.config(state="disabled")
-                self.rinCombobox.config(state="disabled")
 
             else:
                 self.linewidthEntry.config(state="normal")
                 self.rinEntry.config(state="normal")
-                self.rinCombobox.config(state="readonly")
+                self.linewidthCombobox.config(state="readonly")
                 
         elif self.type == "channel":
             if self.channelCheckVar.get():
@@ -383,8 +383,8 @@ class ParametersWindow:
             else:
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
                 self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
-                self.linewidthEntry.insert(0, str(self.defaultParameters.get("Linewidth")))
-                self.setDefaultRIN()
+                self.setDefaultLinewidth()
+                self.rinEntry.insert(0, str(self.defaultParameters.get("RIN")))
         
         elif self.type == "modulator":
             # No default parameters
@@ -526,7 +526,7 @@ class ParametersWindow:
 
     def setDefaultBandwidth(self):
         """
-        Sets default value of bandwidth with corresponding units.
+        Sets default value of reciever bandwidth with corresponding units.
         """
         bandwidth = self.defaultParameters.get("Bandwidth")
 
@@ -542,26 +542,20 @@ class ParametersWindow:
         else:
             self.bandwidthEntry.insert(0, str(bandwidth))
             self.bandwidthCombobox.set("Hz")
-        
 
-    def setDefaultRIN(self):
-        """
-        Sets default value of RIN with corresponding order.
-        """
-        rin = self.defaultParameters.get("RIN")
 
-        if rin <= 10**-15:
-            self.rinEntry.insert(0, str(rin * 10**15))
-            self.rinCombobox.set("* 10^-15")
-        elif rin <= 10**-12:
-            self.rinEntry.insert(0, str(rin * 10**12))
-            self.rinCombobox.set("* 10^-12")
-        elif rin <= 10**-9:
-            self.rinEntry.insert(0, str(rin * 10**9))
-            self.rinCombobox.set("* 10^-9")
-        elif rin <= 10**-6:
-            self.rinEntry.insert(0, str(rin * 10**6))
-            self.rinCombobox.set("* 10^-6")
+    def setDefaultLinewidth(self):
+        """
+        Sets default value of source linewidth with corresponding units.
+        """
+        linewidth = self.defaultParameters.get("Linewidth")
+
+        if linewidth >= 10**6:
+            self.linewidthEntry.insert(0, str(linewidth / 10**6))
+            self.linewidthCombobox.set("MHz")
+        elif linewidth >= 10**3:
+            self.linewidthEntry.insert(0, str(linewidth / 10**3))
+            self.linewidthCombobox.set("kHz")
         else:
-            self.rinEntry.insert(0, str(rin * 10**3))
-            self.rinCombobox.set("* 10^-3")
+            self.linewidthEntry.insert(0, str(linewidth))
+            self.linewidthCombobox.set("Hz")

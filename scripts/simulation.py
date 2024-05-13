@@ -18,9 +18,9 @@ import matplotlib.pyplot as plt
 
 from scripts.my_devices import edfa, laserSource, idealLaser, myiqm
 from scripts.my_plot import eyediagram, constellation, opticalSpectrum, electricalInTime, opticalInTime
-from scripts.output_functions import calculateTransSpeed
+from scripts.other_functions import calculateTransSpeed
 
-def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict) -> dict:
+def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict, includeAmplifier: bool) -> dict:
     """
     Simulate communication.
 
@@ -38,7 +38,6 @@ def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameter
     # Each time random numbers
     np.random.seed(seed=123)
 
-    # Not returning values
     Fs = generalParameters.get("Fs")
     frequency = sourceParameters.get("Frequency")*10**12 # Manage units (THz -> Hz)
 
@@ -50,9 +49,9 @@ def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameter
     # Adds carrierSignal
     simulationResults.update(carrierSignal(sourceParameters, Fs, simulationResults.get("modulationSignal")))
     # Adds modulatedSignal
-    simulationResults.update(modulate(modulatorParameters, simulationResults.get("modulationSignal"), simulationResults.get("carrierSignal")))
+    simulationResults.update(modulate(modulatorParameters, simulationResults.get("modulationSignal"), simulationResults.get("carrierSignal"), generalParameters))
     # Adds recieverSignal
-    simulationResults.update(fiberTransmition(channelParameters, amplifierParameters, simulationResults.get("modulatedSignal"), Fs, frequency))
+    simulationResults.update(fiberTransmition(channelParameters, amplifierParameters, simulationResults.get("modulatedSignal"), Fs, frequency, includeAmplifier))
     
     # Error with amplifier detection (signal is too low)
     if simulationResults.get("recieverSignal") is None:
@@ -117,17 +116,22 @@ def carrierSignal(sourceParameters: dict, Fs: int, modulationSignal) -> dict:
         return{"carrierSignal":idealLaser(power, samples)}
     
     else:
+        # Converts rin (dB/Hz to absolute value)
+        rin = 10**(sourceParameters.get("RIN") / 10)
+
+        print(sourceParameters.get("Linewidth"))
+
         # Laser parameters
         paramLaser = parameters()
         paramLaser.P = sourceParameters.get("Power")   # laser power [dBm] [default: 10 dBm]
         paramLaser.lw = sourceParameters.get("Linewidth")    # laser linewidth [Hz] [default: 1 kHz]
         paramLaser.Fs = Fs  # sampling rate [samples/s]
         paramLaser.Ns = len(modulationSignal)   # number of signal samples [default: 1e3]
-        paramLaser.RIN_var = sourceParameters.get("RIN") # RIN [1e-20]
+        paramLaser.RIN_var = rin # RIN [1e-20]
 
         return {"carrierSignal":basicLaserModel(paramLaser)}
 
-def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict:
+def modulate(modulatorParameters: dict, modulationSignal, carrierSignal, generalParameters: dict) -> dict:
     """
     Modulates carrier signal.
 
@@ -146,7 +150,10 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict
         paramMZM.Vpi = 2
         paramMZM.Vb = -1
 
-        return {"modulatedSignal":mzm(carrierSignal, modulationSignal, paramMZM)}
+        if generalParameters.get("Format") == "pam" and generalParameters.get("Order") == 4:
+            return {"modulatedSignal":mzm(carrierSignal, modulationSignal*0.7, paramMZM)}
+        else:
+            return {"modulatedSignal":mzm(carrierSignal, modulationSignal, paramMZM)}
     
     elif modulatorParameters.get("Type") == "IQM":
         # IQM parameters
@@ -160,7 +167,7 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict
     
     else: raise Exception("Unexpected error")
 
-def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulatedSignal, Fs: int, frequency: float) -> dict:
+def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulatedSignal, Fs: int, frequency: float, includeAmplifier: bool) -> dict:
     """
     Simulates signal thru optical fiber.
 
@@ -183,7 +190,7 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
     paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
 
     # Channel has amplifier = doesnt has initial 0 gain
-    if amplifierParameters.get("Gain") != 0:
+    if includeAmplifier:
         recieverSignal = amplifierTransmition(paramCh, amplifierParameters, fiberParameters.get("Ideal"), modulatedSignal, Fs, frequency)
     # Channel without amplifier
     else:
@@ -396,6 +403,7 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
     Fs = generalParameters.get("Fs")
     SpS = generalParameters.get("SpS")
 
+    # Frequency to Hz
     centralFrequency = sourceParameters.get("Frequency") * 10**12
 
     carrierSignal =simulationResults.get("carrierSignal")

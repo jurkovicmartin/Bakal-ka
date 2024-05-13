@@ -75,12 +75,13 @@ def validateParameters(type: str, parameters: dict, generalParameters: dict, par
         else:
             numberParameters.update({key:checked})
 
+    # Correct linewidth units (to Hz) in case of source parameters
+    if type == "source":
+        parameters.update({"Linewidth": correctFrequency(parameters.get("Linewidth"), units)})
+
     # Correct bandwidth units (to Hz) in case of reciever parameters
     if type == "reciever":
-        parameters.update({"Bandwidth": correctBandwidth(parameters.get("Bandwidth"), units)})
-    # Correct RIN value (order) in case of source parameters
-    if type == "source":
-        parameters.update({"RIN": correctRIN(parameters.get("RIN"), units)})
+        parameters.update({"Bandwidth": correctFrequency(parameters.get("Bandwidth"), units)})
 
     # Check the limits
     for key, value in numberParameters.items():
@@ -168,7 +169,7 @@ def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> b
         "Power":(True , -50), # -50 dBm
         "Frequency":(True, 170), # ~ 1760 nm
         "Linewidth":(True, 1), # 1 Hz
-        "RIN": (True, 0), # 0
+        "RIN": (True, -250), # -250 dB/Hz
         # Modulator
 
         # Channel
@@ -222,7 +223,7 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
         "Power":(True , 50), # 50 dBm
         "Frequency":(True, 250), # <= ~ 1200 nm
         "Linewidth":(True, 10**9), # 10 GHz
-        "RIN":(True, 1), # 1
+        "RIN":(True, 0), # 0 dB/Hz
         # Modulator
 
         # Channel
@@ -293,36 +294,18 @@ def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, 
     else: raise Exception("Unexpected error")     
 
 
-def correctBandwidth(bandwidth: float, bandwidthUnits: ttk.Combobox) -> float:
+def correctFrequency(frequency: float, units: ttk.Combobox) -> float:
     """
-    Corrects reciever bandwidth value to correspondate with setted units.
+    Correcs frequency. Converts it to Hz based on Combobox units selection.
     """
-    if bandwidthUnits.get() == "Hz":
-        return bandwidth
-    elif bandwidthUnits.get() == "kHz":
-        return bandwidth * 10**3
-    elif bandwidthUnits.get() == "MHz":
-        return bandwidth * 10**6
-    elif bandwidthUnits.get() == "GHz":
-        return bandwidth * 10**9
-    else:
-        raise Exception("Unexpected error")
-    
-
-def correctRIN(rin: float, orders: ttk.Combobox) -> float:
-    """
-    Corrects rin value (order).
-    """
-    if orders.get() == "* 10^-3":
-        return rin / 10**3
-    elif orders.get() == "* 10^-6":
-        return rin / 10**6
-    elif orders.get() == "* 10^-9":
-        return rin / 10**9
-    elif orders.get() == "* 10^-12":
-        return rin / 10**12
-    elif orders.get() == "* 10^-15":
-        return rin / 10**15
+    if units.get() == "Hz":
+        return frequency
+    elif units.get() == "kHz":
+        return frequency * 10**3
+    elif units.get() == "MHz":
+        return frequency * 10**6
+    elif units.get() == "GHz":
+        return frequency * 10**9
     else:
         raise Exception("Unexpected error")
     
