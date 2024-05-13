@@ -156,7 +156,7 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal) -> dict
         paramIQM.VbQ = -2
         paramIQM.Vphi = 1
 
-        return {"modulatedSignal":iqm(carrierSignal, modulationSignal, paramIQM)}
+        return {"modulatedSignal":iqm(carrierSignal*np.sqrt(2), modulationSignal, paramIQM)}
     
     else: raise Exception("Unexpected error")
 
