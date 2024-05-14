@@ -12,9 +12,9 @@ from scripts.plots_window import PlotWindow
 from scripts.simulation import simulate, getValues, getPlot
 from scripts.parameters_functions import convertNumber
 import matplotlib.pyplot as plt
-import math
 
 import customtkinter as ctk
+from scripts.message_winodw import MessageWindow
 
 class Gui(ctk.CTk):
     def __init__(self):
@@ -270,7 +270,7 @@ class Gui(ctk.CTk):
         self.outputsQuitButton.pack(padx=10, pady=10)
 
         # Frames with buttons that will be disabled when doing configuration
-        self.buttonFrames = [self.optionsFrame, self.outputsFrame, self.plotsFrame, self.sourceFrame, self.modulatorFrame, self.channelFrame, self.recieverFrame, self.amplifierFrame, self.amplfierChannelFrame]
+        self.buttonFrames = [self.optionsFrame, self.outputsFrame, plotsHelpFrame, self.sourceFrame, self.modulatorFrame, self.channelFrame, self.recieverFrame, self.amplifierFrame, self.amplfierChannelFrame]
 
 
 
@@ -381,7 +381,7 @@ class Gui(ctk.CTk):
             return
 
         # Disable the other buttons when a popup is open
-        self.disableButtons()
+        self.disableWidgets()
 
         # Open a new popup
         if clickedButton == self.sourceButton:
@@ -397,24 +397,54 @@ class Gui(ctk.CTk):
         else: raise Exception("Unexpected error")
 
         
-    def disableButtons(self):
+    def disableWidgets(self):
         """
-        Disable buttons when window to set parameters is opened
+        Disable widgets when window to set parameters is opened. (Lock the main window)
         """
+        # Buttons
         for frame in self.buttonFrames:
             for button in frame.winfo_children():
-                if isinstance(button, tk.Button):
+                if isinstance(button, ctk.CTkButton):
                     button.configure(state="disabled")
 
+        self.disableGeneralParameters()
 
-    def enableButtons(self):
+        self.amplifierCheckbutton.configure(state="disabled")
+
+
+    def enableWidgets(self):
         """
-        Enable buttons when parameters have been set
+        Enable widgets when parameters have been set. (Unlock the main window)
         """
+        # Buttons
         for frame in self.buttonFrames:
             for button in frame.winfo_children():
-                if isinstance(button, tk.Button):
+                if isinstance(button, ctk.CTkButton):
                     button.configure(state="normal")
+
+        self.enableGeneralParameters()
+
+        self.amplifierCheckbutton.configure(state="normal")
+
+
+    def disableGeneralParameters(self):
+        """
+        Disable widgets for setting general parameters.
+        """
+        self.mFormatComboBox.configure(state="disable")
+        self.mOrderCombobox.configure(state="disable")
+        self.symbolRateEntry.configure(state="disable")
+        self.symbolRateCombobox.configure(state="disable")
+
+
+    def enableGeneralParameters(self):
+        """
+        Enable widgets for setting general parameters.
+        """
+        self.mFormatComboBox.configure(state="readonly")
+        self.mOrderCombobox.configure(state="readonly")
+        self.symbolRateEntry.configure(state="normal")
+        self.symbolRateCombobox.configure(state="readonly")
 
 
     def getParameters(self, parameters: dict, buttonType: str):
@@ -482,7 +512,7 @@ class Gui(ctk.CTk):
         if self.mFormatComboBox.get() == "OOK":
             orderOptions = ["2"]
             # Disable modulation order combobox for OOK format
-            self.mOrderCombobox.configure(state="raedonly")
+            self.mOrderCombobox.configure(state="readonly")
         elif self.mFormatComboBox.get() == "PAM":
             orderOptions = ["4"]
             # Enable modulation order combobox
@@ -631,7 +661,7 @@ class Gui(ctk.CTk):
 
         plots = self.loadPlot(type)
 
-        plotWindow = PlotWindow(type, title, plots)
+        PlotWindow(type, title, plots)
 
 
     def loadPlot(self, type: str) -> tuple[plt.Figure, plt.Figure]:
@@ -719,7 +749,7 @@ class Gui(ctk.CTk):
         """
         if type == "source":
             linewidthText = self.correctLinewidthUnits()
-            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {linewidthText} Hz\nRIN: {self.sourceParameters.get('RIN')} dB/Hz"
+            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {linewidthText}\nRIN: {self.sourceParameters.get('RIN')} dB/Hz"
             self.sourceButton.configure(text=text)
         elif type =="modulator":
             text = f"{self.modulatorParameters.get('Type')}"

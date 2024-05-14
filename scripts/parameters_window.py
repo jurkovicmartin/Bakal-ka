@@ -2,6 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk
+import customtkinter as ctk
 
 from scripts.parameters_functions import validateParameters
 
@@ -39,179 +40,214 @@ class ParametersWindow:
         """
         Creates popup gui for setting parameters.
         """
-        self.popup = tk.Toplevel()
+        self.popup = ctk.CTkToplevel(self.parentGui)
         self.popup.geometry("800x400")
+        self.popup.minsize(800, 400)
+        self.popup.after(100, self.popup.lift)
+
+        self.generalFont = ("Helvetica", 16, "bold")
+        headFont = ("Helvetica", 24, "bold")
 
         if self.type == "source":
             self.popup.title("Parameters of optical source")
 
-            self.titleLabel = tk.Label(self.popup, text="Parameters of optical source")
-            self.titleLabel.grid(row=0, column=0, columnspan=2)
+            self.sourceFrame = ctk.CTkFrame(self.popup)
+            self.sourceFrame.pack(padx=10, pady=10, fill="both", expand=True)
+
+            self.titleLabel = ctk.CTkLabel(self.sourceFrame, text="Parameters of optical source", font=headFont)
+            self.titleLabel.pack(padx=20, pady=20)
+
+            sourceHelpFrame = ctk.CTkFrame(self.sourceFrame, fg_color="transparent")
+            sourceHelpFrame.pack()
 
             # Setting parameters
 
             # Power
-            self.lengthLabel = tk.Label(self.popup, text="Power [dBm]")
-            self.lengthLabel.grid(row=1, column=0)
-            self.powerEntry = tk.Entry(self.popup)
-            self.powerEntry.grid(row=1, column=1)
+            self.lengthLabel = ctk.CTkLabel(sourceHelpFrame, text="Power [dBm]", font=self.generalFont)
+            self.lengthLabel.grid(row=0, column=0, padx=10, pady=10)
+            self.powerEntry = ctk.CTkEntry(sourceHelpFrame, font=self.generalFont)
+            self.powerEntry.grid(row=0, column=1, padx=10, pady=10)
 
             # Frequency
-            self.frequencyLabel = tk.Label(self.popup, text="Central frequency [THz]")
-            self.frequencyLabel.grid(row=2, column=0)
-            self.frequencyEntry = tk.Entry(self.popup)
-            self.frequencyEntry.grid(row=2, column=1)
+            self.frequencyLabel = ctk.CTkLabel(sourceHelpFrame, text="Central frequency [THz]", font=self.generalFont)
+            self.frequencyLabel.grid(row=1, column=0, padx=10, pady=10)
+            self.frequencyEntry = ctk.CTkEntry(sourceHelpFrame, font=self.generalFont)
+            self.frequencyEntry.grid(row=1, column=1, padx=10, pady=10)
 
             # Linewidth
-            self.linewidthLabel = tk.Label(self.popup, text="Linewidth [Hz]")
-            self.linewidthLabel.grid(row=3, column=0)
-            self.linewidthEntry = tk.Entry(self.popup)
-            self.linewidthEntry.grid(row=3, column=1)
-            self.linewidthCombobox = ttk.Combobox(self.popup, values=["Hz", "kHz", "MHz"], state="readonly")
+            self.linewidthLabel = ctk.CTkLabel(sourceHelpFrame, text="Linewidth [Hz]", font=self.generalFont)
+            self.linewidthLabel.grid(row=2, column=0, padx=10, pady=10)
+            self.linewidthEntry = ctk.CTkEntry(sourceHelpFrame, font=self.generalFont)
+            self.linewidthEntry.grid(row=2, column=1, padx=10, pady=10)
+            self.linewidthCombobox = ctk.CTkComboBox(sourceHelpFrame, values=["Hz", "kHz", "MHz"], state="readonly", font=self.generalFont)
             self.linewidthCombobox.set("Hz")
-            self.linewidthCombobox.grid(row=3, column=2)
+            self.linewidthCombobox.grid(row=2, column=2, padx=3, pady=10)
 
             # RIN
-            self.rinLabel = tk.Label(self.popup, text="RIN [dB/Hz]")
-            self.rinLabel.grid(row=4, column=0)
-            self.rinEntry = tk.Entry(self.popup)
-            self.rinEntry.grid(row=4, column=1)
+            self.rinLabel = ctk.CTkLabel(sourceHelpFrame, text="RIN [dB/Hz]", font=self.generalFont)
+            self.rinLabel.grid(row=3, column=0, padx=10, pady=10)
+            self.rinEntry = ctk.CTkEntry(sourceHelpFrame, font=self.generalFont)
+            self.rinEntry.grid(row=3, column=1, padx=10, pady=10)
 
             # Ideal parameters checkbutton
             self.sourceCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.sourceCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton.grid(row=5, column=0, columnspan=2)
+            self.idealCheckbutton = ctk.CTkCheckBox(sourceHelpFrame, text="Ideal parameters", variable=self.sourceCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
+            self.idealCheckbutton.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
     
             # Set button
-            self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=6, column=0, columnspan=2)
+            self.setButton = ctk.CTkButton(self.popup, text="Set parameters", command=self.setParameters, font=self.generalFont)
+            self.setButton.pack(padx=10, pady=20)
 
             self.setDefaultParameters()
         
         elif self.type == "modulator":
             self.popup.title("Parameters of modulator")
 
-            self.titleLabel = tk.Label(self.popup, text="Parameters of modulator")
-            self.titleLabel.grid(row=0, column=0, columnspan=2)
+            self.modulatorFrame = ctk.CTkFrame(self.popup)
+            self.modulatorFrame.pack(padx=10, pady=10, fill="both", expand=True)
+
+            self.titleLabel = ctk.CTkLabel(self.modulatorFrame, text="Parameters of modulator", font=headFont)
+            self.titleLabel.pack(padx=20, pady=20)
+
+            modulatorHelpFrame = ctk.CTkFrame(self.modulatorFrame, fg_color="transparent")
+            modulatorHelpFrame.pack()
 
             # Setting parameters
 
             # Type
-            self.modulatorLabel = tk.Label(self.popup, text="Type of modulator")
-            self.modulatorLabel.grid(row=1, column=0)
-            self.modulatorCombobox = ttk.Combobox(self.popup, values=["PM", "MZM", "IQM"], state="readonly")
+            self.modulatorLabel = ctk.CTkLabel(modulatorHelpFrame, text="Type of modulator", font=self.generalFont)
+            self.modulatorLabel.grid(row=0, column=0, padx=10, pady=10)
+            self.modulatorCombobox = ctk.CTkComboBox(modulatorHelpFrame, values=["PM", "MZM", "IQM"], state="readonly", font=self.generalFont)
             self.modulatorCombobox.set("PM")
-            self.modulatorCombobox.grid(row=1, column=1)
+            self.modulatorCombobox.grid(row=1, column=0, padx=10, pady=10)
 
             # Set button
-            self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=2, column=0, columnspan=2)
+            self.setButton = ctk.CTkButton(self.popup, text="Set parameters", command=self.setParameters, font=self.generalFont)
+            self.setButton.pack(padx=20, pady=20)
 
             self.setDefaultParameters()
         
         elif self.type == "channel":
             self.popup.title("Parameters of fiber channel")
 
-            self.titleLabel = tk.Label(self.popup, text="Parameters of fiber channel")
-            self.titleLabel.grid(row=0, column=0, columnspan=2)
+            self.channelFrame = ctk.CTkFrame(self.popup)
+            self.channelFrame.pack(padx=10, pady=10, fill="both", expand=True)
+
+            self.titleLabel = ctk.CTkLabel(self.channelFrame, text="Parameters of fiber channel", font=headFont)
+            self.titleLabel.pack(padx=20, pady=20)
+
+            channelHelpFrame = ctk.CTkFrame(self.channelFrame, fg_color="transparent")
+            channelHelpFrame.pack()
 
             # Setting parameters
 
             # Length
-            self.lengthLabel = tk.Label(self.popup, text="Length [km]")
-            self.lengthLabel.grid(row=1, column=0)
-            self.lengthEntry = tk.Entry(self.popup)
-            self.lengthEntry.grid(row=1, column=1)
+            self.lengthLabel = ctk.CTkLabel(channelHelpFrame, text="Length [km]", font=self.generalFont)
+            self.lengthLabel.grid(row=0, column=0, padx=10, pady=10)
+            self.lengthEntry = ctk.CTkEntry(channelHelpFrame, font=self.generalFont)
+            self.lengthEntry.grid(row=0, column=1, padx=10, pady=10)
 
             # Attenuation
-            self.attenuatinLabel = tk.Label(self.popup, text="Attenuation [dB/km]")
-            self.attenuatinLabel.grid(row=2, column=0)
-            self.attenuationEntry = tk.Entry(self.popup)
-            self.attenuationEntry.grid(row=2, column=1)
+            self.attenuatinLabel = ctk.CTkLabel(channelHelpFrame, text="Attenuation [dB/km]", font=self.generalFont)
+            self.attenuatinLabel.grid(row=1, column=0, padx=10, pady=10)
+            self.attenuationEntry = ctk.CTkEntry(channelHelpFrame, font=self.generalFont)
+            self.attenuationEntry.grid(row=1, column=1, padx=10, pady=10)
 
             # Dispersion
-            self.dispersionLabel = tk.Label(self.popup, text="Chromatic dispersion [ps/nm/km]")
-            self.dispersionLabel.grid(row=3, column=0)
-            self.dispersionEntry = tk.Entry(self.popup)
-            self.dispersionEntry.grid(row=3, column=1)
+            self.dispersionLabel = ctk.CTkLabel(channelHelpFrame, text="Chromatic dispersion [ps/nm/km]", font=self.generalFont)
+            self.dispersionLabel.grid(row=2, column=0, padx=10, pady=10)
+            self.dispersionEntry = ctk.CTkEntry(channelHelpFrame, font=self.generalFont)
+            self.dispersionEntry.grid(row=2, column=1, padx=10, pady=10)
 
             # Ideal parameters checkbutton
             self.channelCheckVar = tk.BooleanVar()
             # self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters\nNote that ideal channel will ignore amplifier!", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
+            self.idealCheckbutton = ctk.CTkCheckBox(channelHelpFrame, text="Ideal parameters", variable=self.channelCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
             self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
 
             # Set button
-            self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=5, column=0, columnspan=2)
+            self.setButton = ctk.CTkButton(self.popup, text="Set parameters", command=self.setParameters, font=self.generalFont)
+            self.setButton.pack(padx=20, pady=20)
 
             self.setDefaultParameters()
         
         elif self.type == "reciever":
             self.popup.title("Parameters of reciever")
 
-            self.titleLabel = tk.Label(self.popup, text="Parameters of reciever")
-            self.titleLabel.grid(row=0, column=0, columnspan=2)
+            self.recieverFrame = ctk.CTkFrame(self.popup)
+            self.recieverFrame.pack(padx=10, pady=10, fill="both", expand=True)
+
+            self.titleLabel = ctk.CTkLabel(self.recieverFrame, text="Parameters of reciever", font=headFont)
+            self.titleLabel.pack(padx=20, pady=20)
+
+            self.recieverHelpFrame = ctk.CTkFrame(self.recieverFrame, fg_color="transparent")
+            self.recieverHelpFrame.pack()
 
             # Setting parameters
 
             # Type
-            self.recieverLabel = tk.Label(self.popup, text="Type of reciever")
-            self.recieverLabel.grid(row=1, column=0)
-            self.recieverCombobox = ttk.Combobox(self.popup, values=["Photodiode", "Coherent"], state="readonly")
+            self.recieverLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Type of reciever", font=self.generalFont)
+            self.recieverLabel.grid(row=0, column=0, padx=10, pady=10)
+            self.recieverCombobox = ctk.CTkComboBox(self.recieverHelpFrame, values=["Photodiode", "Coherent"], state="readonly", command=self.receiverChange, font=self.generalFont)
             self.recieverCombobox.set("Photodiode")
-            self.recieverCombobox.grid(row=1, column=1)
-            self.recieverCombobox.bind("<<ComboboxSelected>>", self.receiverChange)
+            self.recieverCombobox.grid(row=0, column=1, padx=10, pady=10)
+            # self.recieverCombobox.bind("<<ComboboxSelected>>", self.receiverChange)
             # Other parameters
             self.receiverChange(event=None)
 
             # Set button
-            self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=5, column=0, columnspan=2)
+            self.setButton = ctk.CTkButton(self.popup, text="Set parameters", command=self.setParameters, font=self.generalFont)
+            self.setButton.pack(padx=20, pady=20)
 
             self.setDefaultParameters()
         
         elif self.type == "amplifier":
             self.popup.title("Parameters of amplifier")
 
-            self.titleLabel = tk.Label(self.popup, text="Parameters of amplifier")
-            self.titleLabel.grid(row=0, column=0, columnspan=2)
+            self.amplfierFrame = ctk.CTkFrame(self.popup)
+            self.amplfierFrame.pack(padx=10, pady=10, fill="both", expand=True)
+
+            self.titleLabel = ctk.CTkLabel(self.amplfierFrame, text="Parameters of amplifier", font=headFont)
+            self.titleLabel.pack(padx=20, pady=20)
+
+            amplifierHelpFrame = ctk.CTkFrame(self.amplfierFrame, fg_color="transparent")
+            amplifierHelpFrame.pack()
 
             # Setting parameters
 
             # Position
-            self.positionLabel = tk.Label(self.popup, text="Position in channel")
-            self.positionLabel.grid(row=1, column=0)
-            self.positionCombobox = ttk.Combobox(self.popup, values=["start", "middle", "end"], state="readonly")
+            self.positionLabel = ctk.CTkLabel(amplifierHelpFrame, text="Position in channel", font=self.generalFont)
+            self.positionLabel.grid(row=0, column=0, padx=10, pady=10)
+            self.positionCombobox = ctk.CTkComboBox(amplifierHelpFrame, values=["start", "middle", "end"], state="readonly", font=self.generalFont)
             self.positionCombobox.set("start")
-            self.positionCombobox.grid(row=1, column=1)
+            self.positionCombobox.grid(row=0, column=1, padx=10, pady=10)
 
             # Gain
-            self.gainLabel = tk.Label(self.popup, text="Gain [dB]")
-            self.gainLabel.grid(row=2, column=0)
-            self.gainEntry = tk.Entry(self.popup)
-            self.gainEntry.grid(row=2, column=1)
+            self.gainLabel = ctk.CTkLabel(amplifierHelpFrame, text="Gain [dB]", font=self.generalFont)
+            self.gainLabel.grid(row=1, column=0, padx=10, pady=10)
+            self.gainEntry = ctk.CTkEntry(amplifierHelpFrame, font=self.generalFont)
+            self.gainEntry.grid(row=1, column=1, padx=10, pady=10)
 
             # Noise
-            self.noiseLabel = tk.Label(self.popup, text="Noise figure [dB]")
-            self.noiseLabel.grid(row=3, column=0)
-            self.noiseEntry = tk.Entry(self.popup)
-            self.noiseEntry.grid(row=3, column=1)
+            self.noiseLabel = ctk.CTkLabel(amplifierHelpFrame, text="Noise figure [dB]", font=self.generalFont)
+            self.noiseLabel.grid(row=2, column=0, padx=10, pady=10)
+            self.noiseEntry = ctk.CTkEntry(amplifierHelpFrame, font=self.generalFont)
+            self.noiseEntry.grid(row=2, column=1, padx=10, pady=10)
 
             # Detection
-            self.detectionLabel = tk.Label(self.popup, text="Detection limit [dBm]")
-            self.detectionLabel.grid(row=4, column=0)
-            self.detectionEntry = tk.Entry(self.popup)
-            self.detectionEntry.grid(row=4, column=1)
+            self.detectionLabel = ctk.CTkLabel(amplifierHelpFrame, text="Detection limit [dBm]", font=self.generalFont)
+            self.detectionLabel.grid(row=3, column=0, padx=10, pady=10)
+            self.detectionEntry = ctk.CTkEntry(amplifierHelpFrame, font=self.generalFont)
+            self.detectionEntry.grid(row=3, column=1, padx=10, pady=10)
 
             # Ideal parameters checkbutton
             self.amplifierCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.amplifierCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton.grid(row=5, column=0, columnspan=2)
+            self.idealCheckbutton = ctk.CTkCheckBox(amplifierHelpFrame, text="Ideal parameters", variable=self.amplifierCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
+            self.idealCheckbutton.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
 
             # Set button
-            self.setButton = tk.Button(self.popup, text="Set parameters", command=self.setParameters)
-            self.setButton.grid(row=6, column=0, columnspan=2)
+            self.setButton = ctk.CTkButton(self.popup, text="Set parameters", command=self.setParameters, font=self.generalFont)
+            self.setButton.pack(padx=20, pady=20)
 
             self.setDefaultParameters()
         
@@ -220,7 +256,7 @@ class ParametersWindow:
 
     def closePopup(self):
         # Enable the parent buttons and destroy the popup window
-        self.parentGui.enableButtons()
+        self.parentGui.enableWidgets()
         self.popup.destroy()
 
 
@@ -300,50 +336,50 @@ class ParametersWindow:
             if self.sourceCheckVar.get():
                 self.linewidthEntry.delete(0, tk.END)
                 self.linewidthEntry.insert(0, "1")
-                self.linewidthEntry.config(state="disabled")
-                self.linewidthCombobox.config(state="disabled")
+                self.linewidthEntry.configure(state="disabled")
+                self.linewidthCombobox.configure(state="disabled")
 
                 self.rinEntry.delete(0, tk.END)
                 self.rinEntry.insert(0, "0")
-                self.rinEntry.config(state="disabled")
+                self.rinEntry.configure(state="disabled")
 
             else:
-                self.linewidthEntry.config(state="normal")
-                self.rinEntry.config(state="normal")
-                self.linewidthCombobox.config(state="readonly")
+                self.linewidthEntry.configure(state="normal")
+                self.rinEntry.configure(state="normal")
+                self.linewidthCombobox.configure(state="readonly")
                 
         elif self.type == "channel":
             if self.channelCheckVar.get():
                 self.attenuationEntry.delete(0, tk.END)
                 self.attenuationEntry.insert(0, "0")
-                self.attenuationEntry.config(state="disabled")
+                self.attenuationEntry.configure(state="disabled")
 
                 self.dispersionEntry.delete(0, tk.END)
                 self.dispersionEntry.insert(0, "0")
-                self.dispersionEntry.config(state="disabled")
+                self.dispersionEntry.configure(state="disabled")
 
             else:
-                self.attenuationEntry.config(state="normal")
-                self.dispersionEntry.config(state="normal")
+                self.attenuationEntry.configure(state="normal")
+                self.dispersionEntry.configure(state="normal")
 
         elif self.type == "reciever":
             if self.recieverCheckVar.get():
                 self.bandwidthEntry.delete(0, tk.END)
                 self.bandwidthEntry.insert(0, "inf")
-                self.bandwidthEntry.config(state="disabled")
-                self.bandwidthCombobox.config(state="disabled")
+                self.bandwidthEntry.configure(state="disabled")
+                self.bandwidthCombobox.configure(state="disabled")
 
                 self.resolutionEntry.delete(0, tk.END)
                 self.resolutionEntry.insert(0, "inf")
-                self.resolutionEntry.config(state="disabled")
+                self.resolutionEntry.configure(state="disabled")
 
             else:
-                self.bandwidthEntry.config(state="normal")
+                self.bandwidthEntry.configure(state="normal")
                 self.bandwidthEntry.delete(0, tk.END)
                 self.bandwidthEntry.insert(0, "0")
-                self.bandwidthCombobox.config(state="readonly")
+                self.bandwidthCombobox.configure(state="readonly")
 
-                self.resolutionEntry.config(state="normal")
+                self.resolutionEntry.configure(state="normal")
                 self.resolutionEntry.delete(0, tk.END)
                 self.resolutionEntry.insert(0, "0")
 
@@ -352,15 +388,15 @@ class ParametersWindow:
             if self.amplifierCheckVar.get():
                 self.noiseEntry.delete(0, tk.END)
                 self.noiseEntry.insert(0, "0")
-                self.noiseEntry.config(state="disabled")
+                self.noiseEntry.configure(state="disabled")
 
                 self.detectionEntry.delete(0, tk.END)
                 self.detectionEntry.insert(0, "-inf")
-                self.detectionEntry.config(state="disabled")
+                self.detectionEntry.configure(state="disabled")
             
             else:
-                self.noiseEntry.config(state="normal")
-                self.detectionEntry.config(state="normal")
+                self.noiseEntry.configure(state="normal")
+                self.detectionEntry.configure(state="normal")
                 self.detectionEntry.delete(0, tk.END)
                 self.detectionEntry.insert(0, "0")
 
@@ -379,7 +415,7 @@ class ParametersWindow:
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
                 self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
                 # Change check button state
-                self.idealCheckbutton.invoke() # Trigger command function
+                self.idealCheckbutton.toggle() # Trigger command function
             else:
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
                 self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
@@ -399,7 +435,7 @@ class ParametersWindow:
             if self.defaultParameters.get("Ideal"):
                 self.lengthEntry.insert(0, str(self.defaultParameters.get("Length")))
                 # Change check button state
-                self.idealCheckbutton.invoke() # Trigger command function
+                self.idealCheckbutton.toggle() # Trigger command function
             else:
                 self.lengthEntry.insert(0, str(self.defaultParameters.get("Length")))
                 self.attenuationEntry.insert(0, str(self.defaultParameters.get("Attenuation")))
@@ -412,7 +448,7 @@ class ParametersWindow:
             if self.defaultParameters.get("Ideal"):
                 self.recieverCombobox.set(self.defaultParameters.get("Type"))
                 # Change check button state
-                self.idealCheckbutton.invoke() # Trigger command function
+                self.idealCheckbutton.toggle() # Trigger command function
             else:
                 self.recieverCombobox.set(self.defaultParameters.get("Type"))
                 self.setDefaultBandwidth()
@@ -426,7 +462,7 @@ class ParametersWindow:
                 self.positionCombobox.set(self.defaultParameters.get("Position"))
                 self.gainEntry.insert(0, str(self.defaultParameters.get("Gain")))
                 # Change check button state
-                self.idealCheckbutton.invoke() # Trigger command function
+                self.idealCheckbutton.toggle() # Trigger command function
             
             else:
                 self.positionCombobox.set(self.defaultParameters.get("Position"))
@@ -476,50 +512,50 @@ class ParametersWindow:
 
         if reciever == "Photodiode":
             # Bandwidth
-            self.bandwidthLabel = tk.Label(self.popup, text="Bandwidth")
-            self.bandwidthLabel.grid(row=2, column=0)
-            self.bandwidthEntry = tk.Entry(self.popup)
+            self.bandwidthLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Bandwidth", font=self.generalFont)
+            self.bandwidthLabel.grid(row=1, column=0, padx=10, pady=10)
+            self.bandwidthEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
             self.bandwidthEntry.insert(0, "0")
-            self.bandwidthEntry.grid(row=2, column=1)
-            self.bandwidthCombobox = ttk.Combobox(self.popup, values=["Hz", "kHz", "MHz", "GHz"], state="readonly")
+            self.bandwidthEntry.grid(row=1, column=1, padx=10, pady=10)
+            self.bandwidthCombobox = ctk.CTkComboBox(self.recieverHelpFrame, values=["Hz", "kHz", "MHz", "GHz"], state="readonly", font=self.generalFont)
             self.bandwidthCombobox.set("Hz")
-            self.bandwidthCombobox.grid(row=2, column=2)
+            self.bandwidthCombobox.grid(row=1, column=2, padx=10, pady=10)
 
             # Resolution
-            self.resolutionLabel = tk.Label(self.popup, text="Resolution [A/W]")
-            self.resolutionLabel.grid(row=3, column=0)
-            self.resolutionEntry = tk.Entry(self.popup)
+            self.resolutionLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Resolution [A/W]", font=self.generalFont)
+            self.resolutionLabel.grid(row=2, column=0, padx=10, pady=10)
+            self.resolutionEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
             self.resolutionEntry.insert(0, "0")
-            self.resolutionEntry.grid(row=3, column=1)
+            self.resolutionEntry.grid(row=2, column=1, padx=10, pady=10)
             
 
             # Ideal parameters checkbutton
             self.recieverCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
+            self.idealCheckbutton = ctk.CTkCheckBox(self.recieverHelpFrame, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
+            self.idealCheckbutton.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
         elif reciever == "Coherent":
             # Bandwidth
-            self.bandwidthLabel = tk.Label(self.popup, text="Bandwidth")
-            self.bandwidthLabel.grid(row=2, column=0)
-            self.bandwidthEntry = tk.Entry(self.popup)
+            self.bandwidthLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Bandwidth", font=self.generalFont)
+            self.bandwidthLabel.grid(row=1, column=0, padx=10, pady=10)
+            self.bandwidthEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
             self.bandwidthEntry.insert(0, "0")
-            self.bandwidthEntry.grid(row=2, column=1)
-            self.bandwidthCombobox = ttk.Combobox(self.popup, values=["Hz", "kHz", "MHz", "GHz"], state="readonly")
+            self.bandwidthEntry.grid(row=1, column=1, padx=10, pady=10)
+            self.bandwidthCombobox = ctk.CTkComboBox(self.recieverHelpFrame, values=["Hz", "kHz", "MHz", "GHz"], state="readonly", font=self.generalFont)
             self.bandwidthCombobox.set("Hz")
-            self.bandwidthCombobox.grid(row=2, column=2)
+            self.bandwidthCombobox.grid(row=1, column=2, padx=10, pady=10)
 
             # Resolution
-            self.resolutionLabel = tk.Label(self.popup, text="Resolution [A/W]")
-            self.resolutionLabel.grid(row=3, column=0)
-            self.resolutionEntry = tk.Entry(self.popup)
+            self.resolutionLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Resolution [A/W]", font=self.generalFont)
+            self.resolutionLabel.grid(row=2, column=0, padx=10, pady=10)
+            self.resolutionEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
             self.resolutionEntry.insert(0, "0")
-            self.resolutionEntry.grid(row=3, column=1)
+            self.resolutionEntry.grid(row=2, column=1, padx=10, pady=10)
 
             # Ideal parameters checkbutton
             self.recieverCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
+            self.idealCheckbutton = ctk.CTkCheckBox(self.recieverHelpFrame, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
+            self.idealCheckbutton.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
         else: raise Exception("Unexpected error")
 
