@@ -252,7 +252,7 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None, title=""
 
     axes.set_xlabel("symbol period (Ts)")
     axes.set_ylabel("amplitude")
-    axes.set_title(f"eye diagram {plotlabel_}")
+    # axes.set_title(f"eye diagram {plotlabel_}")
     axes.grid(alpha=0.15)
 
     plt.suptitle(title)

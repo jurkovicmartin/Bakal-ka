@@ -6,14 +6,11 @@
 - numerical power values (average value) + obrazek v praci
 
 # 1
-- ideal laser (spectrum)
 - dispersion
-- limits (linewidth, detection)
-- spectrum - rozsah, priblizeni
-- spectrum - amplifier, other modulations
-- fix iqm and detection output values (sqr(carrier)) (check only popisky)
-- spectrum
-- detection (modulation signal shows U, detected signal shows I)
+- limits
+- channel aplha (only attenuation channel)
+- rin (complete)
+
 
 
 # 2

@@ -119,8 +119,6 @@ def carrierSignal(sourceParameters: dict, Fs: int, modulationSignal) -> dict:
         # Converts rin (dB/Hz to absolute value)
         rin = 10**(sourceParameters.get("RIN") / 10)
 
-        print(sourceParameters.get("Linewidth"))
-
         # Laser parameters
         paramLaser = parameters()
         paramLaser.P = sourceParameters.get("Power")   # laser power [dBm] [default: 10 dBm]
@@ -196,10 +194,10 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
     else:
         # Directly pass modulated signal without changes (Ideal channel)
         if fiberParameters.get("Ideal"):
-            return {"recieverSignal":modulatedSignal}
-        
-        recieverSignal = linearFiberChannel(modulatedSignal, paramCh)
-
+            recieverSignal = modulatedSignal
+        else:
+            recieverSignal = linearFiberChannel(modulatedSignal, paramCh)
+            
     return {"recieverSignal":recieverSignal}
 
 

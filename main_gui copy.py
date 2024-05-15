@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 import customtkinter as ctk
 from scripts.message_winodw import MessageWindow
+from scripts.tooltip import ToolTip
 
 class Gui(ctk.CTk):
     def __init__(self):
@@ -108,7 +109,7 @@ class Gui(ctk.CTk):
 
         # Symbol rate
         self.symbolRateLabel = ctk.CTkLabel(generalHelpFrame, text="Symbol rate [symbols/s]", font=generalFont)
-        self.symbolRateEntry = ctk.CTkEntry(generalHelpFrame, font=generalFont)
+        self.symbolRateEntry = ctk.CTkEntry(generalHelpFrame, justify="right", font=generalFont)
         self.symbolRateEntry.insert(0, "1")
         self.symbolRateCombobox = ctk.CTkComboBox(generalHelpFrame, values=["M (10^6)", "G (10^9)"], state="readonly", font=generalFont)
         self.symbolRateCombobox.set("M (10^6)")
@@ -220,31 +221,52 @@ class Gui(ctk.CTk):
         valuesHelpFrame.pack(padx=10, pady=10)
 
         # Values frame
+        txFrame = ctk.CTkFrame(valuesHelpFrame, fg_color="transparent")
+        txFrame.grid(row=0, column=0, rowspan=2, padx=20, pady=5)
+        self.powerTxWLabel = ctk.CTkLabel(txFrame, text="Average Tx power: -", font=generalFont)
+        self.powerTxdBmLabel = ctk.CTkLabel(txFrame, text="Average Tx power: -", font=generalFont)
+        self.powerTxWLabel.grid(row=0, column=1, pady=10)
+        self.powerTxdBmLabel.grid(row=1, column=1, pady=10)
+        txWTooltip = ctk.CTkLabel(txFrame, text="(?)", font=generalFont)
+        txWTooltip.grid(row=0, column=0, padx=(10,3), pady=10)
+        ToolTip(txWTooltip, "Optical signal power at output of modulator")
+        txdBmTooltip = ctk.CTkLabel(txFrame, text="(?)", font=generalFont)
+        txdBmTooltip.grid(row=1, column=0, padx=(10,3), pady=10)
+        ToolTip(txdBmTooltip, "Optical signal power at output of modulator")
 
-        self.powerTxWLabel = ctk.CTkLabel(valuesHelpFrame, text="Average Tx power: -", font=generalFont)
-        self.powerTxdBmLabel = ctk.CTkLabel(valuesHelpFrame, text="Average Tx power: -", font=generalFont)
-        self.powerRxWLabel = ctk.CTkLabel(valuesHelpFrame, text="Average Rx power: -", font=generalFont)
-        self.powerRxdBmLabel = ctk.CTkLabel(valuesHelpFrame, text="Average Rx power: -", font=generalFont)
-        self.powerTxWLabel.grid(row=0, column=0, padx=20, pady=5)
-        self.powerTxdBmLabel.grid(row=1, column=0, padx=20, pady=5)
-        self.powerRxWLabel.grid(row=2, column=0, padx=20, pady=5)
-        self.powerRxdBmLabel.grid(row=3, column=0, padx=20, pady=5)
+        rxFrame = ctk.CTkFrame(valuesHelpFrame, fg_color="transparent")
+        rxFrame.grid(row=2, column=0, rowspan=2, padx=20, pady=5)
+        self.powerRxWLabel = ctk.CTkLabel(rxFrame, text="Average Rx power: -", font=generalFont)
+        self.powerRxdBmLabel = ctk.CTkLabel(rxFrame, text="Average Rx power: -", font=generalFont)
+        self.powerRxWLabel.grid(row=0, column=1, pady=10)
+        self.powerRxdBmLabel.grid(row=1, column=1, pady=10)
+        rxWTooltip = ctk.CTkLabel(rxFrame, text="(?)", font=generalFont)
+        rxWTooltip.grid(row=0, column=0, padx=(10,3), pady=10)
+        ToolTip(rxWTooltip, "Optical signal power at input of detector")
+        rxdBmTooltip = ctk.CTkLabel(rxFrame, text="(?)", font=generalFont)
+        rxdBmTooltip.grid(row=1, column=0, padx=(10,3), pady=10)
+        ToolTip(rxdBmTooltip, "Optical signal power at input of detector")
 
         self.transSpeedLabel = ctk.CTkLabel(valuesHelpFrame, text="Transmission speed: -", font=generalFont)
-        self.snrLabel = ctk.CTkLabel(valuesHelpFrame, text="SNR: -", font=generalFont)
-        self.berLabel = ctk.CTkLabel(valuesHelpFrame, text="BER: -", font=generalFont)
-        self.serLabel = ctk.CTkLabel(valuesHelpFrame, text="SER: -", font=generalFont)
-        self.transSpeedLabel.grid(row=0, column=1, padx=20, pady=5)
-        self.snrLabel.grid(row=1, column=1, padx=20, pady=5)
-        self.berLabel.grid(row=2, column=1, padx=20, pady=5)
-        self.serLabel.grid(row=3, column=1, padx=20, pady=5)
+        self.snrLabel = ctk.CTkLabel(valuesHelpFrame, text="Signal to noise ratio: -", font=generalFont)
+        self.berLabel = ctk.CTkLabel(valuesHelpFrame, text="Bit error rate: -", font=generalFont)
+        self.serLabel = ctk.CTkLabel(valuesHelpFrame, text="Symbol error rate: -", font=generalFont)
+        self.transSpeedLabel.grid(row=0, column=1, padx=20, pady=10)
+        self.snrLabel.grid(row=1, column=1, padx=20, pady=10)
+        self.berLabel.grid(row=2, column=1, padx=20, pady=10)
+        self.serLabel.grid(row=3, column=1, padx=20, pady=10)
 
         # Plots Frame
         self.plotsFrame = ctk.CTkFrame(self.outputsFrame)
         self.plotsFrame.pack(padx=10, pady=10, fill="both", expand=True)
 
-        self.plotsLabel = ctk.CTkLabel(self.plotsFrame, text="Graphical outputs", font=headFont)
-        self.plotsLabel.pack(padx=10, pady=10)
+        headFrame = ctk.CTkFrame(self.plotsFrame, fg_color="transparent")
+        headFrame.pack(padx=10, pady=10)
+        self.plotsLabel = ctk.CTkLabel(headFrame, text="Graphical outputs", font=headFont)
+        self.plotsLabel.grid(row=0, column=0, padx=(10,5))
+        headTooltip = ctk.CTkLabel(headFrame, text="(?)", font=generalFont)
+        headTooltip.grid(row=0, column=1)
+        ToolTip(headTooltip, "More specific informations about graphs is shown after mouse hover over the button")
 
         plotsHelpFrame = ctk.CTkFrame(self.plotsFrame, fg_color="transparent")
         plotsHelpFrame.pack(padx=10, pady=10)
@@ -252,18 +274,23 @@ class Gui(ctk.CTk):
         # Electrical
         self.electricalButton = ctk.CTkButton(plotsHelpFrame, text="Show information signals", command=lambda: self.showPlots(self.electricalButton), font=generalFont)
         self.electricalButton.pack(fill="x", padx=10, pady=10)
+        ToolTip(self.electricalButton, "Shows voltage of modulation signal and current of detector in time domain")
         # Optical
         self.opticalButton = ctk.CTkButton(plotsHelpFrame, text="Show optical signals", command=lambda: self.showPlots(self.opticalButton), font=generalFont)
         self.opticalButton.pack(fill="x", padx=10, pady=10)
+        ToolTip(self.opticalButton, "Shows carrier signal, signal at output of modulator and signal at input of detector in time domain")
         # Spectrum
         self.spectrumButton = ctk.CTkButton(plotsHelpFrame, text="Show spectum of signals", command=lambda: self.showPlots(self.spectrumButton), font=generalFont)
         self.spectrumButton.pack(fill="x", padx=10, pady=10)
+        ToolTip(self.spectrumButton, "Shows optical spectrum of carrier signal, signal at output of modulator and signal at input of detector in frequency / wavelength domain")
         # Constellation diagrams
         self.constellationButton = ctk.CTkButton(plotsHelpFrame, text="Show constellation diagrams", command=lambda: self.showPlots(self.constellationButton), font=generalFont)
         self.constellationButton.pack(fill="x", padx=10, pady=10)
+        ToolTip(self.constellationButton, "Shows constellation diagrams of Tx and Rx signal")
         # Eye diagrams
         self.eyeButton = ctk.CTkButton(plotsHelpFrame, text="Show eye diagrams", command=lambda: self.showPlots(self.eyeButton), font=generalFont)
         self.eyeButton.pack(fill="x", padx=10, pady=10)
+        ToolTip(self.eyeButton, "Shows eye diagrams of Tx and Rx signal")
 
         # Quit
         self.outputsQuitButton = ctk.CTkButton(self.outputsFrame, text="Quit", command=self.terminateApp, font=generalFont)
@@ -612,9 +639,9 @@ class Gui(ctk.CTk):
         self.powerRxdBmLabel.configure(text=f"Average Rx power: {outputValues.get('powerRxdBm'):.3} dBm")
         
         self.showTransSpeed(outputValues.get("Speed"))
-        self.snrLabel.configure(text=f"SNR: {outputValues.get('SNR'):.3} dB")
-        self.berLabel.configure(text=f"BER: {outputValues.get('BER'):.3}")
-        self.serLabel.configure(text=f"SER: {outputValues.get('SER'):.3}")
+        self.snrLabel.configure(text=f"Signal to noise ratio: {outputValues.get('SNR'):.3} dB")
+        self.berLabel.configure(text=f"Bit error rate: {outputValues.get('BER'):.3}")
+        self.serLabel.configure(text=f"Symbol error rate: {outputValues.get('SER'):.3}")
 
 
     def showTransSpeed(self, transmissionSpeed: float):
@@ -685,14 +712,14 @@ class Gui(ctk.CTk):
             keySc = "opticalSc"
             titleTx = "Modulated signal"
             titleRx = "Reciever signal"
-            titleSc = "Source signal"  
+            titleSc = "Carrier signal"  
         elif type == "spectrum":
             keyTx = "spectrumTx"
             keyRx = "spectrumRx"
             keySc = "spectrumSc"
             titleTx = "Tx spectrum signal"
             titleRx = "Rx spectrum signal"
-            titleSc = "Source spectrum" 
+            titleSc = "Carrier spectrum" 
         elif type == "constellation":
             keyTx = "constellationTx"
             keyRx = "constellationRx"
@@ -735,7 +762,7 @@ class Gui(ctk.CTk):
         Closes all opened Toplevel windows.
         """
         for window in self.winfo_children():
-            if isinstance(window, tk.Toplevel):
+            if isinstance(window, ctk.CTkToplevel):
                 window.destroy()
 
 

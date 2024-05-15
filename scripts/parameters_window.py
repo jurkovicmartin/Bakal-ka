@@ -5,6 +5,7 @@ from tkinter import ttk
 import customtkinter as ctk
 
 from scripts.parameters_functions import validateParameters
+from scripts.tooltip import ToolTip
 
 class ParametersWindow:
     def __init__(self, parentGui, parentButton, buttonType: str, callback, defaultParameters: dict, generalParameters: dict):
@@ -41,8 +42,8 @@ class ParametersWindow:
         Creates popup gui for setting parameters.
         """
         self.popup = ctk.CTkToplevel(self.parentGui)
-        self.popup.geometry("800x400")
-        self.popup.minsize(800, 400)
+        self.popup.geometry("800x450")
+        self.popup.minsize(800, 450)
         self.popup.after(100, self.popup.lift)
 
         self.generalFont = ("Helvetica", 16, "bold")
@@ -75,7 +76,7 @@ class ParametersWindow:
             self.frequencyEntry.grid(row=1, column=1, padx=10, pady=10)
 
             # Linewidth
-            self.linewidthLabel = ctk.CTkLabel(sourceHelpFrame, text="Linewidth [Hz]", font=self.generalFont)
+            self.linewidthLabel = ctk.CTkLabel(sourceHelpFrame, text="Linewidth", font=self.generalFont)
             self.linewidthLabel.grid(row=2, column=0, padx=10, pady=10)
             self.linewidthEntry = ctk.CTkEntry(sourceHelpFrame, font=self.generalFont)
             self.linewidthEntry.grid(row=2, column=1, padx=10, pady=10)
@@ -84,15 +85,25 @@ class ParametersWindow:
             self.linewidthCombobox.grid(row=2, column=2, padx=3, pady=10)
 
             # RIN
-            self.rinLabel = ctk.CTkLabel(sourceHelpFrame, text="RIN [dB/Hz]", font=self.generalFont)
-            self.rinLabel.grid(row=3, column=0, padx=10, pady=10)
+            rinFrame = ctk.CTkFrame(sourceHelpFrame, fg_color="transparent")
+            rinFrame.grid(row=3, column=0, padx=10, pady=10)
+            self.rinLabel = ctk.CTkLabel(rinFrame, text="RIN [dB/Hz]", font=self.generalFont)
+            self.rinLabel.grid(row=0, column=0, padx=(10,3), pady=10)
+            rinTooltip = ctk.CTkLabel(rinFrame, text="(?)", font=self.generalFont)
+            rinTooltip.grid(row=0, column=1, pady=10)
+            ToolTip(rinTooltip, "Relative intensity noise")
             self.rinEntry = ctk.CTkEntry(sourceHelpFrame, font=self.generalFont)
             self.rinEntry.grid(row=3, column=1, padx=10, pady=10)
 
             # Ideal parameters checkbutton
+            idealFrame = ctk.CTkFrame(sourceHelpFrame, fg_color="transparent")
+            idealFrame.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
             self.sourceCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = ctk.CTkCheckBox(sourceHelpFrame, text="Ideal parameters", variable=self.sourceCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
-            self.idealCheckbutton.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
+            self.idealCheckbutton = ctk.CTkCheckBox(idealFrame, text="Ideal parameters", variable=self.sourceCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
+            self.idealCheckbutton.grid(row=0, column=0, padx=(10,3), pady=10)
+            idealTooltip = ctk.CTkLabel(idealFrame, text="(?)", font=self.generalFont)
+            idealTooltip.grid(row=0, column=1, pady=10)
+            ToolTip(idealTooltip, "Ideal optical source is:\nExtremly narrowbanded (Linewidth 1 Hz)\nWithout noise (RIN 0)")
     
             # Set button
             self.setButton = ctk.CTkButton(self.popup, text="Set parameters", command=self.setParameters, font=self.generalFont)
@@ -115,8 +126,14 @@ class ParametersWindow:
             # Setting parameters
 
             # Type
-            self.modulatorLabel = ctk.CTkLabel(modulatorHelpFrame, text="Type of modulator", font=self.generalFont)
-            self.modulatorLabel.grid(row=0, column=0, padx=10, pady=10)
+            typeFrame = ctk.CTkFrame(modulatorHelpFrame, fg_color="transparent")
+            typeFrame.grid(row=0, column=0, padx=10, pady=10)
+
+            self.modulatorLabel = ctk.CTkLabel(typeFrame, text="Type of modulator", font=self.generalFont)
+            self.modulatorLabel.grid(row=0, column=0, padx=(10,3), pady=10)
+            typeTooltip = ctk.CTkLabel(typeFrame, text="(?)", font=self.generalFont)
+            typeTooltip.grid(row=0, column=1, pady=10)
+            ToolTip(typeTooltip, "PM = Simple phase shifter\nMZM = Mach-Zehnder modulator\nIQM = IQ modulator")
             self.modulatorCombobox = ctk.CTkComboBox(modulatorHelpFrame, values=["PM", "MZM", "IQM"], state="readonly", font=self.generalFont)
             self.modulatorCombobox.set("PM")
             self.modulatorCombobox.grid(row=1, column=0, padx=10, pady=10)
@@ -160,10 +177,14 @@ class ParametersWindow:
             self.dispersionEntry.grid(row=2, column=1, padx=10, pady=10)
 
             # Ideal parameters checkbutton
+            idealFrame = ctk.CTkFrame(channelHelpFrame, fg_color="transparent")
+            idealFrame.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
             self.channelCheckVar = tk.BooleanVar()
-            # self.idealCheckbutton = tk.Checkbutton(self.popup, text="Ideal parameters\nNote that ideal channel will ignore amplifier!", variable=self.channelCheckVar, command=self.idealCheckbuttonChange)
-            self.idealCheckbutton = ctk.CTkCheckBox(channelHelpFrame, text="Ideal parameters", variable=self.channelCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
-            self.idealCheckbutton.grid(row=4, column=0, columnspan=2)
+            self.idealCheckbutton = ctk.CTkCheckBox(idealFrame, text="Ideal parameters", variable=self.channelCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
+            self.idealCheckbutton.grid(row=0, column=0, padx=(10,3), pady=10)
+            idealTooltip = ctk.CTkLabel(idealFrame, text="(?)", font=self.generalFont)
+            idealTooltip.grid(row=0, column=1, pady=10)
+            ToolTip(idealTooltip, "Ideal channel is: Wihtout attenuation (Attenuation 0)\nWithout dispersion (Dispersion 0)")
 
             # Set button
             self.setButton = ctk.CTkButton(self.popup, text="Set parameters", command=self.setParameters, font=self.generalFont)
@@ -172,12 +193,12 @@ class ParametersWindow:
             self.setDefaultParameters()
         
         elif self.type == "reciever":
-            self.popup.title("Parameters of reciever")
+            self.popup.title("Parameters of detector")
 
             self.recieverFrame = ctk.CTkFrame(self.popup)
             self.recieverFrame.pack(padx=10, pady=10, fill="both", expand=True)
 
-            self.titleLabel = ctk.CTkLabel(self.recieverFrame, text="Parameters of reciever", font=headFont)
+            self.titleLabel = ctk.CTkLabel(self.recieverFrame, text="Parameters of detector", font=headFont)
             self.titleLabel.pack(padx=20, pady=20)
 
             self.recieverHelpFrame = ctk.CTkFrame(self.recieverFrame, fg_color="transparent")
@@ -186,12 +207,11 @@ class ParametersWindow:
             # Setting parameters
 
             # Type
-            self.recieverLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Type of reciever", font=self.generalFont)
+            self.recieverLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Type of detector", font=self.generalFont)
             self.recieverLabel.grid(row=0, column=0, padx=10, pady=10)
             self.recieverCombobox = ctk.CTkComboBox(self.recieverHelpFrame, values=["Photodiode", "Coherent"], state="readonly", command=self.receiverChange, font=self.generalFont)
             self.recieverCombobox.set("Photodiode")
             self.recieverCombobox.grid(row=0, column=1, padx=10, pady=10)
-            # self.recieverCombobox.bind("<<ComboboxSelected>>", self.receiverChange)
             # Other parameters
             self.receiverChange(event=None)
 
@@ -235,15 +255,25 @@ class ParametersWindow:
             self.noiseEntry.grid(row=2, column=1, padx=10, pady=10)
 
             # Detection
-            self.detectionLabel = ctk.CTkLabel(amplifierHelpFrame, text="Detection limit [dBm]", font=self.generalFont)
-            self.detectionLabel.grid(row=3, column=0, padx=10, pady=10)
+            detectionFrame = ctk.CTkFrame(amplifierHelpFrame, fg_color="transparent")
+            detectionFrame.grid(row=3, column=0, padx=10, pady=10)
+            self.detectionLabel = ctk.CTkLabel(detectionFrame, text="Sensitivity [dBm]", font=self.generalFont)
+            self.detectionLabel.grid(row=0, column=0, padx=(10,3), pady=10)
+            detectionTooltip = ctk.CTkLabel(detectionFrame, text="(?)", font=self.generalFont)
+            detectionTooltip.grid(row=0, column=1, pady=10)
+            ToolTip(detectionTooltip, "Lowest power that amplifier can detect")
             self.detectionEntry = ctk.CTkEntry(amplifierHelpFrame, font=self.generalFont)
             self.detectionEntry.grid(row=3, column=1, padx=10, pady=10)
 
             # Ideal parameters checkbutton
+            idealFrame = ctk.CTkFrame(amplifierHelpFrame, fg_color="transparent")
+            idealFrame.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
             self.amplifierCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = ctk.CTkCheckBox(amplifierHelpFrame, text="Ideal parameters", variable=self.amplifierCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
-            self.idealCheckbutton.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
+            self.idealCheckbutton = ctk.CTkCheckBox(idealFrame, text="Ideal parameters", variable=self.amplifierCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
+            self.idealCheckbutton.grid(row=0, column=0, padx=(10,3), pady=10)
+            idealTooltip = ctk.CTkLabel(idealFrame, text="(?)", font=self.generalFont)
+            idealTooltip.grid(row=0, column=1, pady=10)
+            ToolTip(idealTooltip, "Ideal amplifier is:\nWithout noise (0)\nCan detect any signal (Sensitivity -inf)")
 
             # Set button
             self.setButton = ctk.CTkButton(self.popup, text="Set parameters", command=self.setParameters, font=self.generalFont)
@@ -530,9 +560,14 @@ class ParametersWindow:
             
 
             # Ideal parameters checkbutton
+            idealFrame = ctk.CTkFrame(self.recieverHelpFrame, fg_color="transparent")
+            idealFrame.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
             self.recieverCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = ctk.CTkCheckBox(self.recieverHelpFrame, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
-            self.idealCheckbutton.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+            self.idealCheckbutton = ctk.CTkCheckBox(idealFrame, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
+            self.idealCheckbutton.grid(row=0, column=0, padx=(10,3), pady=10)
+            idealTooltip = ctk.CTkLabel(idealFrame, text="(?)", font=self.generalFont)
+            idealTooltip.grid(row=0, column=1, pady=10)
+            ToolTip(idealTooltip, "Ideal detector is:\nExtremly broadbaned (Bandwidth inf)\nPerefect resolutin (inf)")
 
         elif reciever == "Coherent":
             # Bandwidth
@@ -553,9 +588,14 @@ class ParametersWindow:
             self.resolutionEntry.grid(row=2, column=1, padx=10, pady=10)
 
             # Ideal parameters checkbutton
+            idealFrame = ctk.CTkFrame(self.recieverHelpFrame, fg_color="transparent")
+            idealFrame.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
             self.recieverCheckVar = tk.BooleanVar()
-            self.idealCheckbutton = ctk.CTkCheckBox(self.recieverHelpFrame, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
-            self.idealCheckbutton.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+            self.idealCheckbutton = ctk.CTkCheckBox(idealFrame, text="Ideal parameters", variable=self.recieverCheckVar, command=self.idealCheckbuttonChange, font=self.generalFont)
+            self.idealCheckbutton.grid(row=0, column=0, padx=(10,3), pady=10)
+            idealTooltip = ctk.CTkLabel(idealFrame, text="(?)", font=self.generalFont)
+            idealTooltip.grid(row=0, column=1, pady=10)
+            ToolTip(idealTooltip, "Ideal detector is:\nExtremly broadbaned (Bandwidth inf)\nPerefect resolutin (inf)")
 
         else: raise Exception("Unexpected error")
 
