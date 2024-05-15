@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from optic.models.devices import mzm, pm, iqm, photodiode, coherentReceiver, hybrid_2x4_90deg
 from optic.comm.metrics import fastBERcalc
 
-from scripts.my_devices import idealLaserModel
+from scripts.my_models import idealLaserModel
 
 from optic.comm.modulation import modulateGray, GrayMapping, demodulateGray
 from optic.dsp.core import pulseShape, pnorm, signal_power

@@ -15,12 +15,12 @@ try:
 except ImportError:
     from optic.dsp.core import firFilter
 
-from scripts.my_devices import laserSource
+
 from scripts.my_plot import opticalSpectrum
 from optic.models.devices import basicLaserModel
 from optic.models.amplification import get_spectrum
 from optic.utils import dBm2W
-from scripts.my_devices import idealLaser
+from scripts.my_models import idealLaser
 from optic.plot import eyediagram
 
 import logging as logg
@@ -333,13 +333,15 @@ eyediagram(information[discard:-discard], modulated.size-2*discard, SpS, ptype="
 
 # Linear optical channel
 paramCh = parameters()
-paramCh.L = 100       # total link distance [km]
+paramCh.L = 20       # total link distance [km]
 paramCh.alpha = 0     # fiber loss parameter [dB/km]
 paramCh.D = 16       # fiber dispersion parameter [ps/nm/km]
 paramCh.Fc = 193.1 * (10**12) # central optical frequency [Hz]
-paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
+paramCh.Fs = Fs      # simulation sampling frequency [samples/second]
 
 recieved = copy_linearFiberChannel(modulated, paramCh)
+print(len(modulated))
+print(len(recieved))
 # recieved = my_channel(modulated, paramCh)
 
 

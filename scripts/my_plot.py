@@ -310,7 +310,7 @@ def opticalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, p
         yMax = magnitude.max()*2
     # modulated
     else:
-        yMin = -1e-6
+        yMin = magnitude.min()
         yMax = magnitude.max() + 0.05 * magnitude.max()
 
     # Plotting magnitude and phase in two subplots

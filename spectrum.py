@@ -1,7 +1,7 @@
 
 import numpy as np
 from optic.utils import parameters
-from scripts.my_devices import edfa
+from scripts.my_models import edfa
 from optic.utils import dBm2W
 import matplotlib.pyplot as plt
 # from optic.models.amplification import get_spectrum

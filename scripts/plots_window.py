@@ -8,16 +8,16 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 
 class PlotWindow:
+    """
+    Class to creates popup window to show graphical outputs.
+
+    Parameters
+    ----
+    type: type of output (electrical / optical / spectrum / ...)
+
+    plots: tuple with figure objects (Tx, RX)
+    """
     def __init__(self, type: str, title: str, plots: tuple):
-        """
-        Class to creates popup window to show graphical outputs.
-
-        Parameters
-        ----
-        type: type of output (electrical / optical / spectrum / ...)
-
-        plots: tuple with figure objects (Tx, RX)
-        """
         self.type = type
         self.title = title
         self.plots = plots

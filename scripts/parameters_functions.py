@@ -55,7 +55,7 @@ def validateParameters(type: str, parameters: dict, generalParameters: dict, par
     ideal = parameters.pop("Ideal")
 
     # Remove valid string values
-    if type == "modulator" or type == "reciever" or type == "amplifier":
+    if type == "source" or type == "modulator" or type == "reciever" or type == "amplifier":
         numberParameters, stringParameters = removeStringValues(parameters, type, ideal)
     else:
         numberParameters = parameters
@@ -268,7 +268,17 @@ def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, 
     tuple (dictionary with number parameters, dictionary with string parameters)
     """
 
-    if type == "modulator":
+    if type == "source":
+        # Ideal source has -inf RIN
+        if ideal:
+            stringDict = {"RIN":parameters.pop("RIN")}
+        else:
+            stringDict = {}
+
+        return parameters, stringDict
+
+    
+    elif type == "modulator":
         pass
 
     elif type == "reciever":

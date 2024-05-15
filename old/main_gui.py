@@ -13,24 +13,21 @@ from scripts.simulation import simulate, getValues, getPlot
 from scripts.parameters_functions import convertNumber
 import matplotlib.pyplot as plt
 
-import customtkinter as ctk
-from scripts.message_winodw import MessageWindow
-from scripts.tooltip import ToolTip
-
-class Gui(ctk.CTk):
+class Gui:
     def __init__(self):
-        super().__init__()
+        self.root = tk.Tk()
 
-        ctk.set_default_color_theme("dark-blue")
-        self.geometry("1000x700")
-        self.minsize(1000,700)
-        self.after(0, lambda:self.state("zoomed"))
-        self.title("Optical communication simulation app")
+        self.root.wm_state("zoomed")
+        #self.root.geometry("1000x600")
+        self.root.title("Optical modulaton simulation application")
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
 
-        generalFont = ("Helvetica", 16, "bold")
-        headFont = ("Helvetica", 24, "bold")
-
-        self.update()
+        # Design
+        charset="Helvetica"
+        myGrey = "light grey"
+        myBlue = "#adadeb"
+        self.root.option_add("*Font", (charset, 14))
 
         ### VARIABLES
         
@@ -54,132 +51,155 @@ class Gui(ctk.CTk):
         self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
 
 
+
         # Simulation results variables
         self.plots = {}
         self.simulationResults = None
 
-
+        # Notebook tabs frame
+        self.notebookFrame = ttk.Notebook(self.root)
+        self.notebookFrame.grid(row=0, column=0, sticky="nsew")
 
         # Tabs
-        self.tabview = ctk.CTkTabview(master=self, width=0.95*self.winfo_width(), height=0.95*self.winfo_height())
-        self.tabview.pack(padx=20, pady=20)
-        self.tabview._segmented_button.configure(font=generalFont)
+        self.optionsFrame = tk.Frame(self.notebookFrame, bg=myGrey)
+        self.outputsFrame = tk.Frame(self.notebookFrame)
 
-        self.tabview.add("Input settings")  # add tab at the end
-        self.tabview.add("Outputs")  # add tab at the end
+        self.optionsFrame.pack(padx=10)
+        self.outputsFrame.pack()
 
-        self.optionsFrame = ctk.CTkFrame(self.tabview.tab("Input settings"))
-        self.outputsFrame = ctk.CTkFrame(self.tabview.tab("Outputs"))
+        self.notebookFrame.add(self.optionsFrame, text="Input options")
+        self.notebookFrame.add(self.outputsFrame, text="Outputs")
 
-        self.optionsFrame.pack(fill="both", expand=True)
-        self.outputsFrame.pack(fill="both", expand=True)
-
+        
 
         ### OPTIONS TAB
+
+        # Create a custom style
+        style = ttk.Style()
+        style.theme_use("default")  # Use the default theme
+        style.configure("Custom.TCombobox", background=myGrey)  # Set the background color
+        
         # Options tab frames
-        self.generalFrame = ctk.CTkFrame(self.optionsFrame)
-        # self.generalFrame.grid_rowconfigure((0, 1, 2), weight=0)
-        # self.generalFrame.grid_columnconfigure((0, 1, 2, 3), weight=0)
-        self.generalFrame.pack(fill="x", padx=10, pady=10)
+        self.generalFrame = tk.Frame(self.optionsFrame, bg=myBlue, borderwidth=1, relief="solid")
+        self.schemeFrame = tk.Frame(self.optionsFrame, bg=myBlue, borderwidth=1, relief="solid")
+
+        # Create a canvas to draw the rounded border
+        self.generalFrame.pack(fill="both", padx=10, pady=10)
+        self.schemeFrame.pack(fill="both", padx=10, pady=10, expand=True)
+
 
         # General frame
 
         # General label
-        self.generalLabel = ctk.CTkLabel(self.generalFrame, text="General parameters", font=headFont)
-        # self.generalLabel.grid(row=0, column=0, columnspan=4, padx=10, pady=10)
-        self.generalLabel.pack(pady=10)
-
-        generalHelpFrame = ctk.CTkFrame(self.generalFrame, fg_color="transparent")
-        generalHelpFrame.pack(pady=10)
+        generalLabelFrame = tk.Frame(self.generalFrame, bg="white", borderwidth=1, relief="solid")
+        generalLabelFrame.grid(row=0, column=0, columnspan=4, padx=10, pady=10)
+        self.generalLabel = tk.Label(generalLabelFrame, text="General parameters", bg=myGrey, font=(charset, 20))
+        self.generalLabel.pack(padx=3, pady=3)
 
         # Choosing modulation format to map
-        self.mFormatLabel = ctk.CTkLabel(generalHelpFrame, text="Modulation format", font=generalFont)
-        self.mFormatComboBox = ctk.CTkComboBox(generalHelpFrame, values=["OOK", "PAM", "PSK", "QAM"], state="readonly", font=generalFont, command=self.modulationFormatChange)
+        self.mFormatLabel = tk.Label(self.generalFrame, text="Modulation format", bg=myBlue)
+        self.mFormatComboBox = ttk.Combobox(self.generalFrame, values=["OOK", "PAM", "PSK", "QAM"], state="readonly", width=10, justify="center")
         self.mFormatComboBox.set("OOK")
-        # self.mFormatComboBox.bind("<<ComboboxSelected>>", self.modulationFormatChange)
+        self.mFormatComboBox.bind("<<ComboboxSelected>>", self.modulationFormatChange)
         self.mFormatLabel.grid(row=1, column=0, padx=10, pady=10)
         self.mFormatComboBox.grid(row=2, column=0, padx=10, pady=10)
 
         # Choosing modulation order to map
-        self.mOrderLabel = ctk.CTkLabel(generalHelpFrame, text="Order of modulation", font=generalFont)
-        self.mOrderCombobox = ctk.CTkComboBox(generalHelpFrame, values=["2"], state="readonly", font=generalFont)
+        self.mOrderLabel = tk.Label(self.generalFrame, text="Order of modulation", bg=myBlue)
+        self.mOrderCombobox = ttk.Combobox(self.generalFrame, values=["2"], state="disabled", width=10, justify="center")
         self.mOrderCombobox.set("2")
         self.mOrderLabel.grid(row=1, column=1, padx=10, pady=10)
         self.mOrderCombobox.grid(row=2, column=1, padx=10, pady=10)
 
         # Symbol rate
-        self.symbolRateLabel = ctk.CTkLabel(generalHelpFrame, text="Symbol rate [symbols/s]", font=generalFont)
-        self.symbolRateEntry = ctk.CTkEntry(generalHelpFrame, justify="right", font=generalFont)
+        self.symbolRateLabel = tk.Label(self.generalFrame, text="Symbol rate [symbols/s]", bg=myBlue)
+        self.symbolRateEntry = tk.Entry(self.generalFrame, bg=myGrey, width=10)
         self.symbolRateEntry.insert(0, "1")
-        self.symbolRateCombobox = ctk.CTkComboBox(generalHelpFrame, values=["M (10^6)", "G (10^9)"], state="readonly", font=generalFont)
+        self.symbolRateCombobox = ttk.Combobox(self.generalFrame, values=["M (10^6)", "G (10^9)"], state="readonly", width=10, justify="center")
         self.symbolRateCombobox.set("M (10^6)")
         self.symbolRateLabel.grid(row=1, column=2, columnspan=2, padx=10, pady=10)
-        self.symbolRateEntry.grid(row=2, column=2, padx=5, pady=10)
-        self.symbolRateCombobox.grid(row=2, column=3, padx=10, pady=10)
+        self.symbolRateEntry.grid(row=2, column=2, padx=3, pady=10)
+        self.symbolRateCombobox.grid(row=2, column=3, pady=10)
 
         
 
         # Scheme frame
-        self.schemeFrame = ctk.CTkFrame(self.optionsFrame)
-        self.schemeFrame.grid_rowconfigure(2, weight=1)
-        self.schemeFrame.grid_columnconfigure((0, 1, 2, 3), weight=1)
-        self.schemeFrame.grid_columnconfigure(4, weight=0)
-        self.schemeFrame.pack(fill="both", expand=True, padx=10, pady=10)
+        # Configure grid ro expand
+        self.schemeFrame.grid_columnconfigure(0, weight=1)  
+        self.schemeFrame.grid_columnconfigure(1, weight=1)  
+        self.schemeFrame.grid_columnconfigure(2, weight=1)  
+        self.schemeFrame.grid_columnconfigure(3, weight=1)  
+        self.schemeFrame.grid_columnconfigure(4, weight=1)  
+        self.schemeFrame.grid_columnconfigure(5, weight=1)
 
-        self.schemeLabel = ctk.CTkLabel(self.schemeFrame, text="Optical communication chain parameters", font=headFont)
-        self.schemeLabel.grid(row=0, column=0, columnspan=6, padx=10, pady=10)
+        schemeLabelFrame = tk.Frame(self.schemeFrame, bg="white", borderwidth=1, relief="solid")
+        schemeLabelFrame.grid(row=0, column=0, columnspan=6, padx=10, pady=10)
+        self.schemeLabel = tk.Label(schemeLabelFrame, text="Optical communication chain parameters", bg=myGrey, font=(charset, 20))
+        self.schemeLabel.pack(padx=3, pady=3)
 
         # Source
-        self.sourceFrame = ctk.CTkFrame(self.schemeFrame)
-        self.sourceFrame.grid(row=2, column=0, padx=5, pady=20, sticky="nsew")
-        self.sourceLabel = ctk.CTkLabel(self.sourceFrame, text="Optical source", font=generalFont)
+        self.sourceFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+        self.sourceFrame.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
+
+        self.sourceLabel = tk.Label(self.sourceFrame, text="Optical source", bg=myGrey)
         self.sourceLabel.pack(padx=5, pady=5)
-        self.sourceButton = ctk.CTkButton(self.sourceFrame, text="", command=lambda: self.showParametersPopup(self.sourceButton), font=generalFont)
-        self.sourceButton.pack(padx=20, pady=20, fill="both", expand=True)
+
+        self.sourceButton = tk.Button(self.sourceFrame, text="", command=lambda: self.showParametersPopup(self.sourceButton), bg=myGrey)
+        self.sourceButton.pack(padx=5, pady=5, fill="both", expand=True)
 
         # Modulator
-        self.modulatorFrame = ctk.CTkFrame(self.schemeFrame)
-        self.modulatorFrame.grid(row=2, column=1, padx=5, pady=20, sticky="nsew")
-        self.modulatorLabel = ctk.CTkLabel(self.modulatorFrame, text="Modulator", font=generalFont)
+        self.modulatorFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+        self.modulatorFrame.grid(row=2, column=1, padx=5, pady=5, sticky="nsew")
+
+        self.modulatorLabel = tk.Label(self.modulatorFrame, text="Modulator", bg=myGrey)
         self.modulatorLabel.pack(padx=5, pady=5)
-        self.modulatorButton = ctk.CTkButton(self.modulatorFrame, text="", command=lambda: self.showParametersPopup(self.modulatorButton), font=generalFont)
-        self.modulatorButton.pack(padx=20, pady=20, fill="both", expand=True)
+
+        self.modulatorButton = tk.Button(self.modulatorFrame, text="", command=lambda: self.showParametersPopup(self.modulatorButton), bg=myGrey)
+        self.modulatorButton.pack(padx=5, pady=5, fill="both", expand=True)
 
         # Channel
-        self.channelFrame = ctk.CTkFrame(self.schemeFrame)
-        self.channelFrame.grid(row=2, column=2, padx=5, pady=20, sticky="nsew")
-        self.channelLabel = ctk.CTkLabel(self.channelFrame, text="Communication channel", font=generalFont)
+        self.channelFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+        self.channelFrame.grid(row=2, column=2, padx=5, pady=5, sticky="nsew")
+
+        self.channelLabel = tk.Label(self.channelFrame, text="Communication channel", bg=myGrey)
         self.channelLabel.pack(padx=5, pady=5)
-        self.channelButton = ctk.CTkButton(self.channelFrame, text="", command=lambda: self.showParametersPopup(self.channelButton), font=generalFont)
-        self.channelButton.pack(padx=20, pady=20, fill="both", expand=True)
+
+        self.channelButton = tk.Button(self.channelFrame, text="", command=lambda: self.showParametersPopup(self.channelButton), bg=myGrey)
+        self.channelButton.pack(padx=5, pady=5, fill="both", expand=True)
 
         # Reciever
-        self.recieverFrame = ctk.CTkFrame(self.schemeFrame)
-        self.recieverFrame.grid(row=2, column=3, padx=5, pady=20, sticky="nsew")
-        self.recieverLabel = ctk.CTkLabel(self.recieverFrame, text="Detector", font=generalFont)
+        self.recieverFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+        self.recieverFrame.grid(row=2, column=3, padx=5, pady=5, sticky="nsew")
+
+        self.recieverLabel = tk.Label(self.recieverFrame, text="Detector", bg=myGrey)
         self.recieverLabel.pack(padx=5, pady=5)
-        self.recieverButton = ctk.CTkButton(self.recieverFrame, text="", command=lambda: self.showParametersPopup(self.recieverButton), font=generalFont)
-        self.recieverButton.pack(padx=20, pady=20, fill="both", expand=True)
+
+        self.recieverButton = tk.Button(self.recieverFrame, text="", command=lambda: self.showParametersPopup(self.recieverButton), bg=myGrey)
+        self.recieverButton.pack(padx=5, pady=5, fill="both", expand=True)
 
         # Amplifier button initially hidden
-        self.amplifierFrame = ctk.CTkFrame(self.schemeFrame)
-        self.amplifierLabel = ctk.CTkLabel(self.amplifierFrame, text="Optical amplifier", font=generalFont)
+        self.amplifierFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+
+        self.amplifierLabel = tk.Label(self.amplifierFrame, text="Optical amplifier", bg=myGrey)
         self.amplifierLabel.pack(padx=5, pady=5)
-        self.amplifierButton = ctk.CTkButton(self.amplifierFrame, text="", command=lambda: self.showParametersPopup(self.amplifierButton), font=generalFont)
-        self.amplifierButton.pack(padx=20, pady=20, fill="both", expand=True)
+
+        self.amplifierButton = tk.Button(self.amplifierFrame, text="", command=lambda: self.showParametersPopup(self.amplifierButton), bg=myGrey)
+        self.amplifierButton.pack(padx=5, pady=5, fill="both", expand=True)
 
         # Channel with amplifier
-        self.amplfierChannelFrame = ctk.CTkFrame(self.schemeFrame)
-        self.amplfierChannelFrame.grid_rowconfigure(1, weight=1)
-        self.amplfierChannelFrame.grid_columnconfigure((0, 1), weight=1)
-        self.channelLabel = ctk.CTkLabel(self.amplfierChannelFrame, text="Communication channel", font=generalFont)
+        self.amplfierChannelFrame = tk.Frame(self.schemeFrame, bd=1, relief="solid", bg=myGrey)
+        self.amplfierChannelFrame.grid_columnconfigure(0, weight=1)  
+        self.amplfierChannelFrame.grid_columnconfigure(1, weight=1) 
+
+        self.channelLabel = tk.Label(self.amplfierChannelFrame, text="Communication channel", bg=myGrey)
         self.channelLabel.grid(row=0, column=0, padx=10, pady=10) 
-        self.comboChannelButton = ctk.CTkButton(self.amplfierChannelFrame, text="", command=lambda: self.showParametersPopup(self.channelButton), font=generalFont)
-        self.comboChannelButton.grid(row=1, column=0, padx=20, pady=20, sticky="nsew")
-        self.amplifierLabel = ctk.CTkLabel(self.amplfierChannelFrame, text="Optical amplifier", font=generalFont)
+        self.comboChannelButton = tk.Button(self.amplfierChannelFrame, text="", command=lambda: self.showParametersPopup(self.channelButton), bg=myGrey)
+        self.comboChannelButton.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+
+        self.amplifierLabel = tk.Label(self.amplfierChannelFrame, text="Optical amplifier", bg=myGrey)
         self.amplifierLabel.grid(row=0, column=1, padx=10, pady=10)
-        self.comboAmplifierButton = ctk.CTkButton(self.amplfierChannelFrame, text="", command=lambda: self.showParametersPopup(self.amplifierButton), font=generalFont)
-        self.comboAmplifierButton.grid(row=1, column=1, padx=20, pady=20, sticky="nsew")
+        self.comboAmplifierButton = tk.Button(self.amplfierChannelFrame, text="", command=lambda: self.showParametersPopup(self.amplifierButton), bg=myGrey)
+        self.comboAmplifierButton.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
         
 
         # Show default parameters
@@ -188,8 +208,8 @@ class Gui(ctk.CTk):
 
         # Checkbutton for including / excluding channel pre-amplifier
         self.amplifierCheckVar = tk.BooleanVar()
-        self.amplifierCheckbutton = ctk.CTkCheckBox(self.schemeFrame, text="Add amplifier", variable=self.amplifierCheckVar, command=self.amplifierCheckbuttonChange, font=generalFont)
-        self.amplifierCheckbutton.grid(row=1, column=0, padx=15, pady=5, sticky="nsew")
+        self.amplifierCheckbutton = tk.Checkbutton(self.schemeFrame, text="Add amplifier", variable=self.amplifierCheckVar, command=self.amplifierCheckbuttonChange, bg=myBlue, activebackground=myBlue)
+        self.amplifierCheckbutton.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
 
         # Attention label for adding pre-amplifier
         # self.attentionLabel = tk.Label(self.generalFrame, text="")
@@ -199,105 +219,67 @@ class Gui(ctk.CTk):
         # Other
 
         # Start simulation
-        self.simulateButton = ctk.CTkButton(self.optionsFrame, text="Simulate", command=self.startSimulation, font=generalFont)
+        self.simulateButton = tk.Button(self.optionsFrame, text="Simulate", command=self.startSimulation)
         self.simulateButton.pack(padx=10, pady=10)
 
         # Quit
-        self.optionsQuitButton = ctk.CTkButton(self.optionsFrame, text="Quit", command=self.terminateApp, font=generalFont)
-        self.optionsQuitButton.pack(padx=10, pady=10)
+        self.quitButton = tk.Button(self.optionsFrame, text="Quit", command=self.terminateApp)
+        self.quitButton.pack(padx=10, pady=10)
 
 
         ### OUTPUTS TAB
 
         # Frames
 
-        self.valuesFrame = ctk.CTkFrame(self.outputsFrame)
-        self.valuesFrame.pack(padx=10, pady=10, fill="both", expand=True)
+        self.valuesFrame = tk.Frame(self.outputsFrame)
+        self.plotsFrame = tk.Frame(self.outputsFrame)
 
-        self.valuesLabel = ctk.CTkLabel(self.valuesFrame, text="Numeric outputs",  font=headFont)
-        self.valuesLabel.pack(padx=10, pady=10)
-
-        valuesHelpFrame = ctk.CTkFrame(self.valuesFrame, fg_color="transparent")
-        valuesHelpFrame.pack(padx=10, pady=10)
+        self.valuesFrame.pack()
+        self.plotsFrame.pack()
 
         # Values frame
-        txFrame = ctk.CTkFrame(valuesHelpFrame, fg_color="transparent")
-        txFrame.grid(row=0, column=0, rowspan=2, padx=20, pady=5)
-        self.powerTxWLabel = ctk.CTkLabel(txFrame, text="Average Tx power: -", font=generalFont)
-        self.powerTxdBmLabel = ctk.CTkLabel(txFrame, text="Average Tx power: -", font=generalFont)
-        self.powerTxWLabel.grid(row=0, column=1, pady=10)
-        self.powerTxdBmLabel.grid(row=1, column=1, pady=10)
-        txWTooltip = ctk.CTkLabel(txFrame, text="(?)", font=generalFont)
-        txWTooltip.grid(row=0, column=0, padx=(10,3), pady=10)
-        ToolTip(txWTooltip, "Optical signal power at output of modulator")
-        txdBmTooltip = ctk.CTkLabel(txFrame, text="(?)", font=generalFont)
-        txdBmTooltip.grid(row=1, column=0, padx=(10,3), pady=10)
-        ToolTip(txdBmTooltip, "Optical signal power at output of modulator")
 
-        rxFrame = ctk.CTkFrame(valuesHelpFrame, fg_color="transparent")
-        rxFrame.grid(row=2, column=0, rowspan=2, padx=20, pady=5)
-        self.powerRxWLabel = ctk.CTkLabel(rxFrame, text="Average Rx power: -", font=generalFont)
-        self.powerRxdBmLabel = ctk.CTkLabel(rxFrame, text="Average Rx power: -", font=generalFont)
-        self.powerRxWLabel.grid(row=0, column=1, pady=10)
-        self.powerRxdBmLabel.grid(row=1, column=1, pady=10)
-        rxWTooltip = ctk.CTkLabel(rxFrame, text="(?)", font=generalFont)
-        rxWTooltip.grid(row=0, column=0, padx=(10,3), pady=10)
-        ToolTip(rxWTooltip, "Optical signal power at input of detector")
-        rxdBmTooltip = ctk.CTkLabel(rxFrame, text="(?)", font=generalFont)
-        rxdBmTooltip.grid(row=1, column=0, padx=(10,3), pady=10)
-        ToolTip(rxdBmTooltip, "Optical signal power at input of detector")
+        self.powerTxWLabel = tk.Label(self.valuesFrame, text="Average Tx power:")
+        self.powerTxdBmLabel = tk.Label(self.valuesFrame, text="Average Tx power:")
+        self.powerRxWLabel = tk.Label(self.valuesFrame, text="Average Rx power:")
+        self.powerRxdBmLabel = tk.Label(self.valuesFrame, text="Average Rx power:")
+        self.powerTxWLabel.grid(row=0, column=0)
+        self.powerTxdBmLabel.grid(row=0, column=1)
+        self.powerRxWLabel.grid(row=1, column=0)
+        self.powerRxdBmLabel.grid(row=1, column=1)
 
-        self.transSpeedLabel = ctk.CTkLabel(valuesHelpFrame, text="Transmission speed: -", font=generalFont)
-        self.snrLabel = ctk.CTkLabel(valuesHelpFrame, text="Signal to noise ratio: -", font=generalFont)
-        self.berLabel = ctk.CTkLabel(valuesHelpFrame, text="Bit error rate: -", font=generalFont)
-        self.serLabel = ctk.CTkLabel(valuesHelpFrame, text="Symbol error rate: -", font=generalFont)
-        self.transSpeedLabel.grid(row=0, column=1, padx=20, pady=10)
-        self.snrLabel.grid(row=1, column=1, padx=20, pady=10)
-        self.berLabel.grid(row=2, column=1, padx=20, pady=10)
-        self.serLabel.grid(row=3, column=1, padx=20, pady=10)
+        self.transSpeedLabel = tk.Label(self.valuesFrame, text="Transmission speed:")
+        self.snrLabel = tk.Label(self.valuesFrame, text="SNR:")
+        self.berLabel = tk.Label(self.valuesFrame, text="BER:")
+        self.serLabel = tk.Label(self.valuesFrame, text="SER:")
+        self.transSpeedLabel.grid(row=2, column=0)
+        self.snrLabel.grid(row=2, column=1)
+        self.berLabel.grid(row=3, column=0)
+        self.serLabel.grid(row=3, column=1)
 
         # Plots Frame
-        self.plotsFrame = ctk.CTkFrame(self.outputsFrame)
-        self.plotsFrame.pack(padx=10, pady=10, fill="both", expand=True)
-
-        headFrame = ctk.CTkFrame(self.plotsFrame, fg_color="transparent")
-        headFrame.pack(padx=10, pady=10)
-        self.plotsLabel = ctk.CTkLabel(headFrame, text="Graphical outputs", font=headFont)
-        self.plotsLabel.grid(row=0, column=0, padx=(10,5))
-        headTooltip = ctk.CTkLabel(headFrame, text="(?)", font=generalFont)
-        headTooltip.grid(row=0, column=1)
-        ToolTip(headTooltip, "More specific informations about graphs is shown after mouse hover over the button")
-
-        plotsHelpFrame = ctk.CTkFrame(self.plotsFrame, fg_color="transparent")
-        plotsHelpFrame.pack(padx=10, pady=10)
 
         # Electrical
-        self.electricalButton = ctk.CTkButton(plotsHelpFrame, text="Show information signals", command=lambda: self.showPlots(self.electricalButton), font=generalFont)
-        self.electricalButton.pack(fill="x", padx=10, pady=10)
-        ToolTip(self.electricalButton, "Shows voltage of modulation signal and current of detector in time domain")
+        self.electricalButton = tk.Button(self.plotsFrame, text="Show information signals", command=lambda: self.showPlots(self.electricalButton))
+        self.electricalButton.grid(row=0, column=0)
         # Optical
-        self.opticalButton = ctk.CTkButton(plotsHelpFrame, text="Show optical signals", command=lambda: self.showPlots(self.opticalButton), font=generalFont)
-        self.opticalButton.pack(fill="x", padx=10, pady=10)
-        ToolTip(self.opticalButton, "Shows carrier signal, signal at output of modulator and signal at input of detector in time domain")
+        self.opticalButton = tk.Button(self.plotsFrame, text="Show optical signals", command=lambda: self.showPlots(self.opticalButton))
+        self.opticalButton.grid(row=1, column=0)
         # Spectrum
-        self.spectrumButton = ctk.CTkButton(plotsHelpFrame, text="Show spectum of signals", command=lambda: self.showPlots(self.spectrumButton), font=generalFont)
-        self.spectrumButton.pack(fill="x", padx=10, pady=10)
-        ToolTip(self.spectrumButton, "Shows optical spectrum of carrier signal, signal at output of modulator and signal at input of detector in frequency / wavelength domain")
+        self.spectrumButton = tk.Button(self.plotsFrame, text="Show spectum of signals", command=lambda: self.showPlots(self.spectrumButton))
+        self.spectrumButton.grid(row=2, column=0)
         # Constellation diagrams
-        self.constellationButton = ctk.CTkButton(plotsHelpFrame, text="Show constellation diagrams", command=lambda: self.showPlots(self.constellationButton), font=generalFont)
-        self.constellationButton.pack(fill="x", padx=10, pady=10)
-        ToolTip(self.constellationButton, "Shows constellation diagrams of Tx and Rx signal")
+        self.constellationButton = tk.Button(self.plotsFrame, text="Show constellation diagrams", command=lambda: self.showPlots(self.constellationButton))
+        self.constellationButton.grid(row=3, column=0)
         # Eye diagrams
-        self.eyeButton = ctk.CTkButton(plotsHelpFrame, text="Show eye diagrams", command=lambda: self.showPlots(self.eyeButton), font=generalFont)
-        self.eyeButton.pack(fill="x", padx=10, pady=10)
-        ToolTip(self.eyeButton, "Shows eye diagrams of Tx and Rx signal")
+        self.eyeButton = tk.Button(self.plotsFrame, text="Show eye diagrams", command=lambda: self.showPlots(self.eyeButton))
+        self.eyeButton.grid(row=4, column=0)
 
-        # Quit
-        self.outputsQuitButton = ctk.CTkButton(self.outputsFrame, text="Quit", command=self.terminateApp, font=generalFont)
-        self.outputsQuitButton.pack(padx=10, pady=10)
 
         # Frames with buttons that will be disabled when doing configuration
-        self.buttonFrames = [self.optionsFrame, self.outputsFrame, plotsHelpFrame, self.sourceFrame, self.modulatorFrame, self.channelFrame, self.recieverFrame, self.amplifierFrame, self.amplfierChannelFrame]
+        self.buttonFrames = [self.optionsFrame, self.plotsFrame, self.sourceFrame, self.modulatorFrame, self.channelFrame, self.recieverFrame, self.amplifierFrame, self.amplfierChannelFrame]
+
+        self.root.mainloop()
 
 
 
@@ -310,7 +292,7 @@ class Gui(ctk.CTk):
         # Toplevels windows (graphs)
         self.closeGraphsWindows()
         # Main window
-        self.destroy()
+        self.root.destroy()
 
     def startSimulation(self):
         """
@@ -332,7 +314,7 @@ class Gui(ctk.CTk):
 
         # Simulation
         self.simulationResults = simulate(self.generalParameters, self.sourceParameters, self.modulatorParameters,
-                                           self.channelParameters, self.recieverParameters, self.amplifierParameters, self.amplifierCheckVar.get())
+                                           self.channelParameters, self.recieverParameters, self.amplifierParameters)
         
         # Signal power is too low for amplifier detection
         if self.simulationResults.get("recieverSignal") is None:
@@ -361,37 +343,34 @@ class Gui(ctk.CTk):
             amplifierPosition = self.amplifierParameters.get("Position")
 
             if amplifierPosition == "start":
-                self.schemeFrame.grid_columnconfigure(4, weight=1)
                 self.amplfierChannelFrame.grid_forget()
-                self.amplifierFrame.grid(row=2, column=2, padx=5, pady=20, sticky="nsew")
-                self.channelFrame.grid(row=2, column=3, padx=5, pady=20, sticky="nsew")
-                self.recieverFrame.grid(row=2, column=4, padx=5, pady=20, sticky="nsew")
+                self.amplifierFrame.grid(row=2, column=2, padx=5, pady=5, sticky="nsew")
+                self.channelFrame.grid(row=2, column=3, padx=5, pady=5, sticky="nsew")
+                self.recieverFrame.grid(row=2, column=4, padx=5, pady=5, sticky="nsew")
 
             elif amplifierPosition == "middle":
-                self.schemeFrame.grid_columnconfigure(4, weight=0)
                 self.channelFrame.grid_forget()
                 self.amplifierFrame.grid_forget()
-                self.amplfierChannelFrame.grid(row=2, column=2, padx=5, pady=20, sticky="nsew")
-                self.recieverFrame.grid(row=2, column=3, padx=5, pady=20, sticky="nsew")
+                self.amplfierChannelFrame.grid(row=2, column=2, padx=5, pady=5, sticky="nsew")
+                self.recieverFrame.grid(row=2, column=3, padx=5, pady=5, sticky="nsew")
+
 
             elif amplifierPosition =="end":
-                self.schemeFrame.grid_columnconfigure(4, weight=1)
                 self.amplfierChannelFrame.grid_forget()
-                self.channelFrame.grid(row=2, column=2, padx=5, pady=20, sticky="nsew")
-                self.amplifierFrame.grid(row=2, column=3, padx=5, pady=20, sticky="nsew")
-                self.recieverFrame.grid(row=2, column=4, padx=5, pady=20, sticky="nsew")
+                self.channelFrame.grid(row=2, column=2, padx=5, pady=5, sticky="nsew")
+                self.amplifierFrame.grid(row=2, column=3, padx=5, pady=5, sticky="nsew")
+                self.recieverFrame.grid(row=2, column=4, padx=5, pady=5, sticky="nsew")
 
             else:
                 raise Exception("Unexpected error")
             
             # self.attentionCheck()
         else:
-            self.schemeFrame.grid_columnconfigure(4, weight=0)
             # Remove amplifier button
             self.amplfierChannelFrame.grid_forget()
             self.amplifierFrame.grid_forget()
-            self.channelFrame.grid(row=2, column=2, padx=5, pady=20, sticky="nsew")
-            self.recieverFrame.grid(row=2, column=3, padx=5, pady=20, sticky="nsew")
+            self.channelFrame.grid(row=2, column=2, padx=5, pady=5, sticky="nsew")
+            self.recieverFrame.grid(row=2, column=3, padx=5, pady=5, sticky="nsew")
 
             # self.attentionCheck()
 
@@ -408,7 +387,7 @@ class Gui(ctk.CTk):
             return
 
         # Disable the other buttons when a popup is open
-        self.disableWidgets()
+        self.disableButtons()
 
         # Open a new popup
         if clickedButton == self.sourceButton:
@@ -424,54 +403,24 @@ class Gui(ctk.CTk):
         else: raise Exception("Unexpected error")
 
         
-    def disableWidgets(self):
+    def disableButtons(self):
         """
-        Disable widgets when window to set parameters is opened. (Lock the main window)
+        Disable buttons when window to set parameters is opened
         """
-        # Buttons
         for frame in self.buttonFrames:
             for button in frame.winfo_children():
-                if isinstance(button, ctk.CTkButton):
-                    button.configure(state="disabled")
-
-        self.disableGeneralParameters()
-
-        self.amplifierCheckbutton.configure(state="disabled")
+                if isinstance(button, tk.Button):
+                    button.config(state="disabled")
 
 
-    def enableWidgets(self):
+    def enableButtons(self):
         """
-        Enable widgets when parameters have been set. (Unlock the main window)
+        Enable buttons when parameters have been set
         """
-        # Buttons
         for frame in self.buttonFrames:
             for button in frame.winfo_children():
-                if isinstance(button, ctk.CTkButton):
-                    button.configure(state="normal")
-
-        self.enableGeneralParameters()
-
-        self.amplifierCheckbutton.configure(state="normal")
-
-
-    def disableGeneralParameters(self):
-        """
-        Disable widgets for setting general parameters.
-        """
-        self.mFormatComboBox.configure(state="disable")
-        self.mOrderCombobox.configure(state="disable")
-        self.symbolRateEntry.configure(state="disable")
-        self.symbolRateCombobox.configure(state="disable")
-
-
-    def enableGeneralParameters(self):
-        """
-        Enable widgets for setting general parameters.
-        """
-        self.mFormatComboBox.configure(state="readonly")
-        self.mOrderCombobox.configure(state="readonly")
-        self.symbolRateEntry.configure(state="normal")
-        self.symbolRateCombobox.configure(state="readonly")
+                if isinstance(button, tk.Button):
+                    button.config(state="normal")
 
 
     def getParameters(self, parameters: dict, buttonType: str):
@@ -539,23 +488,23 @@ class Gui(ctk.CTk):
         if self.mFormatComboBox.get() == "OOK":
             orderOptions = ["2"]
             # Disable modulation order combobox for OOK format
-            self.mOrderCombobox.configure(state="readonly")
+            self.mOrderCombobox.config(state="disabled")
         elif self.mFormatComboBox.get() == "PAM":
             orderOptions = ["4"]
             # Enable modulation order combobox
-            self.mOrderCombobox.configure(state="readonly")
+            self.mOrderCombobox.config(state="readonly")
         elif self.mFormatComboBox.get() == "PSK":
             orderOptions = ["2", "4", "8", "16"]
             # Enable modulation order combobox
-            self.mOrderCombobox.configure(state="readonly")
+            self.mOrderCombobox.config(state="readonly")
         elif self.mFormatComboBox.get() == "QAM":
             orderOptions = ["4", "16", "64", "256"]
             # Enable modulation order combobox
-            self.mOrderCombobox.configure(state="readonly")
+            self.mOrderCombobox.config(state="readonly")
         else: raise Exception("Unexpected error")
 
         # Sets new options to modulation order combobox
-        self.mOrderCombobox.configure(values=orderOptions)
+        self.mOrderCombobox.config(values=orderOptions)
         self.mOrderCombobox.set(orderOptions[0])
 
 
@@ -633,15 +582,15 @@ class Gui(ctk.CTk):
         Show values from dictionary in the app.
         """
         # ' ' insted of " " because of f-string 
-        self.powerTxWLabel.configure(text=f"Average Tx power: {outputValues.get('powerTxW') / 1e-3:.3} mW")
-        self.powerTxdBmLabel.configure(text=f"Average Tx power: {outputValues.get('powerTxdBm'):.3} dBm")
-        self.powerRxWLabel.configure(text=f"Average Rx power: {outputValues.get('powerRxW') / 1e-3 :.3} mW")
-        self.powerRxdBmLabel.configure(text=f"Average Rx power: {outputValues.get('powerRxdBm'):.3} dBm")
+        self.powerTxWLabel.config(text=f"Average Tx power: {outputValues.get('powerTxW') / 1e-3:.3} mW")
+        self.powerTxdBmLabel.config(text=f"Average Tx power: {outputValues.get('powerTxdBm'):.3} dBm")
+        self.powerRxWLabel.config(text=f"Average Rx power: {outputValues.get('powerRxW') / 1e-3 :.3} mW")
+        self.powerRxdBmLabel.config(text=f"Average Rx power: {outputValues.get('powerRxdBm'):.3} dBm")
         
         self.showTransSpeed(outputValues.get("Speed"))
-        self.snrLabel.configure(text=f"Signal to noise ratio: {outputValues.get('SNR'):.3} dB")
-        self.berLabel.configure(text=f"Bit error rate: {outputValues.get('BER'):.3}")
-        self.serLabel.configure(text=f"Symbol error rate: {outputValues.get('SER'):.3}")
+        self.snrLabel.config(text=f"SNR: {outputValues.get('SNR'):.3} dB")
+        self.berLabel.config(text=f"BER: {outputValues.get('BER'):.3}")
+        self.serLabel.config(text=f"SER: {outputValues.get('SER'):.3}")
 
 
     def showTransSpeed(self, transmissionSpeed: float):
@@ -649,14 +598,14 @@ class Gui(ctk.CTk):
         Shows transmission speed in the app with reasonable units
         """
         if transmissionSpeed >= 10**9:
-            self.transSpeedLabel.configure(text=f"Transmission speed: {transmissionSpeed / 10**9} Gb/s")
+            self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed / 10**9} Gb/s")
         elif transmissionSpeed >= 10**6:
-            self.transSpeedLabel.configure(text=f"Transmission speed: {transmissionSpeed / 10**6} Mb/s")
+            self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed / 10**6} Mb/s")
         elif transmissionSpeed >= 10**3:
-            self.transSpeedLabel.configure(text=f"Transmission speed: {transmissionSpeed / 10**3} kb/s")
+            self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed / 10**3} kb/s")
         # Should not happen
         else:
-            self.transSpeedLabel.configure(text=f"Transmission speed: {transmissionSpeed} b/s")
+            self.transSpeedLabel.config(text=f"Transmission speed: {transmissionSpeed} b/s")
 
 
     def showPlots(self, clickedButton):
@@ -688,7 +637,7 @@ class Gui(ctk.CTk):
 
         plots = self.loadPlot(type)
 
-        PlotWindow(type, title, plots)
+        plotWindow = PlotWindow(type, title, plots)
 
 
     def loadPlot(self, type: str) -> tuple[plt.Figure, plt.Figure]:
@@ -712,14 +661,14 @@ class Gui(ctk.CTk):
             keySc = "opticalSc"
             titleTx = "Modulated signal"
             titleRx = "Reciever signal"
-            titleSc = "Carrier signal"  
+            titleSc = "Source signal"  
         elif type == "spectrum":
             keyTx = "spectrumTx"
             keyRx = "spectrumRx"
             keySc = "spectrumSc"
             titleTx = "Tx spectrum signal"
             titleRx = "Rx spectrum signal"
-            titleSc = "Carrier spectrum" 
+            titleSc = "Source spectrum" 
         elif type == "constellation":
             keyTx = "constellationTx"
             keyRx = "constellationRx"
@@ -761,8 +710,8 @@ class Gui(ctk.CTk):
         """
         Closes all opened Toplevel windows.
         """
-        for window in self.winfo_children():
-            if isinstance(window, ctk.CTkToplevel):
+        for window in self.root.winfo_children():
+            if isinstance(window, tk.Toplevel):
                 window.destroy()
 
 
@@ -775,41 +724,65 @@ class Gui(ctk.CTk):
         type: button type (can be all fo all buttons)
         """
         if type == "source":
-            linewidthText = self.correctLinewidthUnits()
-            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {linewidthText}\nRIN: {self.sourceParameters.get('RIN')} dB/Hz"
-            self.sourceButton.configure(text=text)
+            rinText = self.correctRinOrder()
+            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {self.sourceParameters.get('Linewidth')} Hz\nRIN: {rinText}"
+            self.sourceButton.config(text=text)
         elif type =="modulator":
             text = f"{self.modulatorParameters.get('Type')}"
-            self.modulatorButton.configure(text=text)
+            self.modulatorButton.config(text=text)
         elif type == "channel":
             text = f"Length: {self.channelParameters.get('Length')} km\nAttenuation: {self.channelParameters.get('Attenuation')} dB/km\nChromatic dispersion: {self.channelParameters.get('Dispersion')} ps/nm/km"
-            self.channelButton.configure(text=text)
-            self.comboChannelButton.configure(text=text)
+            self.channelButton.config(text=text)
+            self.comboChannelButton.config(text=text)
         elif type == "reciever":
             bandwidthText = self.correctBandwidthUnits()
             text = f"{self.recieverParameters.get('Type')}\nBandwidth: {bandwidthText}\nResolution: {self.recieverParameters.get('Resolution')} A/W"
-            self.recieverButton.configure(text=text)
+            self.recieverButton.config(text=text)
         elif type == "amplifier":
             text = f"Position in channel: {self.amplifierParameters.get('Position')}\nGain: {self.amplifierParameters.get('Gain')} dB\nNoise figure: {self.amplifierParameters.get('Noise')} dB\n Detection limit: {self.amplifierParameters.get('Detection')} dBm"
-            self.amplifierButton.configure(text=text)
-            self.comboAmplifierButton.configure(text=text)
+            self.amplifierButton.config(text=text)
+            self.comboAmplifierButton.config(text=text)
         elif type == "all":
-            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {self.sourceParameters.get('Linewidth')} Hz\nRIN: {self.sourceParameters.get('RIN')} dB/Hz"
-            self.sourceButton.configure(text=text)
+            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {self.sourceParameters.get('Linewidth')} Hz\nRIN: {self.sourceParameters.get('RIN')}"
+            self.sourceButton.config(text=text)
 
             text = f"{self.modulatorParameters.get('Type')}"
-            self.modulatorButton.configure(text=text)
+            self.modulatorButton.config(text=text)
 
             text = f"Length: {self.channelParameters.get('Length')} km\nAttenuation: {self.channelParameters.get('Attenuation')} dB/km\nChromatic dispersion: {self.channelParameters.get('Dispersion')} ps/nm/km"
-            self.channelButton.configure(text=text)
+            self.channelButton.config(text=text)
 
             text = f"{self.recieverParameters.get('Type')}\nBandwidth: {self.recieverParameters.get('Bandwidth')} Hz\nResolution: {self.recieverParameters.get('Resolution')} A/W"
-            self.recieverButton.configure(text=text)
+            self.recieverButton.config(text=text)
 
             text = f"Position in channel: {self.amplifierParameters.get('Position')}\nGain: {self.amplifierParameters.get('Gain')} dB\nNoise figure: {self.amplifierParameters.get('Noise')} dB\n Detection limit: {self.amplifierParameters.get('Detection')} dBm"
-            self.amplifierButton.configure(text=text)
+            self.amplifierButton.config(text=text)
         else:
             raise Exception("Unexpected")
+        
+
+    def correctRinOrder(self) -> str:
+        """
+        Corrects RIN text to show a number * 10^x.
+
+        Returns
+        ----
+        rin: str value
+        """
+        rin = self.sourceParameters.get("RIN")
+
+        if rin == 0:
+            return rin
+        elif rin <= 10**-15:
+            return f"{rin * 10**15} * 10^-15"
+        elif rin <= 10**-12:
+            return f"{rin * 10**12} * 10^-12"
+        elif rin <= 10**-9:
+            return f"{rin * 10**9} * 10^-9"
+        elif rin <= 10**-6:
+            return f"{rin * 10**6} * 10^-6"
+        else:
+            return f"{rin * 10**3} * 10^-3"
         
 
     def correctBandwidthUnits(self) -> str:
@@ -822,9 +795,6 @@ class Gui(ctk.CTk):
         """
         bandwidth = self.recieverParameters.get("Bandwidth")
 
-        if str(bandwidth) == "inf":
-            return f"{bandwidth} Hz"
-
         if bandwidth >= 10**9:
             return f"{bandwidth / 10**9} GHz"
         elif bandwidth >= 10**6:
@@ -833,24 +803,6 @@ class Gui(ctk.CTk):
             return f"{bandwidth / 10**3} kHz"
         else:
             return f"{bandwidth} Hz"
-        
-
-    def correctLinewidthUnits(self) -> str:
-        """
-        Corrects source text to show correct linewidth unist.
-
-        Returns
-        ----
-        linewidth: str value
-        """
-        linewidth = self.sourceParameters.get("Linewidth")
-
-        if linewidth >= 10**6:
-            return f"{linewidth / 10**6} MHz"
-        elif linewidth >= 10**3:
-            return f"{linewidth / 10**3} kHz"
-        else:
-            return f"{linewidth} Hz"
 
 
 
@@ -870,8 +822,3 @@ class Gui(ctk.CTk):
             self.attentionLabel.config(text="Attention, when using ideal channel the amplifier will be ignored!")
         else:
             self.attentionLabel.config(text="")
-
-
-
-app = Gui()
-app.mainloop()

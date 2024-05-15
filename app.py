@@ -1,7 +1,8 @@
 from scripts.main_gui import Gui
 
 def main():
-    mainWindow = Gui()
+    app = Gui()
+    app.mainloop()
 
 
 if __name__ == "__main__":

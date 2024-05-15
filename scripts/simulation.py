@@ -5,7 +5,7 @@ from commpy.utilities  import upsample
 from optic.models.devices import mzm, photodiode, basicLaserModel, iqm, coherentReceiver, pm
 from optic.models.channels import linearFiberChannel
 from optic.comm.modulation import modulateGray, GrayMapping, demodulateGray
-from optic.dsp.core import pulseShape, pnorm, signal_power, sigPow
+from optic.dsp.core import pulseShape, pnorm, signal_power
 from optic.comm.metrics import fastBERcalc
 
 try:
@@ -16,9 +16,10 @@ except ImportError:
 from optic.utils import parameters
 import matplotlib.pyplot as plt
 
-from scripts.my_devices import edfa, laserSource, idealLaser, myiqm
+from scripts.my_models import edfa, idealLaser
 from scripts.my_plot import eyediagram, constellation, opticalSpectrum, electricalInTime, opticalInTime
 from scripts.other_functions import calculateTransSpeed
+from scripts.my_models import attenuationChannel
 
 def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict, includeAmplifier: bool) -> dict:
     """
@@ -179,11 +180,12 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
     -----
     recieverSignal: signal at reciever (dictionary)
     """
+    dispersion = fiberParameters.get("Dispersion")
 
     paramCh = parameters()
     paramCh.L = fiberParameters.get("Length")         # total link distance [km]
-    paramCh.α = fiberParameters.get("Attenuation")        # fiber loss parameter [dB/km]
-    paramCh.D = fiberParameters.get("Dispersion")         # fiber dispersion parameter [ps/nm/km]
+    paramCh.alpha = fiberParameters.get("Attenuation")        # fiber loss parameter [dB/km]
+    paramCh.D = dispersion         # fiber dispersion parameter [ps/nm/km]
     paramCh.Fc = frequency # central optical frequency [Hz]
     paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
 
@@ -196,7 +198,10 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
         if fiberParameters.get("Ideal"):
             recieverSignal = modulatedSignal
         else:
-            recieverSignal = linearFiberChannel(modulatedSignal, paramCh)
+            if dispersion == 0:
+                recieverSignal = attenuationChannel(modulatedSignal, paramCh)
+            else:
+                recieverSignal = linearFiberChannel(modulatedSignal, paramCh)
             
     return {"recieverSignal":recieverSignal}
 
@@ -219,6 +224,7 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
 
     None: in case there was a error with detection limit of amplifier and signal power
     """
+    dispersion = fiberParameters.D
 
     # Amplifier parameters
     paramEDFA = parameters()
@@ -246,20 +252,34 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
         if amplifierPosition == "start":
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
 
-            recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            if dispersion == 0:
+                recieverSignal = attenuationChannel(modulatedSignal, fiberParameters)
+            else:
+                recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
         elif amplifierPosition == "middle":
             # Lenght needs to be halfed
             fiberParameters.L = fiberParameters.L / 2
             # First half
-            modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            if dispersion == 0:
+                modulatedSignal = attenuationChannel(modulatedSignal, fiberParameters)
+            else:
+                modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+
             # Amplifier
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+
             # Second half
-            recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            if dispersion == 0:
+                recieverSignal = attenuationChannel(modulatedSignal, fiberParameters)
+            else:
+                recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
         elif amplifierPosition == "end":
-            modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            if dispersion == 0:
+                modulatedSignal = attenuationChannel(modulatedSignal, fiberParameters)
+            else:
+                modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
             recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
         
@@ -274,25 +294,39 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
             
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
 
-            recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            if dispersion == 0:
+                recieverSignal = attenuationChannel(modulatedSignal, fiberParameters)
+            else:
+                recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
         elif amplifierPosition == "middle":
             # Lenght needs to be halfed
             fiberParameters.L = fiberParameters.L / 2
-
+            
+            # First half
+            if dispersion == 0:
+                modulatedSignal = attenuationChannel(modulatedSignal, fiberParameters)
+            else:
+                modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            
             # Signal power is too low
             if not(checkPower(modulatedSignal, detectionLimit)):
                 return
-            
-            # First half
-            modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+
             # Amplifier
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
+
             # Second half
-            recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            if dispersion == 0:
+                recieverSignal = attenuationChannel(modulatedSignal, fiberParameters)
+            else:
+                recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
         elif amplifierPosition == "end":
-            modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
+            if dispersion == 0:
+                modulatedSignal = attenuationChannel(modulatedSignal, fiberParameters)
+            else:
+                modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
             # Signal power is too low
             if not(checkPower(modulatedSignal, detectionLimit)):

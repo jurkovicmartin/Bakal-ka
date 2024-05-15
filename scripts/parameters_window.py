@@ -8,22 +8,20 @@ from scripts.parameters_functions import validateParameters
 from scripts.tooltip import ToolTip
 
 class ParametersWindow:
+    """
+    Class to creates popup window for setting parameters.
+
+    Parameters
+    -----
+    buttonType: type of button pressed
+
+        "source" / "modulator" / "channel" / "reciever" / "amplifier"
+
+    callback: function to return parameters values to the main gui
+
+    defaultParameters: values to input into entry fields
+    """
     def __init__(self, parentGui, parentButton, buttonType: str, callback, defaultParameters: dict, generalParameters: dict):
-        """
-        Class to creates popup window for setting parameters.
-
-        Parameters
-        -----
-        buttonType: type of button pressed
-
-            "source" / "modulator" / "channel" / "reciever" / "amplifier"
-
-        callback: function to return parameters values to the main gui
-
-        defaultParameters: values to input into entry fields
-
-            used when popup window isnt shown for the first time
-        """
         self.parentGui = parentGui
         self.parentButton = parentButton
         self.type = buttonType
@@ -370,12 +368,14 @@ class ParametersWindow:
                 self.linewidthCombobox.configure(state="disabled")
 
                 self.rinEntry.delete(0, tk.END)
-                self.rinEntry.insert(0, "0")
+                self.rinEntry.insert(0, "-inf")
                 self.rinEntry.configure(state="disabled")
 
             else:
                 self.linewidthEntry.configure(state="normal")
                 self.rinEntry.configure(state="normal")
+                self.rinEntry.delete(0, tk.END)
+                self.rinEntry.insert(0, "0")
                 self.linewidthCombobox.configure(state="readonly")
                 
         elif self.type == "channel":
@@ -513,7 +513,7 @@ class ParametersWindow:
         """
         if self.type == "source":
             # Maunaly set ideal parameters
-            if parameters.get("Linewidth") == "1" and parameters.get("RIN") == "0":
+            if parameters.get("Linewidth") == "1" and self.linewidthCombobox.get() == "Hz":
                 return {"Ideal":True}
             # Set value based on the ideal checkbox
             else:

@@ -2,6 +2,9 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 class ToolTip:
+    """
+    Shows tooltip on widget hover.
+    """
     def __init__(self, widget, text):
         self.widget = widget
         self.text = text
@@ -23,6 +26,3 @@ class ToolTip:
         if self.tooltip:
             self.tooltip.destroy()
             self.tooltip = None
-
-def create_tooltip(widget, text):
-    ToolTip(widget, text)
