@@ -47,11 +47,11 @@ class Gui(ctk.CTk):
         self.generalParameters = {"SpS":8}
 
         # Default parameters (testing)
-        self.sourceParameters = {"Power": 10, "Frequency": 191.7, "Linewidth": 1, "RIN": "-inf", "Ideal": True}
-        self.modulatorParameters = {"Type": "MZM"}
-        self.channelParameters = {"Length": 40, "Attenuation": 0, "Dispersion": 0, "Ideal": True}
-        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": "inf", "Resolution": "inf", "Ideal": True}
-        self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
+        # self.sourceParameters = {"Power": 10, "Frequency": 191.7, "Linewidth": 1, "RIN": "-inf", "Ideal": True}
+        # self.modulatorParameters = {"Type": "MZM"}
+        # self.channelParameters = {"Length": 40, "Attenuation": 0, "Dispersion": 0, "Ideal": True}
+        # self.recieverParameters = {"Type": "Photodiode", "Bandwidth": "inf", "Resolution": "inf", "Ideal": True}
+        # self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
 
 
         # Simulation results variables
@@ -790,7 +790,7 @@ class Gui(ctk.CTk):
             text = f"{self.recieverParameters.get('Type')}\nBandwidth: {bandwidthText}\nResolution: {self.recieverParameters.get('Resolution')} A/W"
             self.recieverButton.configure(text=text)
         elif type == "amplifier":
-            text = f"Position in channel: {self.amplifierParameters.get('Position')}\nGain: {self.amplifierParameters.get('Gain')} dB\nNoise figure: {self.amplifierParameters.get('Noise')} dB\n Detection limit: {self.amplifierParameters.get('Detection')} dBm"
+            text = f"Position in channel: {self.amplifierParameters.get('Position')}\nGain: {self.amplifierParameters.get('Gain')} dB\nNoise figure: {self.amplifierParameters.get('Noise')} dB\nSensitivity: {self.amplifierParameters.get('Detection')} dBm"
             self.amplifierButton.configure(text=text)
             self.comboAmplifierButton.configure(text=text)
         elif type == "all":

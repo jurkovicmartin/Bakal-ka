@@ -166,7 +166,7 @@ def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> b
     # False = parameter must be greater
     downLimits = {
         # Source
-        "Power":(True , -50), # -50 dBm
+        "Power":(True , -20), # -20 dBm
         "Frequency":(True, 170), # ~ 1760 nm
         "Linewidth":(True, 1), # 1 Hz
         "RIN": (True, -250), # -250 dB/Hz
@@ -182,7 +182,7 @@ def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> b
         # Amplifier
         "Gain":(False, 0), # > 0 dB
         "Noise":(True, 0), # 0 dB
-        "Detection":(True, -100) # -100 dBm
+        "Detection":(True, -50) # -50 dBm
     }
 
     limitComp, limitValue = downLimits.get(parameterName)
@@ -222,20 +222,20 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
         # Source
         "Power":(True , 50), # 50 dBm
         "Frequency":(True, 250), # <= ~ 1200 nm
-        "Linewidth":(True, 10**9), # 10 GHz
+        "Linewidth":(True, 10**9), # 1 GHz
         "RIN":(True, 0), # 0 dB/Hz
         # Modulator
 
         # Channel
         "Length":(True, 1000), # 1000 km
         "Attenuation":(True, 1), # 1 dB/km
-        "Dispersion":(True, 100), # ps/nm/km
+        "Dispersion":(True, 200), # 200 ps/nm/km
         # Reciever
         "Bandwidth":(True, generalParameters.get("Fs") / 2), # <= Fs/2
-        "Resolution":(True, 100), # 100 A/W 
+        "Resolution":(True, 10), # 10 A/W 
         # Amplifier
-        "Gain":(True, 50), # 50 dB
-        "Noise":(True, 100), # 50 dB
+        "Gain":(True, 100), # 100 dB
+        "Noise":(True, 100), # 100 dB
         "Detection":(True, 100) # 100 dBm
     }
 

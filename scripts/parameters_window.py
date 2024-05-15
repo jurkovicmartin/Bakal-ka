@@ -545,7 +545,6 @@ class ParametersWindow:
             self.bandwidthLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Bandwidth", font=self.generalFont)
             self.bandwidthLabel.grid(row=1, column=0, padx=10, pady=10)
             self.bandwidthEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
-            self.bandwidthEntry.insert(0, "0")
             self.bandwidthEntry.grid(row=1, column=1, padx=10, pady=10)
             self.bandwidthCombobox = ctk.CTkComboBox(self.recieverHelpFrame, values=["Hz", "kHz", "MHz", "GHz"], state="readonly", font=self.generalFont)
             self.bandwidthCombobox.set("Hz")
@@ -555,7 +554,6 @@ class ParametersWindow:
             self.resolutionLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Resolution [A/W]", font=self.generalFont)
             self.resolutionLabel.grid(row=2, column=0, padx=10, pady=10)
             self.resolutionEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
-            self.resolutionEntry.insert(0, "0")
             self.resolutionEntry.grid(row=2, column=1, padx=10, pady=10)
             
 
@@ -574,7 +572,6 @@ class ParametersWindow:
             self.bandwidthLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Bandwidth", font=self.generalFont)
             self.bandwidthLabel.grid(row=1, column=0, padx=10, pady=10)
             self.bandwidthEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
-            self.bandwidthEntry.insert(0, "0")
             self.bandwidthEntry.grid(row=1, column=1, padx=10, pady=10)
             self.bandwidthCombobox = ctk.CTkComboBox(self.recieverHelpFrame, values=["Hz", "kHz", "MHz", "GHz"], state="readonly", font=self.generalFont)
             self.bandwidthCombobox.set("Hz")
@@ -584,7 +581,6 @@ class ParametersWindow:
             self.resolutionLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Resolution [A/W]", font=self.generalFont)
             self.resolutionLabel.grid(row=2, column=0, padx=10, pady=10)
             self.resolutionEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
-            self.resolutionEntry.insert(0, "0")
             self.resolutionEntry.grid(row=2, column=1, padx=10, pady=10)
 
             # Ideal parameters checkbutton

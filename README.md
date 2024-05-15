@@ -7,10 +7,6 @@
 
 # 1
 - dispersion
-- limits
-- channel aplha (only attenuation channel)
-- rin (complete)
-
 
 
 # 2
