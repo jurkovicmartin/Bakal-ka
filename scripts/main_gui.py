@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import customtkinter as ctk
 from scripts.message_winodw import MessageWindow
 from scripts.tooltip import ToolTip
+from scripts.help import Help
 
 class Gui(ctk.CTk):
     def __init__(self):
@@ -67,13 +68,16 @@ class Gui(ctk.CTk):
 
         self.tabview.add("Input settings")  # add tab at the end
         self.tabview.add("Outputs")  # add tab at the end
+        self.tabview.add("Help")
 
         self.optionsFrame = ctk.CTkFrame(self.tabview.tab("Input settings"))
         self.outputsFrame = ctk.CTkFrame(self.tabview.tab("Outputs"))
+        self.helpFrame = ctk.CTkScrollableFrame(self.tabview.tab("Help"))
+        
 
         self.optionsFrame.pack(fill="both", expand=True)
         self.outputsFrame.pack(fill="both", expand=True)
-
+        self.helpFrame.pack(fill="both", expand=True)
 
         ### OPTIONS TAB
         # Options tab frames
@@ -295,6 +299,9 @@ class Gui(ctk.CTk):
         # Quit
         self.outputsQuitButton = ctk.CTkButton(self.outputsFrame, text="Quit", command=self.terminateApp, font=generalFont)
         self.outputsQuitButton.pack(padx=10, pady=10)
+
+        Help(self.helpFrame, self.setExampleParameters)
+
 
         # Frames with buttons that will be disabled when doing configuration
         self.buttonFrames = [self.optionsFrame, self.outputsFrame, plotsHelpFrame, self.sourceFrame, self.modulatorFrame, self.channelFrame, self.recieverFrame, self.amplifierFrame, self.amplfierChannelFrame]
@@ -794,7 +801,8 @@ class Gui(ctk.CTk):
             self.amplifierButton.configure(text=text)
             self.comboAmplifierButton.configure(text=text)
         elif type == "all":
-            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {self.sourceParameters.get('Linewidth')} Hz\nRIN: {self.sourceParameters.get('RIN')} dB/Hz"
+            linewidthText = self.correctLinewidthUnits()
+            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {linewidthText}\nRIN: {self.sourceParameters.get('RIN')} dB/Hz"
             self.sourceButton.configure(text=text)
 
             text = f"{self.modulatorParameters.get('Type')}"
@@ -803,7 +811,8 @@ class Gui(ctk.CTk):
             text = f"Length: {self.channelParameters.get('Length')} km\nAttenuation: {self.channelParameters.get('Attenuation')} dB/km\nChromatic dispersion: {self.channelParameters.get('Dispersion')} ps/nm/km"
             self.channelButton.configure(text=text)
 
-            text = f"{self.recieverParameters.get('Type')}\nBandwidth: {self.recieverParameters.get('Bandwidth')} Hz\nResolution: {self.recieverParameters.get('Resolution')} A/W"
+            bandwidthText = self.correctBandwidthUnits()
+            text = f"{self.recieverParameters.get('Type')}\nBandwidth: {bandwidthText}\nResponsivity: {self.recieverParameters.get('Resolution')} A/W"
             self.recieverButton.configure(text=text)
 
             text = f"Position in channel: {self.amplifierParameters.get('Position')}\nGain: {self.amplifierParameters.get('Gain')} dB\nNoise figure: {self.amplifierParameters.get('Noise')} dB\n Detection limit: {self.amplifierParameters.get('Detection')} dBm"
@@ -853,20 +862,23 @@ class Gui(ctk.CTk):
             return f"{linewidth} Hz"
 
 
-
-
-    
-
-
-
-
-
-
-    def attentionCheck(self):
+    def setExampleParameters(self):
         """
-        Checks for attention for combination of ideal channel and amplifier. Also updates the attention label.
+        Sets example parameters to the application. 
         """
-        if self.channelParameters.get("Ideal") and self.amplifierCheckVar.get():
-            self.attentionLabel.config(text="Attention, when using ideal channel the amplifier will be ignored!")
-        else:
-            self.attentionLabel.config(text="")
+        # 10 Gb/s OOK
+        self.mFormatComboBox.set("OOK")
+        self.modulationFormatChange(event=None)
+        self.symbolRateEntry.delete(0, tk.END)
+        self.symbolRateEntry.insert(0, "10")
+        self.symbolRateCombobox.set("G (10^9)")
+        # Remove amplifier if included
+        if self.amplifierCheckVar.get():
+            self.amplifierCheckbutton.toggle()
+
+        self.sourceParameters = {"Power": 10, "Frequency": 193.1, "Linewidth": 10**4, "RIN": -150, "Ideal": False}
+        self.modulatorParameters = {"Type": "MZM"}
+        self.channelParameters = {"Length": 60, "Attenuation": 0.2, "Dispersion": 16, "Ideal": False}
+        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 10**10, "Resolution": 0.7, "Ideal": False}
+
+        self.setButtonText("all")

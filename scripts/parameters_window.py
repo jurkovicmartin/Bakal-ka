@@ -551,7 +551,7 @@ class ParametersWindow:
             self.bandwidthCombobox.grid(row=1, column=2, padx=10, pady=10)
 
             # Resolution
-            self.resolutionLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Resolution [A/W]", font=self.generalFont)
+            self.resolutionLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Responsivity [A/W]", font=self.generalFont)
             self.resolutionLabel.grid(row=2, column=0, padx=10, pady=10)
             self.resolutionEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
             self.resolutionEntry.grid(row=2, column=1, padx=10, pady=10)
@@ -578,7 +578,7 @@ class ParametersWindow:
             self.bandwidthCombobox.grid(row=1, column=2, padx=10, pady=10)
 
             # Resolution
-            self.resolutionLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Resolution [A/W]", font=self.generalFont)
+            self.resolutionLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Responsivity [A/W]", font=self.generalFont)
             self.resolutionLabel.grid(row=2, column=0, padx=10, pady=10)
             self.resolutionEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
             self.resolutionEntry.grid(row=2, column=1, padx=10, pady=10)
