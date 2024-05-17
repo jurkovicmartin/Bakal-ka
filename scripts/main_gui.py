@@ -826,7 +826,7 @@ class GUI(ctk.CTk):
         elif type == "all":
             # Source
             linewidthText = self.correctLinewidthUnits()
-            text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {linewidthText}\nRIN: {self.sourceParameters.get('RIN')} dB/Hz"
+            text = f"Power: {self.sourceParameters.get('Power')} dBm\nCentral frequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {linewidthText}\nRIN: {self.sourceParameters.get('RIN')} dB/Hz"
             self.sourceButton.configure(text=text)
             # Modulator
             text = f"{self.modulatorParameters.get('Type')}"
