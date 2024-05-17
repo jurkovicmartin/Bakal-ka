@@ -1,7 +1,7 @@
-from scripts.main_gui import Gui
+from scripts.main_gui import GUI
 
 def main():
-    app = Gui()
+    app = GUI()
     app.mainloop()
 
 

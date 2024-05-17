@@ -1,20 +1,17 @@
-# Simulation functions
 
 import numpy as np
+from optic.utils import parameters
+import matplotlib.pyplot as plt
 from commpy.utilities  import upsample
 from optic.models.devices import mzm, photodiode, basicLaserModel, iqm, coherentReceiver, pm
 from optic.models.channels import linearFiberChannel
 from optic.comm.modulation import modulateGray, GrayMapping, demodulateGray
 from optic.dsp.core import pulseShape, pnorm, signal_power
 from optic.comm.metrics import fastBERcalc
-
 try:
     from optic.dsp.coreGPU import firFilter    
 except ImportError:
     from optic.dsp.core import firFilter
-    
-from optic.utils import parameters
-import matplotlib.pyplot as plt
 
 from scripts.my_models import edfa, idealLaser
 from scripts.my_plot import eyediagram, constellation, opticalSpectrum, electricalInTime, opticalInTime
@@ -24,10 +21,6 @@ from scripts.my_models import attenuationChannel
 def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameters: dict, channelParameters: dict, recieverParameters: dict, amplifierParameters: dict, includeAmplifier: bool) -> dict:
     """
     Simulate communication.
-
-    Parameters
-    -----
-    generalParameters: including modulation format and order for maping
 
     Returns
     -----
@@ -40,7 +33,8 @@ def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameter
     np.random.seed(seed=123)
 
     Fs = generalParameters.get("Fs")
-    frequency = sourceParameters.get("Frequency")*10**12 # Manage units (THz -> Hz)
+    # Correct units (THz -> Hz)
+    frequency = sourceParameters.get("Frequency")*10**12
 
     # Output dictionary
     simulationResults = {}
@@ -65,37 +59,39 @@ def simulate(generalParameters: dict, sourceParameters: dict, modulatorParameter
 
     return simulationResults
 
+
 def modulationSignal(generalParameters: dict) -> dict:
     """
-    Generate electrical modulation signal.
+    Generate electrical modulation signal (voltage).
 
     Returns
     -----
         bitsTx, symbolsTx, modulationSignal
     """
-
-    SpS = generalParameters.get("SpS")  # Samples per symbol
+    SpS = generalParameters.get("SpS")
     modulationOrder = generalParameters.get("Order")
     modulationFormat = generalParameters.get("Format")
     
-    # generate pseudo-random bit sequence
+    # Generate pseudo-random bit sequence
     bitsTx = np.random.randint(2, size=int(np.log2(modulationOrder)*1e6))
 
-    # generate modulated symbol sequence
+    # Generate modulated symbol sequence
     symbolsTx = modulateGray(bitsTx, modulationOrder, modulationFormat)
-    symbolsTx = pnorm(symbolsTx) # power normalization
+    # Power normalization
+    symbolsTx = pnorm(symbolsTx)
 
-    # upsampling
+    # Upsampling
     symbolsUp = upsample(symbolsTx, SpS)
 
-    # typical NRZ pulse
+    # Typical NRZ pulse
     pulse = pulseShape("nrz", SpS)
     pulse = pulse/max(abs(pulse))
 
-    # pulse shaping
+    # Pulse shaping
     signalTx = firFilter(pulse, symbolsUp)
 
     return {"bitsTx":bitsTx, "symbolsTx":symbolsTx, "modulationSignal":signalTx}
+
 
 def carrierSignal(sourceParameters: dict, Fs: int, modulationSignal) -> dict:
     """
@@ -111,9 +107,11 @@ def carrierSignal(sourceParameters: dict, Fs: int, modulationSignal) -> dict:
     -----
     carrierSignal
     """
+    # Ideal source
     if sourceParameters.get("Ideal"):
         power = sourceParameters.get("Power")
         samples = len(modulationSignal)
+        
         return{"carrierSignal":idealLaser(power, samples)}
     
     else:
@@ -122,13 +120,14 @@ def carrierSignal(sourceParameters: dict, Fs: int, modulationSignal) -> dict:
 
         # Laser parameters
         paramLaser = parameters()
-        paramLaser.P = sourceParameters.get("Power")   # laser power [dBm] [default: 10 dBm]
-        paramLaser.lw = sourceParameters.get("Linewidth")    # laser linewidth [Hz] [default: 1 kHz]
-        paramLaser.Fs = Fs  # sampling rate [samples/s]
-        paramLaser.Ns = len(modulationSignal)   # number of signal samples [default: 1e3]
-        paramLaser.RIN_var = rin # RIN [1e-20]
+        paramLaser.P = sourceParameters.get("Power")   # laser power [dBm]
+        paramLaser.lw = sourceParameters.get("Linewidth")    # laser linewidth [Hz]
+        paramLaser.Fs = Fs  # sampling rate [symbols/s]
+        paramLaser.Ns = len(modulationSignal)   # number of signal samples
+        paramLaser.RIN_var = rin # RIN
 
         return {"carrierSignal":basicLaserModel(paramLaser)}
+
 
 def modulate(modulatorParameters: dict, modulationSignal, carrierSignal, generalParameters: dict) -> dict:
     """
@@ -140,7 +139,6 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal, general
     """
 
     if modulatorParameters.get("Type") == "PM":
-
         return {"modulatedSignal":pm(carrierSignal, modulationSignal, 2)}
     
     elif modulatorParameters.get("Type") == "MZM":
@@ -149,8 +147,10 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal, general
         paramMZM.Vpi = 2
         paramMZM.Vb = -1
 
+        # 4 PAM 
         if generalParameters.get("Format") == "pam" and generalParameters.get("Order") == 4:
             return {"modulatedSignal":mzm(carrierSignal, modulationSignal*0.7, paramMZM)}
+        # Everything else
         else:
             return {"modulatedSignal":mzm(carrierSignal, modulationSignal, paramMZM)}
     
@@ -163,8 +163,8 @@ def modulate(modulatorParameters: dict, modulationSignal, carrierSignal, general
         paramIQM.Vphi = 1
 
         return {"modulatedSignal":iqm(carrierSignal*np.sqrt(2), modulationSignal, paramIQM)}
-    
     else: raise Exception("Unexpected error")
+
 
 def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulatedSignal, Fs: int, frequency: float, includeAmplifier: bool) -> dict:
     """
@@ -178,26 +178,28 @@ def fiberTransmition(fiberParameters: dict, amplifierParameters: dict, modulated
 
     Returns
     -----
-    recieverSignal: signal at reciever (dictionary)
+    recieverSignal: signal at reciever
     """
     dispersion = fiberParameters.get("Dispersion")
 
     paramCh = parameters()
-    paramCh.L = fiberParameters.get("Length")         # total link distance [km]
+    paramCh.L = fiberParameters.get("Length")         # total link distance
     paramCh.alpha = fiberParameters.get("Attenuation")        # fiber loss parameter [dB/km]
     paramCh.D = dispersion         # fiber dispersion parameter [ps/nm/km]
     paramCh.Fc = frequency # central optical frequency [Hz]
     paramCh.Fs = Fs        # simulation sampling frequency [samples/second]
 
-    # Channel has amplifier = doesnt has initial 0 gain
+    # Channel has amplifier
     if includeAmplifier:
         recieverSignal = amplifierTransmition(paramCh, amplifierParameters, fiberParameters.get("Ideal"), modulatedSignal, Fs, frequency)
+    
     # Channel without amplifier
     else:
         # Directly pass modulated signal without changes (Ideal channel)
         if fiberParameters.get("Ideal"):
             recieverSignal = modulatedSignal
         else:
+            # Channel with only attenuation
             if dispersion == 0:
                 recieverSignal = attenuationChannel(modulatedSignal, paramCh)
             else:
@@ -236,11 +238,13 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
     detectionLimit = amplifierParameters.get("Detection")
     amplifierPosition = amplifierParameters.get("Position")
 
-    # Ideal channel (= position of amplifier does not matter)
+    # Ideal channel (= position of amplifier doesn't matter)
     if idealChannel:
+        # Ideal amplifier
         if amplifierParameters.get("Ideal"):
             recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
         else:
+            # Power of signal is too low
             if not(checkPower(modulatedSignal, detectionLimit)):
                 return
             
@@ -248,19 +252,23 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
     
     # Ideal amplifier with real channel
     elif amplifierParameters.get("Ideal") and not(idealChannel):
-
+        # Amplifier at the start of the channel
         if amplifierPosition == "start":
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
 
+            # Channel with only attenuation
             if dispersion == 0:
                 recieverSignal = attenuationChannel(modulatedSignal, fiberParameters)
             else:
                 recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
+        # Amplifier in the middle of the channel
         elif amplifierPosition == "middle":
             # Lenght needs to be halfed
             fiberParameters.L = fiberParameters.L / 2
+
             # First half
+            # Channel with only attenuation
             if dispersion == 0:
                 modulatedSignal = attenuationChannel(modulatedSignal, fiberParameters)
             else:
@@ -270,23 +278,26 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
 
             # Second half
+            # Channel with only attenuation
             if dispersion == 0:
                 recieverSignal = attenuationChannel(modulatedSignal, fiberParameters)
             else:
                 recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
+        # Amplifier at the end of channel
         elif amplifierPosition == "end":
+            # Channel with only attenuation
             if dispersion == 0:
                 modulatedSignal = attenuationChannel(modulatedSignal, fiberParameters)
             else:
                 modulatedSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
             recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
-        
         else: raise Exception("Unexpected error")
 
     # Real amplifier with real channel
     elif not(amplifierParameters.get("Ideal")) and not(idealChannel):
+        # Amplifier at the start of the channel
         if amplifierPosition == "start":
             # Signal power is too low
             if not(checkPower(modulatedSignal, detectionLimit)):
@@ -294,16 +305,19 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
             
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
 
+            # Channel with only attenuation
             if dispersion == 0:
                 recieverSignal = attenuationChannel(modulatedSignal, fiberParameters)
             else:
                 recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
+        # Amplifier i the middle of the channel
         elif amplifierPosition == "middle":
             # Lenght needs to be halfed
             fiberParameters.L = fiberParameters.L / 2
             
             # First half
+            # Channel with only attenuation
             if dispersion == 0:
                 modulatedSignal = attenuationChannel(modulatedSignal, fiberParameters)
             else:
@@ -317,12 +331,15 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
             modulatedSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
 
             # Second half
+            # Channel with only attenuation
             if dispersion == 0:
                 recieverSignal = attenuationChannel(modulatedSignal, fiberParameters)
             else:
                 recieverSignal = linearFiberChannel(modulatedSignal, fiberParameters)
 
+        # Amplifier at the end of the channel
         elif amplifierPosition == "end":
+            # Channel with only attenuation
             if dispersion == 0:
                 modulatedSignal = attenuationChannel(modulatedSignal, fiberParameters)
             else:
@@ -333,7 +350,6 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
                 return
 
             recieverSignal = edfa(modulatedSignal, amplifierParameters.get("Ideal"), paramEDFA)
-        
         else: raise Exception("Unexpected error")
     else: raise Exception("Unexpected error")
 
@@ -342,7 +358,7 @@ def amplifierTransmition(fiberParameters, amplifierParameters: dict, idealChanne
 
 def detection(recieverParameters: dict, recieverSignal, referentSignal, generalParameters: dict) -> dict:
     """
-    Convert optical signal back to electrical
+    Convert optical signal back to electrical (current).
 
     Parameters
     ----
@@ -353,7 +369,6 @@ def detection(recieverParameters: dict, recieverSignal, referentSignal, generalP
     detectedSignal
     """
     Fs = generalParameters.get("Fs")
-    Rs = generalParameters.get("Rs")
 
     if recieverParameters.get("Type") == "Photodiode":
         # Ideal photodiode
@@ -361,7 +376,7 @@ def detection(recieverParameters: dict, recieverSignal, referentSignal, generalP
             paramPD = parameters
             paramPD.idel = True
         else:
-            # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
+            # Noisy photodiode (thermal noise + shot noise + bandwidth limitation)
             paramPD = parameters()
             paramPD.ideal = False
             paramPD.B = recieverParameters.get("Bandwidth")
@@ -371,12 +386,12 @@ def detection(recieverParameters: dict, recieverSignal, referentSignal, generalP
         return {"detectedSignal":photodiode(recieverSignal, paramPD)}
     
     elif recieverParameters.get("Type") == "Coherent":
-        # Ideal photodiode
+        # Ideal photodiodes
         if recieverParameters.get("Ideal"):
             paramPD = parameters
             paramPD.idel = True
         else:
-            # noisy photodiode (thermal noise + shot noise + bandwidth limitation)
+            # Noisy photodiodes (thermal noise + shot noise + bandwidth limitation)
             paramPD = parameters()
             paramPD.ideal = False
             paramPD.B = recieverParameters.get("Bandwidth")
@@ -388,7 +403,6 @@ def detection(recieverParameters: dict, recieverSignal, referentSignal, generalP
     else: raise Exception("Unexpected error")
 
 
-
 def restoreInformation(detectedSignal, generalParameters: dict) -> dict:
     """
     Gets bits information from detected signal.
@@ -397,25 +411,23 @@ def restoreInformation(detectedSignal, generalParameters: dict) -> dict:
     -----
     symbolsRx, bitsRx
     """
-
     SpS = generalParameters.get("SpS")
     modulationFormat = generalParameters.get("Format")
     modulationOrder = generalParameters.get("Order")
 
     detectedSignal = detectedSignal/np.std(detectedSignal)
-
-    # capture samples in the middle of signaling intervals
+    # Capture samples in the middle of signaling intervals
     symbolsRx = detectedSignal[0::SpS]
 
-    # subtract DC level and normalize power
+    # Subtract DC level and normalize power
     symbolsRx = symbolsRx - symbolsRx.mean()
     symbolsRx = pnorm(symbolsRx)
 
-    # demodulate symbols to bits with minimum Euclidean distance 
+    # Demodulate symbols to bits with minimum Euclidean distance 
     const = GrayMapping(modulationOrder, modulationFormat) # get constellation
     Es = signal_power(const) # calculate the average energy per symbol of the constellation
 
-    # demodulated bits
+    # Demodulated bits
     bitsRx = demodulateGray(np.sqrt(Es)*symbolsRx, modulationOrder, modulationFormat)
 
     return {"symbolsRx":symbolsRx, "bitsRx":bitsRx}
@@ -423,16 +435,18 @@ def restoreInformation(detectedSignal, generalParameters: dict) -> dict:
 
 def getPlot(type: str, title: str, simulationResults: dict, generalParameters: dict, sourceParameters: dict)  -> tuple[plt.Figure, plt.Axes]:
     """
-    Shows graph in separate window and returns (Figure, Axes) tuple
+    Get plot object to show.
 
     Parameters
     -----
     type: specify which plot will be returned
+
+    Returns
+    ----
+    tuple (Figure, Axes)
     """
 
     Ts = generalParameters.get("Ts")
-    Rs = generalParameters.get("Rs")
-    Fs = generalParameters.get("Fs")
     SpS = generalParameters.get("SpS")
 
     # Frequency to Hz
@@ -489,11 +503,11 @@ def getPlot(type: str, title: str, simulationResults: dict, generalParameters: d
 
 def getValues(simulationResults: dict, generalParameters: dict) -> dict:
     """
-    Calculates simulation values from simulation results.
+    Calculates simulation output values from simulation results.
 
     Returns
     -----
-    BER, SER, SNR, powerTxdBm, powerTxW, powerRxdBm, powerRxW
+    BER, SER, SNR, powerTxdBm, powerTxW, powerRxdBm, powerRxW, Speed
     """
     
     modulationFormat = generalParameters.get("Format")
@@ -508,7 +522,6 @@ def getValues(simulationResults: dict, generalParameters: dict) -> dict:
     recieverSignal = simulationResults.get("recieverSignal")
 
     # Error values
-
     valuesList = fastBERcalc(symbolsRx, symbolsTx, modulationOrder, modulationFormat)
     # extract the values from arrays
     ber, ser, snr = [array[0] for array in valuesList]
@@ -543,7 +556,6 @@ def checkPower(signal, limit) -> bool:
 
         False: signal power is too low
         """
-
         signalPower = 10*np.log10(signal_power(signal) / 1e-3)
 
         return signalPower >= limit

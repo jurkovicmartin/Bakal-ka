@@ -1,11 +1,15 @@
+
 import customtkinter as ctk
 
 class Help:
     """
     Help tab gui.
+
+    Parameters
+    ----
+    exampleFunction: function to set example parameters
     """
     def __init__(self, mainFrame, exampleFunction):
-
         generalFont = ("Helvetica", 16, "bold")
         headFont = ("Helvetica", 24, "bold")
         backgroundColor = "#2a2a2a"

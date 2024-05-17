@@ -1,4 +1,3 @@
-# Function to work with parameters values
 
 import re
 from tkinter import messagebox
@@ -39,29 +38,28 @@ def validateParameters(type: str, parameters: dict, generalParameters: dict, par
 
     parameters: parameters to check
 
-    generalParameters: for some parameters limits
-
     parentWindow: object for showing messageboxes
 
-    units: Optional. ttk.Combobox (with units options)
+    units: Optional. Combobox object (with units options)
 
     Returns
     -----
     valid parameters
 
-    None if some parameters are not ok
+    None if some parameter isn't ok
     """
-    # Removes ideal (bool) value from dictionary
+    # Removes ideal (bool) value
     ideal = parameters.pop("Ideal")
 
     # Remove valid string values
     if type == "source" or type == "modulator" or type == "reciever" or type == "amplifier":
         numberParameters, stringParameters = removeStringValues(parameters, type, ideal)
+    # Block does't have valid string values
     else:
         numberParameters = parameters
         stringParameters = {}
 
-    # There are no number parameters to be converted or checked
+    # There are no number parameters left to be converted or checked
     if numberParameters == {}:
         stringParameters.update({"Ideal":ideal})
         return stringParameters
@@ -69,9 +67,10 @@ def validateParameters(type: str, parameters: dict, generalParameters: dict, par
     # Conevert parameters values to floats
     for key, value in numberParameters.items():
         checked = checkNumber(key, value, parentWindow)
-        # Some number parameters was not inputed correctly
+        # Parameter was not inputed correctly
         if checked is None:
             return None
+        # Parameter is ok
         else:
             numberParameters.update({key:checked})
 
@@ -90,22 +89,16 @@ def validateParameters(type: str, parameters: dict, generalParameters: dict, par
         if not checked:
             return None
     
-    # Merge all the removed values back together
+    # Merge converted and removed string parameters back together
     numberParameters.update(stringParameters)
     numberParameters.update({"Ideal":ideal})
 
     return numberParameters
 
 
-    
-
 def checkNumber(parameterName: str, parameterValue: str, parentWindow) -> float | None:
     """
     Converts string number to float.
-
-    Checks for:
-        empty string
-        string with characters
 
     Show error message if parameter is not ok and returns None.
 
@@ -113,21 +106,23 @@ def checkNumber(parameterName: str, parameterValue: str, parentWindow) -> float 
     -----
     parentWindow: object for showing messageboxes
     """
-
     value, isEmpty = convertNumber(parameterValue)
 
     if value is None and isEmpty is False:
         messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be a number!", parent=parentWindow)
         return None
+    
     elif value is None and isEmpty is True:
         messagebox.showerror(f"{parameterName} input error", f"You must input {parameterName}!", parent=parentWindow)
         return None
-    else: return value
+    # Number is ok
+    else:
+        return value
         
 
 def checkLimit(parameterName: str, parameterValue: float, generalParameters: dict, parentWindow) -> bool:
     """
-    Checks the limit of parameter.
+    Checks limits of parameter.
 
     Parameters
     -----
@@ -139,16 +134,15 @@ def checkLimit(parameterName: str, parameterValue: float, generalParameters: dic
 
     False: parameters is off limit
     """
-    # Parameter set too low
+    # Parameter value setted too low
     if not checkDownLimit(parameterName, parameterValue, parentWindow):
         return False
     
-    # Parameter set too high
+    # Parameter value setted too high
     if not checkUpLimit(parameterName, parameterValue, generalParameters, parentWindow):
         return False
     
     return True
-
 
 
 def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> bool:
@@ -159,9 +153,9 @@ def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> b
     ----
     True: limit ok
 
-    False: limit not ok
+    False: limit isn't ok
     """
-    # tuple (bool, value)
+    # Format is tuple (bool, value)
     # True = parameter can be equal or greater
     # False = parameter must be greater
     downLimits = {
@@ -189,15 +183,19 @@ def checkDownLimit(parameterName: str, parameterValue: float, parentWindow) -> b
 
     # Can be equal
     if limitComp:
+        # Parameter value is lower
         if parameterValue < limitValue:
             messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be greater or equal to {limitValue}!", parent=parentWindow)
             return False
         else:
             return True
+    # Cannot be equal
     else:
+        # Parameter value is lower
         if parameterValue < limitValue:
             messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be greater than {limitValue}!", parent=parentWindow)
             return False
+        # Parameter value is equal
         elif parameterValue == limitValue:
             messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be greater than {limitValue}!", parent=parentWindow)
             return False
@@ -215,7 +213,7 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
 
     False: limit not ok
     """
-    # tuple (bool, value)
+    # Froma is tuple (bool, value)
     # True = parameter can be equal or lower
     # False = parameter must be lower
     upLimits = {
@@ -243,15 +241,19 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
 
     # Can be equal
     if limitComp:
+        # Parameter value is higher
         if parameterValue > limitValue:
             messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be lower or equal to {limitValue}!", parent=parentWindow)
             return False
         else:
             return True
+    # Cannot be equal
     else:
-        if parameterValue < limitValue:
+        # Parameter value is higher
+        if parameterValue > limitValue:
             messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be lower than {limitValue}!", parent=parentWindow)
             return False
+        # Parameter is equal
         elif parameterValue == limitValue:
             messagebox.showerror(f"{parameterName} input error", f"{parameterName} must be lower than {limitValue}!", parent=parentWindow)
             return False
@@ -261,7 +263,7 @@ def checkUpLimit(parameterName: str, parameterValue: float, generalParameters: d
 
 def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, dict]:
     """
-    Separates valid string parameters from number parameters.
+    Separates valid string parameters from number parameters to convert.
 
     Returns
     -----
@@ -277,7 +279,6 @@ def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, 
 
         return parameters, stringDict
 
-    
     elif type == "modulator":
         pass
 
@@ -288,11 +289,11 @@ def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, 
         # Some parameters has as ideal value "inf"
         if ideal:
             stringDict.update({"Bandwidth":parameters.pop("Bandwidth"), "Resolution":parameters.pop("Resolution")})
-        
 
         return parameters, stringDict
     
     elif type == "amplifier":
+        # Position of amplifier
         stringDict = {"Position":parameters.pop("Position")}
 
         # Detection has as ideal value "-inf"
@@ -300,7 +301,6 @@ def removeStringValues(parameters: dict, type: str, ideal: bool) -> tuple[dict, 
             stringDict.update({"Detection":parameters.pop("Detection")})
         
         return parameters, stringDict
-        
     else: raise Exception("Unexpected error")     
 
 

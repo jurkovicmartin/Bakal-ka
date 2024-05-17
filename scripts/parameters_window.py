@@ -1,15 +1,12 @@
-# Popup window for setting components parameters
 
 import tkinter as tk
-from tkinter import ttk
 import customtkinter as ctk
-
-from scripts.parameters_functions import validateParameters
 from scripts.tooltip import ToolTip
+from scripts.parameters_functions import validateParameters
 
 class ParametersWindow:
     """
-    Class to creates popup window for setting parameters.
+    Class to creates popup window for setting scheme blocks parameters.
 
     Parameters
     -----
@@ -28,17 +25,9 @@ class ParametersWindow:
         self.callback = callback
         self.defaultParameters = defaultParameters
         self.generalParameters = generalParameters
-        self.popupGui()
 
-        # Bind the popup window's closing event to the parent's method
-        self.popup.protocol("WM_DELETE_WINDOW", self.closePopup)
+        # GUI
 
-    ### METHODS
-
-    def popupGui(self):
-        """
-        Creates popup gui for setting parameters.
-        """
         self.popup = ctk.CTkToplevel(self.parentGui)
         self.popup.geometry("800x450")
         self.popup.minsize(800, 450)
@@ -52,14 +41,15 @@ class ParametersWindow:
 
             self.sourceFrame = ctk.CTkFrame(self.popup)
             self.sourceFrame.pack(padx=10, pady=10, fill="both", expand=True)
-
+            
+            # Title
             self.titleLabel = ctk.CTkLabel(self.sourceFrame, text="Parameters of optical source", font=headFont)
             self.titleLabel.pack(padx=20, pady=20)
 
             sourceHelpFrame = ctk.CTkFrame(self.sourceFrame, fg_color="transparent")
             sourceHelpFrame.pack()
 
-            # Setting parameters
+            # Parameters setting
 
             # Power
             self.lengthLabel = ctk.CTkLabel(sourceHelpFrame, text="Power [dBm]", font=self.generalFont)
@@ -115,18 +105,18 @@ class ParametersWindow:
             self.modulatorFrame = ctk.CTkFrame(self.popup)
             self.modulatorFrame.pack(padx=10, pady=10, fill="both", expand=True)
 
+            # Titile
             self.titleLabel = ctk.CTkLabel(self.modulatorFrame, text="Parameters of modulator", font=headFont)
             self.titleLabel.pack(padx=20, pady=20)
 
             modulatorHelpFrame = ctk.CTkFrame(self.modulatorFrame, fg_color="transparent")
             modulatorHelpFrame.pack()
 
-            # Setting parameters
+            # Parameters setting
 
             # Type
             typeFrame = ctk.CTkFrame(modulatorHelpFrame, fg_color="transparent")
             typeFrame.grid(row=0, column=0, padx=10, pady=10)
-
             self.modulatorLabel = ctk.CTkLabel(typeFrame, text="Type of modulator", font=self.generalFont)
             self.modulatorLabel.grid(row=0, column=0, padx=(10,3), pady=10)
             typeTooltip = ctk.CTkLabel(typeFrame, text="(?)", font=self.generalFont)
@@ -148,13 +138,14 @@ class ParametersWindow:
             self.channelFrame = ctk.CTkFrame(self.popup)
             self.channelFrame.pack(padx=10, pady=10, fill="both", expand=True)
 
+            # Title
             self.titleLabel = ctk.CTkLabel(self.channelFrame, text="Parameters of fiber channel", font=headFont)
             self.titleLabel.pack(padx=20, pady=20)
 
             channelHelpFrame = ctk.CTkFrame(self.channelFrame, fg_color="transparent")
             channelHelpFrame.pack()
 
-            # Setting parameters
+            # Parameters setting
 
             # Length
             self.lengthLabel = ctk.CTkLabel(channelHelpFrame, text="Length [km]", font=self.generalFont)
@@ -196,13 +187,14 @@ class ParametersWindow:
             self.recieverFrame = ctk.CTkFrame(self.popup)
             self.recieverFrame.pack(padx=10, pady=10, fill="both", expand=True)
 
+            # Title
             self.titleLabel = ctk.CTkLabel(self.recieverFrame, text="Parameters of detector", font=headFont)
             self.titleLabel.pack(padx=20, pady=20)
 
             self.recieverHelpFrame = ctk.CTkFrame(self.recieverFrame, fg_color="transparent")
             self.recieverHelpFrame.pack()
 
-            # Setting parameters
+            # Parameters setting
 
             # Type
             self.recieverLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Type of detector", font=self.generalFont)
@@ -210,6 +202,7 @@ class ParametersWindow:
             self.recieverCombobox = ctk.CTkComboBox(self.recieverHelpFrame, values=["Photodiode", "Coherent"], state="readonly", command=self.receiverChange, font=self.generalFont)
             self.recieverCombobox.set("Photodiode")
             self.recieverCombobox.grid(row=0, column=1, padx=10, pady=10)
+
             # Other parameters
             self.receiverChange(event=None)
 
@@ -225,13 +218,14 @@ class ParametersWindow:
             self.amplfierFrame = ctk.CTkFrame(self.popup)
             self.amplfierFrame.pack(padx=10, pady=10, fill="both", expand=True)
 
+            # Title
             self.titleLabel = ctk.CTkLabel(self.amplfierFrame, text="Parameters of amplifier", font=headFont)
             self.titleLabel.pack(padx=20, pady=20)
 
             amplifierHelpFrame = ctk.CTkFrame(self.amplfierFrame, fg_color="transparent")
             amplifierHelpFrame.pack()
 
-            # Setting parameters
+            # Parameters setting
 
             # Position
             self.positionLabel = ctk.CTkLabel(amplifierHelpFrame, text="Position in channel", font=self.generalFont)
@@ -278,11 +272,19 @@ class ParametersWindow:
             self.setButton.pack(padx=20, pady=20)
 
             self.setDefaultParameters()
-        
-        else: raise Exception("Unexpected if statement")
+        else: raise Exception("Unexpected error")
 
+        # Bind the popup window closing event to the parent method
+        self.popup.protocol("WM_DELETE_WINDOW", self.closePopup)
+
+
+
+    ### METHODS
 
     def closePopup(self):
+        """
+        Closes window.
+        """
         # Enable the parent buttons and destroy the popup window
         self.parentGui.enableWidgets()
         self.popup.destroy()
@@ -295,95 +297,98 @@ class ParametersWindow:
         if self.type == "source":
             # Getting inserted values
             parameters = {"Power":self.powerEntry.get(), "Frequency":self.frequencyEntry.get(), "Linewidth":self.linewidthEntry.get(), "RIN":self.rinEntry.get()}
-            
             parameters.update(self.setIdealParameter(parameters))
+
             # Validating parameters values
             parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup, self.linewidthCombobox)
 
-            # Return if parameters are not valid
-            if parameters is None: return
-
-
+            # Parameters are not ok
+            if parameters is None:
+                return
 
         elif self.type == "modulator":
             # Getting inserted values
             parameters = {"Type":self.modulatorCombobox.get()}
 
-
         elif self.type == "channel":
             # Getting inserted values
             parameters = {"Length":self.lengthEntry.get(), "Attenuation":self.attenuationEntry.get(), "Dispersion":self.dispersionEntry.get()}
-            
             parameters.update(self.setIdealParameter(parameters))
+
             # Validating parameters values
             parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup)
 
-            # Return if parameters are not valid
-            if parameters is None: return
-
+            # Parameters are not ok
+            if parameters is None:
+                return
 
         elif self.type == "reciever":
             # Getting inserted values
             parameters = {"Type":self.recieverCombobox.get(), "Bandwidth":self.bandwidthEntry.get(), "Resolution":self.resolutionEntry.get()}
-            
             parameters.update(self.setIdealParameter(parameters))
+
             # Validating parameters values
             parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup, units=self.bandwidthCombobox)
 
-
-            # Return if parameters are not valid
-            if parameters is None: return
+            # Parameters are not ok
+            if parameters is None:
+                return
 
         
         elif self.type == "amplifier":
             # Getting inserted values
             parameters = {"Position":self.positionCombobox.get(), "Gain":self.gainEntry.get(), "Noise":self.noiseEntry.get(), "Detection":self.detectionEntry.get()}
-            
             parameters.update(self.setIdealParameter(parameters))
-            # Validating parameters values
+
+            # Parameters are not ok
             parameters = validateParameters(self.type, parameters, self.generalParameters, self.popup)
 
-            if parameters is None: return
+            if parameters is None:
+                return
         
         else: raise Exception("Unexpected error")
 
-        # Return parameters
+        # Return parameters to main window
         self.callback(parameters, self.type)
-        # Check for combination of ideal channel + pre-amplifier
-        # Only for channel parameters setting, is here because the Ideal state is passed only line above
-        # self.parentGui.attentionCheck()
 
         self.closePopup()
 
 
     def idealCheckbuttonChange(self):
         """
-        Change parameters to simulate ideal components
+        Change parameters to ideal state.
         """
         if self.type == "source":
+            # Ideal
             if self.sourceCheckVar.get():
+                # Linewidth
                 self.linewidthEntry.delete(0, tk.END)
                 self.linewidthEntry.insert(0, "1")
                 self.linewidthEntry.configure(state="disabled")
                 self.linewidthCombobox.configure(state="disabled")
 
+                # RIN
                 self.rinEntry.delete(0, tk.END)
                 self.rinEntry.insert(0, "-inf")
                 self.rinEntry.configure(state="disabled")
 
             else:
                 self.linewidthEntry.configure(state="normal")
+                self.linewidthCombobox.configure(state="readonly")
+
                 self.rinEntry.configure(state="normal")
                 self.rinEntry.delete(0, tk.END)
                 self.rinEntry.insert(0, "0")
-                self.linewidthCombobox.configure(state="readonly")
                 
         elif self.type == "channel":
+            # Ideal
             if self.channelCheckVar.get():
+                # Attenuation
                 self.attenuationEntry.delete(0, tk.END)
                 self.attenuationEntry.insert(0, "0")
                 self.attenuationEntry.configure(state="disabled")
 
+                # Dispersion
                 self.dispersionEntry.delete(0, tk.END)
                 self.dispersionEntry.insert(0, "0")
                 self.dispersionEntry.configure(state="disabled")
@@ -393,12 +398,15 @@ class ParametersWindow:
                 self.dispersionEntry.configure(state="normal")
 
         elif self.type == "reciever":
+            # Ideal
             if self.recieverCheckVar.get():
+                # Bandwidth
                 self.bandwidthEntry.delete(0, tk.END)
                 self.bandwidthEntry.insert(0, "inf")
                 self.bandwidthEntry.configure(state="disabled")
                 self.bandwidthCombobox.configure(state="disabled")
 
+                # Resolution
                 self.resolutionEntry.delete(0, tk.END)
                 self.resolutionEntry.insert(0, "inf")
                 self.resolutionEntry.configure(state="disabled")
@@ -413,13 +421,15 @@ class ParametersWindow:
                 self.resolutionEntry.delete(0, tk.END)
                 self.resolutionEntry.insert(0, "0")
 
-
         elif self.type == "amplifier":
+            # Ideal
             if self.amplifierCheckVar.get():
+                # Noise figure
                 self.noiseEntry.delete(0, tk.END)
                 self.noiseEntry.insert(0, "0")
                 self.noiseEntry.configure(state="disabled")
 
+                # Detection limit
                 self.detectionEntry.delete(0, tk.END)
                 self.detectionEntry.insert(0, "-inf")
                 self.detectionEntry.configure(state="disabled")
@@ -429,13 +439,12 @@ class ParametersWindow:
                 self.detectionEntry.configure(state="normal")
                 self.detectionEntry.delete(0, tk.END)
                 self.detectionEntry.insert(0, "0")
-
         else: raise Exception("Unexpected error")
 
         
     def setDefaultParameters(self):
         """
-        Set default parameters to the entries. If there are any.
+        Set default parameters to the entries when window is showed.
         """
         if self.type == "source":
             # No default parameters
@@ -445,7 +454,8 @@ class ParametersWindow:
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
                 self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
                 # Change check button state
-                self.idealCheckbutton.toggle() # Trigger command function
+                self.idealCheckbutton.toggle()
+
             else:
                 self.powerEntry.insert(0, str(self.defaultParameters.get("Power")))
                 self.frequencyEntry.insert(0, str(self.defaultParameters.get("Frequency")))
@@ -465,7 +475,8 @@ class ParametersWindow:
             if self.defaultParameters.get("Ideal"):
                 self.lengthEntry.insert(0, str(self.defaultParameters.get("Length")))
                 # Change check button state
-                self.idealCheckbutton.toggle() # Trigger command function
+                self.idealCheckbutton.toggle()
+
             else:
                 self.lengthEntry.insert(0, str(self.defaultParameters.get("Length")))
                 self.attenuationEntry.insert(0, str(self.defaultParameters.get("Attenuation")))
@@ -478,7 +489,8 @@ class ParametersWindow:
             if self.defaultParameters.get("Ideal"):
                 self.recieverCombobox.set(self.defaultParameters.get("Type"))
                 # Change check button state
-                self.idealCheckbutton.toggle() # Trigger command function
+                self.idealCheckbutton.toggle()
+
             else:
                 self.recieverCombobox.set(self.defaultParameters.get("Type"))
                 self.setDefaultBandwidth()
@@ -492,20 +504,19 @@ class ParametersWindow:
                 self.positionCombobox.set(self.defaultParameters.get("Position"))
                 self.gainEntry.insert(0, str(self.defaultParameters.get("Gain")))
                 # Change check button state
-                self.idealCheckbutton.toggle() # Trigger command function
+                self.idealCheckbutton.toggle()
             
             else:
                 self.positionCombobox.set(self.defaultParameters.get("Position"))
                 self.gainEntry.insert(0, str(self.defaultParameters.get("Gain")))
                 self.noiseEntry.insert(0, str(self.defaultParameters.get("Noise")))
-                self.detectionEntry.insert(0, str(self.defaultParameters.get("Detection")))
-                    
+                self.detectionEntry.insert(0, str(self.defaultParameters.get("Detection")))             
         else: raise Exception("Unexpected error")
 
 
     def setIdealParameter(self, parameters: dict) -> dict:
         """
-        Set ideal parameter to chain blocks parameters.
+        Set ideal parameter value.
 
         Returns
         ----
@@ -518,6 +529,9 @@ class ParametersWindow:
             # Set value based on the ideal checkbox
             else:
                 return {"Ideal":self.sourceCheckVar.get()}
+            
+        elif self.type == "modulator":
+            pass
         
         elif self.type == "channel":
             # Maunaly set ideal parameters
@@ -536,7 +550,7 @@ class ParametersWindow:
     
     def receiverChange(self, event):
         """
-        When reciever combobox is changed.
+        Reciever type is changed.
         """
         reciever = self.recieverCombobox.get()
 
@@ -556,7 +570,6 @@ class ParametersWindow:
             self.resolutionEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
             self.resolutionEntry.grid(row=2, column=1, padx=10, pady=10)
             
-
             # Ideal parameters checkbutton
             idealFrame = ctk.CTkFrame(self.recieverHelpFrame, fg_color="transparent")
             idealFrame.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
@@ -592,7 +605,6 @@ class ParametersWindow:
             idealTooltip = ctk.CTkLabel(idealFrame, text="(?)", font=self.generalFont)
             idealTooltip.grid(row=0, column=1, pady=10)
             ToolTip(idealTooltip, "Ideal detector is:\nExtremly broadbaned (Bandwidth inf)\nPerefect resolutin (inf)")
-
         else: raise Exception("Unexpected error")
 
 

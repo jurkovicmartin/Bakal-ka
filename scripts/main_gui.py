@@ -1,24 +1,20 @@
-# Main window
-
-# SpS = samples per symbol, Rs = symbol rate, Fs sampling frequency, Ts sampling period
 
 import tkinter as tk
-from tkinter import ttk, messagebox
-
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
-from scripts.parameters_window import ParametersWindow
-from scripts.plots_window import PlotWindow
-from scripts.simulation import simulate, getValues, getPlot
-from scripts.parameters_functions import convertNumber
+from tkinter import messagebox
+import customtkinter as ctk
 import matplotlib.pyplot as plt
 
-import customtkinter as ctk
-from scripts.message_winodw import MessageWindow
+from scripts.help_gui import Help
+from scripts.parameters_window import ParametersWindow
+from scripts.plots_window import PlotWindow
 from scripts.tooltip import ToolTip
-from scripts.help import Help
+from scripts.simulation import simulate, getValues, getPlot
+from scripts.parameters_functions import convertNumber
 
-class Gui(ctk.CTk):
+class GUI(ctk.CTk):
+    """
+    GUI of the main window.
+    """
     def __init__(self):
         super().__init__()
 
@@ -27,11 +23,11 @@ class Gui(ctk.CTk):
         self.minsize(1000,700)
         self.after(0, lambda:self.state("zoomed"))
         self.title("Optical communication simulation app")
+        self.update()
 
         generalFont = ("Helvetica", 16, "bold")
         headFont = ("Helvetica", 24, "bold")
 
-        self.update()
 
         ### VARIABLES
         
@@ -41,77 +37,66 @@ class Gui(ctk.CTk):
         self.channelParameters = {"Length": 0, "Attenuation": 0, "Dispersion": 0, "Ideal": False}
         self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 0, "Resolution": 0, "Ideal": False}
         self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
-        # Store initial parameters to check for simulation start
+        # Store initial parameters to check for simulation start (if user inputed all parameters)
         self.initialParameters = {"Source": self.sourceParameters, "Modulator": self.modulatorParameters, 
                                   "Channel": self.channelParameters, "Reciever": self.recieverParameters, "Amplifier": self.amplifierParameters}
 
         self.generalParameters = {"SpS":8}
-
-        # Default parameters (testing)
-        # self.sourceParameters = {"Power": 10, "Frequency": 191.7, "Linewidth": 1, "RIN": "-inf", "Ideal": True}
-        # self.modulatorParameters = {"Type": "MZM"}
-        # self.channelParameters = {"Length": 40, "Attenuation": 0, "Dispersion": 0, "Ideal": True}
-        # self.recieverParameters = {"Type": "Photodiode", "Bandwidth": "inf", "Resolution": "inf", "Ideal": True}
-        # self.amplifierParameters = {"Position": "start", "Gain": 0, "Noise": 0, "Detection": 0, "Ideal": False}
-
 
         # Simulation results variables
         self.plots = {}
         self.simulationResults = None
 
 
+        ### GUI
 
-        # Tabs
+        # Setting tabs
         self.tabview = ctk.CTkTabview(master=self, width=0.95*self.winfo_width(), height=0.95*self.winfo_height())
         self.tabview.pack(padx=20, pady=20)
         self.tabview._segmented_button.configure(font=generalFont)
 
-        self.tabview.add("Input settings")  # add tab at the end
-        self.tabview.add("Outputs")  # add tab at the end
+        self.tabview.add("Input settings")
+        self.tabview.add("Outputs")
         self.tabview.add("Help")
 
         self.optionsFrame = ctk.CTkFrame(self.tabview.tab("Input settings"))
         self.outputsFrame = ctk.CTkFrame(self.tabview.tab("Outputs"))
         self.helpFrame = ctk.CTkScrollableFrame(self.tabview.tab("Help"))
         
-
         self.optionsFrame.pack(fill="both", expand=True)
         self.outputsFrame.pack(fill="both", expand=True)
         self.helpFrame.pack(fill="both", expand=True)
 
+
         ### OPTIONS TAB
-        # Options tab frames
-        self.generalFrame = ctk.CTkFrame(self.optionsFrame)
-        # self.generalFrame.grid_rowconfigure((0, 1, 2), weight=0)
-        # self.generalFrame.grid_columnconfigure((0, 1, 2, 3), weight=0)
-        self.generalFrame.pack(fill="x", padx=10, pady=10)
 
         # General frame
 
-        # General label
+        self.generalFrame = ctk.CTkFrame(self.optionsFrame)
+        self.generalFrame.pack(fill="x", padx=10, pady=10)
+
+        # Title
         self.generalLabel = ctk.CTkLabel(self.generalFrame, text="General parameters", font=headFont)
-        # self.generalLabel.grid(row=0, column=0, columnspan=4, padx=10, pady=10)
         self.generalLabel.pack(pady=10)
 
         generalHelpFrame = ctk.CTkFrame(self.generalFrame, fg_color="transparent")
         generalHelpFrame.pack(pady=10)
 
-        # Choosing modulation format to map
+        # Modulation format settings
         self.mFormatLabel = ctk.CTkLabel(generalHelpFrame, text="Modulation format", font=generalFont)
         self.mFormatComboBox = ctk.CTkComboBox(generalHelpFrame, values=["OOK", "PAM", "PSK", "QAM"], state="readonly", font=generalFont, command=self.modulationFormatChange)
         self.mFormatComboBox.set("OOK")
-        # self.mFormatComboBox.bind("<<ComboboxSelected>>", self.modulationFormatChange)
         self.mFormatLabel.grid(row=1, column=0, padx=10, pady=10)
         self.mFormatComboBox.grid(row=2, column=0, padx=10, pady=10)
 
-        # Choosing modulation order to map
+        # Modulation order settings
         self.mOrderLabel = ctk.CTkLabel(generalHelpFrame, text="Order of modulation", font=generalFont)
         self.mOrderCombobox = ctk.CTkComboBox(generalHelpFrame, values=["2"], state="readonly", font=generalFont)
         self.mOrderCombobox.set("2")
         self.mOrderLabel.grid(row=1, column=1, padx=10, pady=10)
         self.mOrderCombobox.grid(row=2, column=1, padx=10, pady=10)
 
-        # Symbol rate
+        # Symbol rate settings
         self.symbolRateLabel = ctk.CTkLabel(generalHelpFrame, text="Symbol rate [symbols/s]", font=generalFont)
         self.symbolRateEntry = ctk.CTkEntry(generalHelpFrame, justify="right", font=generalFont)
         self.symbolRateEntry.insert(0, "1")
@@ -122,14 +107,15 @@ class Gui(ctk.CTk):
         self.symbolRateCombobox.grid(row=2, column=3, padx=10, pady=10)
 
         
-
         # Scheme frame
+
         self.schemeFrame = ctk.CTkFrame(self.optionsFrame)
         self.schemeFrame.grid_rowconfigure(2, weight=1)
         self.schemeFrame.grid_columnconfigure((0, 1, 2, 3), weight=1)
         self.schemeFrame.grid_columnconfigure(4, weight=0)
         self.schemeFrame.pack(fill="both", expand=True, padx=10, pady=10)
 
+        # Title
         self.schemeLabel = ctk.CTkLabel(self.schemeFrame, text="Optical communication chain parameters", font=headFont)
         self.schemeLabel.grid(row=0, column=0, columnspan=6, padx=10, pady=10)
 
@@ -165,14 +151,14 @@ class Gui(ctk.CTk):
         self.recieverButton = ctk.CTkButton(self.recieverFrame, text="", command=lambda: self.showParametersPopup(self.recieverButton), font=generalFont)
         self.recieverButton.pack(padx=20, pady=20, fill="both", expand=True)
 
-        # Amplifier button initially hidden
+        # Amplifier  (initially hidden)
         self.amplifierFrame = ctk.CTkFrame(self.schemeFrame)
         self.amplifierLabel = ctk.CTkLabel(self.amplifierFrame, text="Optical amplifier", font=generalFont)
         self.amplifierLabel.pack(padx=5, pady=5)
         self.amplifierButton = ctk.CTkButton(self.amplifierFrame, text="", command=lambda: self.showParametersPopup(self.amplifierButton), font=generalFont)
         self.amplifierButton.pack(padx=20, pady=20, fill="both", expand=True)
 
-        # Channel with amplifier
+        # Channel with amplifier (initially hidden)
         self.amplfierChannelFrame = ctk.CTkFrame(self.schemeFrame)
         self.amplfierChannelFrame.grid_rowconfigure(1, weight=1)
         self.amplfierChannelFrame.grid_columnconfigure((0, 1), weight=1)
@@ -184,23 +170,17 @@ class Gui(ctk.CTk):
         self.amplifierLabel.grid(row=0, column=1, padx=10, pady=10)
         self.comboAmplifierButton = ctk.CTkButton(self.amplfierChannelFrame, text="", command=lambda: self.showParametersPopup(self.amplifierButton), font=generalFont)
         self.comboAmplifierButton.grid(row=1, column=1, padx=20, pady=20, sticky="nsew")
-        
 
         # Show default parameters
         self.setButtonText("all")     
 
-
-        # Checkbutton for including / excluding channel pre-amplifier
+        # Checkbutton for including / excluding amplifier
         self.amplifierCheckVar = tk.BooleanVar()
         self.amplifierCheckbutton = ctk.CTkCheckBox(self.schemeFrame, text="Add amplifier", variable=self.amplifierCheckVar, command=self.amplifierCheckbuttonChange, font=generalFont)
         self.amplifierCheckbutton.grid(row=1, column=0, padx=15, pady=5, sticky="nsew")
 
-        # Attention label for adding pre-amplifier
-        # self.attentionLabel = tk.Label(self.generalFrame, text="")
-        # self.attentionLabel.grid(row=2, column=1, columnspan=2)
 
-
-        # Other
+        ### OTHER
 
         # Start simulation
         self.simulateButton = ctk.CTkButton(self.optionsFrame, text="Simulate", command=self.startSimulation, font=generalFont)
@@ -213,18 +193,19 @@ class Gui(ctk.CTk):
 
         ### OUTPUTS TAB
 
-        # Frames
+        # Values frame
 
         self.valuesFrame = ctk.CTkFrame(self.outputsFrame)
         self.valuesFrame.pack(padx=10, pady=10, fill="both", expand=True)
 
+        # Title
         self.valuesLabel = ctk.CTkLabel(self.valuesFrame, text="Numeric outputs",  font=headFont)
         self.valuesLabel.pack(padx=10, pady=10)
 
         valuesHelpFrame = ctk.CTkFrame(self.valuesFrame, fg_color="transparent")
         valuesHelpFrame.pack(padx=10, pady=10)
 
-        # Values frame
+        # Tx power values
         txFrame = ctk.CTkFrame(valuesHelpFrame, fg_color="transparent")
         txFrame.grid(row=0, column=0, rowspan=2, padx=20, pady=5)
         self.powerTxWLabel = ctk.CTkLabel(txFrame, text="Average Tx power: -", font=generalFont)
@@ -238,6 +219,7 @@ class Gui(ctk.CTk):
         txdBmTooltip.grid(row=1, column=0, padx=(10,3), pady=10)
         ToolTip(txdBmTooltip, "Optical signal power at output of modulator")
 
+        # Rx power values
         rxFrame = ctk.CTkFrame(valuesHelpFrame, fg_color="transparent")
         rxFrame.grid(row=2, column=0, rowspan=2, padx=20, pady=5)
         self.powerRxWLabel = ctk.CTkLabel(rxFrame, text="Average Rx power: -", font=generalFont)
@@ -251,6 +233,7 @@ class Gui(ctk.CTk):
         rxdBmTooltip.grid(row=1, column=0, padx=(10,3), pady=10)
         ToolTip(rxdBmTooltip, "Optical signal power at input of detector")
 
+        # Transmission speed, BER, SER, SNR values
         self.transSpeedLabel = ctk.CTkLabel(valuesHelpFrame, text="Transmission speed: -", font=generalFont)
         self.snrLabel = ctk.CTkLabel(valuesHelpFrame, text="Signal to noise ratio: -", font=generalFont)
         self.berLabel = ctk.CTkLabel(valuesHelpFrame, text="Bit error rate: -", font=generalFont)
@@ -260,10 +243,13 @@ class Gui(ctk.CTk):
         self.berLabel.grid(row=2, column=1, padx=20, pady=10)
         self.serLabel.grid(row=3, column=1, padx=20, pady=10)
 
+
         # Plots Frame
+
         self.plotsFrame = ctk.CTkFrame(self.outputsFrame)
         self.plotsFrame.pack(padx=10, pady=10, fill="both", expand=True)
 
+        # Title
         headFrame = ctk.CTkFrame(self.plotsFrame, fg_color="transparent")
         headFrame.pack(padx=10, pady=10)
         self.plotsLabel = ctk.CTkLabel(headFrame, text="Graphical outputs", font=headFont)
@@ -275,36 +261,41 @@ class Gui(ctk.CTk):
         plotsHelpFrame = ctk.CTkFrame(self.plotsFrame, fg_color="transparent")
         plotsHelpFrame.pack(padx=10, pady=10)
 
-        # Electrical
+        # Infomation signals
         self.electricalButton = ctk.CTkButton(plotsHelpFrame, text="Show information signals", command=lambda: self.showPlots(self.electricalButton), font=generalFont)
         self.electricalButton.pack(fill="x", padx=10, pady=10)
         ToolTip(self.electricalButton, "Shows voltage of modulation signal and current of detector in time domain")
-        # Optical
+        
+        # Optical signals
         self.opticalButton = ctk.CTkButton(plotsHelpFrame, text="Show optical signals", command=lambda: self.showPlots(self.opticalButton), font=generalFont)
         self.opticalButton.pack(fill="x", padx=10, pady=10)
         ToolTip(self.opticalButton, "Shows carrier signal, signal at output of modulator and signal at input of detector in time domain")
-        # Spectrum
+        
+        # Spectrums
         self.spectrumButton = ctk.CTkButton(plotsHelpFrame, text="Show spectum of signals", command=lambda: self.showPlots(self.spectrumButton), font=generalFont)
         self.spectrumButton.pack(fill="x", padx=10, pady=10)
         ToolTip(self.spectrumButton, "Shows optical spectrum of carrier signal, signal at output of modulator and signal at input of detector in frequency / wavelength domain")
+        
         # Constellation diagrams
         self.constellationButton = ctk.CTkButton(plotsHelpFrame, text="Show constellation diagrams", command=lambda: self.showPlots(self.constellationButton), font=generalFont)
         self.constellationButton.pack(fill="x", padx=10, pady=10)
         ToolTip(self.constellationButton, "Shows constellation diagrams of Tx and Rx signal")
+        
         # Eye diagrams
         self.eyeButton = ctk.CTkButton(plotsHelpFrame, text="Show eye diagrams", command=lambda: self.showPlots(self.eyeButton), font=generalFont)
         self.eyeButton.pack(fill="x", padx=10, pady=10)
         ToolTip(self.eyeButton, "Shows eye diagrams of Tx and Rx signal")
 
+        # Other
+
         # Quit
         self.outputsQuitButton = ctk.CTkButton(self.outputsFrame, text="Quit", command=self.terminateApp, font=generalFont)
         self.outputsQuitButton.pack(padx=10, pady=10)
 
+        
+        # Help tab
         Help(self.helpFrame, self.setExampleParameters)
 
-
-        # Frames with buttons that will be disabled when doing configuration
-        self.buttonFrames = [self.optionsFrame, self.outputsFrame, plotsHelpFrame, self.sourceFrame, self.modulatorFrame, self.channelFrame, self.recieverFrame, self.amplifierFrame, self.amplfierChannelFrame]
 
 
 
@@ -312,29 +303,25 @@ class Gui(ctk.CTk):
 
     def terminateApp(self):
         """
-        Terminate the app. Closes main window and all other opened windows.
+        Terminates the app. Closes main window and all other opened windows.
         """
         # Toplevels windows (graphs)
         self.closeGraphsWindows()
         # Main window
         self.destroy()
 
+
     def startSimulation(self):
         """
-        Start of simulation.
-        Main function button.
+        Start of simulation. The main function of the app.
         """
         # Get values of general parameters
         if not self.updateGeneralParameters(): return
 
         # Not all parameters provided
         if not self.checkParameters(): return
-
-        # Amplifier with ideal channel
-        # if self.amplifierCheckVar.get() and self.channelParameters.get("Ideal"):
-        #    messagebox.showwarning("Simulation warning", "Amplifier will be ignored because of ideal channel.")
         
-        # Clear plots for new simulation (othervise old graphs would be shown)
+        # Clear plots for new simulation (othervise old graphs could be shown)
         self.plots.clear()
 
         # Simulation
@@ -344,15 +331,14 @@ class Gui(ctk.CTk):
         # Signal power is too low for amplifier detection
         if self.simulationResults.get("recieverSignal") is None:
             messagebox.showerror("Simulation error", "Signal power is too low to be detected by amplifier !")
-            # Clear simulation results (bcs of graphs)
+            # Clear simulation results
             self.simulationResults = None
-
             return
-        # Showing results
+        
+        # Simulation was succesfull
         else:
-            # Values to show
+            # Show numeric values
             outputValues = getValues(self.simulationResults, self.generalParameters)
-            # Actual showing in the app
             self.showValues(outputValues)
 
             messagebox.showinfo("Simulation status", "Simulation succesfully completed")
@@ -360,14 +346,14 @@ class Gui(ctk.CTk):
 
     def amplifierCheckbuttonChange(self):
         """
-        Including / exluding amplifier from the scheme.
+        Including / exluding amplifier from the setting scheme.
         """
-        # Show amplifier button
+        # Include amplifier
         if self.amplifierCheckVar.get():
-            # Postion
             amplifierPosition = self.amplifierParameters.get("Position")
 
             if amplifierPosition == "start":
+                # Source - Modulator - Amplifier - Channel - Detector
                 self.schemeFrame.grid_columnconfigure(4, weight=1)
                 self.amplfierChannelFrame.grid_forget()
                 self.amplifierFrame.grid(row=2, column=2, padx=5, pady=20, sticky="nsew")
@@ -375,6 +361,7 @@ class Gui(ctk.CTk):
                 self.recieverFrame.grid(row=2, column=4, padx=5, pady=20, sticky="nsew")
 
             elif amplifierPosition == "middle":
+                # Source - Modulator - Channel with amplifier - Detector
                 self.schemeFrame.grid_columnconfigure(4, weight=0)
                 self.channelFrame.grid_forget()
                 self.amplifierFrame.grid_forget()
@@ -382,39 +369,38 @@ class Gui(ctk.CTk):
                 self.recieverFrame.grid(row=2, column=3, padx=5, pady=20, sticky="nsew")
 
             elif amplifierPosition =="end":
+                # Source - Moudlator - Channel - Amplifier - Detector
                 self.schemeFrame.grid_columnconfigure(4, weight=1)
                 self.amplfierChannelFrame.grid_forget()
                 self.channelFrame.grid(row=2, column=2, padx=5, pady=20, sticky="nsew")
                 self.amplifierFrame.grid(row=2, column=3, padx=5, pady=20, sticky="nsew")
                 self.recieverFrame.grid(row=2, column=4, padx=5, pady=20, sticky="nsew")
-
             else:
                 raise Exception("Unexpected error")
             
-            # self.attentionCheck()
+        # Exclude amplifier
         else:
+            # Source - Modulator - Channel - Detector
             self.schemeFrame.grid_columnconfigure(4, weight=0)
-            # Remove amplifier button
             self.amplfierChannelFrame.grid_forget()
             self.amplifierFrame.grid_forget()
             self.channelFrame.grid(row=2, column=2, padx=5, pady=20, sticky="nsew")
             self.recieverFrame.grid(row=2, column=3, padx=5, pady=20, sticky="nsew")
 
-            # self.attentionCheck()
-
+        # Update showing parameters
         self.setButtonText("channel")
         self.setButtonText("amplifier")
 
 
     def showParametersPopup(self, clickedButton):
         """
-        Show Toplevel popup window to set parametrs.
+        Show new popup window to set parametrs for specific block of scheme.
         """
-        # Some general parameter was not ok
+        # Some general parameter is not ok
         if not self.updateGeneralParameters():
             return
 
-        # Disable the other buttons when a popup is open
+        # Disable the other widgets when a popup is open
         self.disableWidgets()
 
         # Open a new popup
@@ -435,51 +421,45 @@ class Gui(ctk.CTk):
         """
         Disable widgets when window to set parameters is opened. (Lock the main window)
         """
-        # Buttons
+        # Frames with buttons on Input settings tab
+        self.buttonFrames = [self.optionsFrame, self.sourceFrame, self.modulatorFrame, self.channelFrame, self.recieverFrame, self.amplifierFrame, self.amplfierChannelFrame]
+        # Disable buttons
         for frame in self.buttonFrames:
             for button in frame.winfo_children():
                 if isinstance(button, ctk.CTkButton):
                     button.configure(state="disabled")
 
-        self.disableGeneralParameters()
-
+        # Disable general parameters settings
+        self.mFormatComboBox.configure(state="disable")
+        self.mOrderCombobox.configure(state="disable")
+        self.symbolRateEntry.configure(state="disable")
+        self.symbolRateCombobox.configure(state="disable")
+        
         self.amplifierCheckbutton.configure(state="disabled")
+
+        self.tabview.configure(state="disabled")
 
 
     def enableWidgets(self):
         """
         Enable widgets when parameters have been set. (Unlock the main window)
         """
-        # Buttons
+        # Enabel buttons on input settings tab
         for frame in self.buttonFrames:
             for button in frame.winfo_children():
                 if isinstance(button, ctk.CTkButton):
                     button.configure(state="normal")
 
-        self.enableGeneralParameters()
-
-        self.amplifierCheckbutton.configure(state="normal")
-
-
-    def disableGeneralParameters(self):
-        """
-        Disable widgets for setting general parameters.
-        """
-        self.mFormatComboBox.configure(state="disable")
-        self.mOrderCombobox.configure(state="disable")
-        self.symbolRateEntry.configure(state="disable")
-        self.symbolRateCombobox.configure(state="disable")
-
-
-    def enableGeneralParameters(self):
-        """
-        Enable widgets for setting general parameters.
-        """
+        # Enable general parameters settings
         self.mFormatComboBox.configure(state="readonly")
         self.mOrderCombobox.configure(state="readonly")
         self.symbolRateEntry.configure(state="normal")
         self.symbolRateCombobox.configure(state="readonly")
 
+        self.amplifierCheckbutton.configure(state="normal")
+
+        self.tabview.configure(state="normal")
+        
 
     def getParameters(self, parameters: dict, buttonType: str):
         """
@@ -507,57 +487,70 @@ class Gui(ctk.CTk):
             self.amplifierCheckbuttonChange()
         else: raise Exception("Unexpected error")
 
-        # Update showed parameters
+        # Update showing parameters
         self.setButtonText(buttonType)
 
 
     def checkParameters(self) -> bool:
         """
-        Checks if all needed parameters are set
+        Checks if all needed parameters are set.
+
+        Returns
+        ----
+        True: parameters are ok
+
+        False parameters aren't ok
         """
-        # There is only 1 general paramete (Fs), means some problem with setting other parameters
+        # There is only 1 general parameter (Fs) means problem with settings other general parameters
         if len(self.generalParameters) == 1:
             return False
-        # Source parameters are same as initial
+        
+        # Checking if all other parameters are set (aren't same as initial)
+
         elif self.sourceParameters == self.initialParameters.get("Source"):
             messagebox.showerror("Simulation error", "You must set source parameters.")
             return False
+        
         # elif self.modulatorParameters == self.initialParameters.get("Modulator"):
         #     messagebox.showerror("Simulation error", "You must set modulator parameters.")
         #     return False
+
         elif self.channelParameters == self.initialParameters.get("Channel"):
             messagebox.showerror("Simulation error", "You must set channel parameters.")
             return False
+        
         elif self.recieverParameters == self.initialParameters.get("Reciever"):
             messagebox.showerror("Simulation error", "You must set reciever parameters.")
             return False
+        
         # Only if amplifier is included
         elif self.amplifierCheckVar.get() and self.amplifierParameters == self.initialParameters.get("Amplifier"):
             messagebox.showerror("Simulation error", "You must set amplifier parameters.")
             return False
+        
+        # All parameters are ok
         else: return True
 
 
     def modulationFormatChange(self, event):
         """
-        Change modulation order options when modulation format is changed
+        Change modulation order options when modulation format is changed.
         """
         # Setting order options for selected modulation format
         if self.mFormatComboBox.get() == "OOK":
             orderOptions = ["2"]
-            # Disable modulation order combobox for OOK format
             self.mOrderCombobox.configure(state="readonly")
+
         elif self.mFormatComboBox.get() == "PAM":
             orderOptions = ["4"]
-            # Enable modulation order combobox
             self.mOrderCombobox.configure(state="readonly")
+
         elif self.mFormatComboBox.get() == "PSK":
             orderOptions = ["2", "4", "8", "16"]
-            # Enable modulation order combobox
             self.mOrderCombobox.configure(state="readonly")
+
         elif self.mFormatComboBox.get() == "QAM":
             orderOptions = ["4", "16", "64", "256"]
-            # Enable modulation order combobox
             self.mOrderCombobox.configure(state="readonly")
         else: raise Exception("Unexpected error")
 
@@ -568,50 +561,58 @@ class Gui(ctk.CTk):
 
     def updateGeneralParameters(self) -> bool:
         """
-        Update general parameters with values from editable fields.
+        Update general parameters with values from their inputs.
 
         Returns
         ----
-        False: some parameter was not ok
-
         True: all general parameters are ok
+
+        False: some parameter was not ok
         """
         # Modulation format and order
         self.generalParameters.update({"Format": self.mFormatComboBox.get().lower(), "Order": int(self.mOrderCombobox.get())})
 
-        # OOK is created same as 2 order PAM
+        # OOK is created as 2 order PAM
         if self.mFormatComboBox.get() == "OOK":
             self.generalParameters.update({"Format": "pam"})
 
-        if not(self.checkSymbolRate()):
-            # Symbol rate is not ok
+        # Check symbol rate
+        if self.checkSymbolRate():
+            self.generalParameters.update({"Fs":self.generalParameters.get("SpS") * self.generalParameters.get("Rs")})
+            self.generalParameters.update({"Ts":1 / self.generalParameters.get("Fs")})
+            return True
+        # Symbol rate is not ok
+        else:
             return False
         
-        self.generalParameters.update({"Fs":self.generalParameters.get("SpS") * self.generalParameters.get("Rs")})
-        self.generalParameters.update({"Ts":1 / self.generalParameters.get("Fs")})
-
-        return True
-    
 
     def checkSymbolRate(self) -> bool:
         """
-        Checks if inputed symbol rate is valid and sets its if yes.
+        Checks if inputed symbol rate is valid and update it if yes.
+
+        Returns
+        ----
+        True: Symbol rate is ok and has been updated.
+
+        False: Symbol rate isn't ok
         """
-        # Checks if it is a number and covert it
+        # Checks if it is a number and coverts it to float
         Rs, isEmpty = convertNumber(self.symbolRateEntry.get())
         if Rs is None and isEmpty:
             messagebox.showerror("Symbol rate input error", "You must input symbol rate!")
             return False
+        
         elif Rs is None and not isEmpty:
             messagebox.showerror("Symbol rate input error", "Symbol rate must be a number!")
             return False
+        
         elif Rs != int(Rs):
             messagebox.showerror("Symbol rate input error", "Symbol rate must whole number!")
             return False
-        # Rs is number
+        # Is legit number
         else: pass
         
-        # Set the rigth value
+        # Corrects value
         if self.symbolRateCombobox.get() == "M (10^6)":
             Rs = Rs * 10**6
         elif self.symbolRateCombobox.get() == "G (10^9)":
@@ -619,13 +620,16 @@ class Gui(ctk.CTk):
         else:
             raise Exception("Unexpected error")
 
-        # Checks size of the number
+        # Checks size
         if Rs < 1000000: # 1 M
             messagebox.showerror("Symbol rate input error", "Symbol rate is too low")
             return False
-        elif self.generalParameters.get("Format") == "pam" and self.generalParameters.get("Order") == 2 and Rs >= 10**11: # 100G OOK
+        
+        # 100G OOK (not allowed)
+        elif self.generalParameters.get("Format") == "pam" and self.generalParameters.get("Order") == 2 and Rs >= 10**11:
             messagebox.showerror("Symbol rate input error", "Symbol rate for OOK is too high")
             return False
+        
         elif Rs >= 10**12: # 1T
             messagebox.showerror("Symbol rate input error", "Symbol rate is too high")
             return False
@@ -661,16 +665,15 @@ class Gui(ctk.CTk):
             self.transSpeedLabel.configure(text=f"Transmission speed: {transmissionSpeed / 10**6} Mb/s")
         elif transmissionSpeed >= 10**3:
             self.transSpeedLabel.configure(text=f"Transmission speed: {transmissionSpeed / 10**3} kb/s")
-        # Should not happen
         else:
             self.transSpeedLabel.configure(text=f"Transmission speed: {transmissionSpeed} b/s")
 
 
     def showPlots(self, clickedButton):
         """
-        Show plots in popup windows. Plots are defined by clickedButton.
+        Show plots in new popup window. Plots are defined by clickedButton.
         """
-        # Trying to show plots without simulation data
+        # Trying to show plots without simulation data (you cannot)
         if self.simulationResults is None:
             messagebox.showerror("Showing error", "You must start simulation first.")
             return
@@ -679,22 +682,28 @@ class Gui(ctk.CTk):
         if clickedButton == self.electricalButton:
             type = "electrical"
             title = "Infromation signals"
+
         elif clickedButton == self.opticalButton:
             type = "optical"
             title = "Optical signals"
+
         elif clickedButton == self.spectrumButton:
             type = "spectrum"
             title = "Spectrum of signals"
+
         elif clickedButton == self.constellationButton:
             type = "constellation"
             title = "Constellation diagrams"
+
         elif clickedButton == self.eyeButton:
             type = "eye"
             title = "Eye diagrams"
         else: raise Exception("Unexpected error")
 
+        # Get plot objecy to show
         plots = self.loadPlot(type)
 
+        # Show the plot
         PlotWindow(type, title, plots)
 
 
@@ -708,11 +717,13 @@ class Gui(ctk.CTk):
         ! source figure is returned only for optical and spectrum
         in other cases Source is None
         """
+        # Keys and titles for the plots. Keys are for checking if that plot was showed before.
         if type == "electrical":
             keyTx = "electricalTx"
             keyRx = "electricalRx"
             titleTx = "Modulation signal"
-            titleRx = "Detected signal"            
+            titleRx = "Detected signal"
+
         elif type == "optical":
             keyTx = "opticalTx"
             keyRx = "opticalRx"
@@ -720,6 +731,7 @@ class Gui(ctk.CTk):
             titleTx = "Modulated signal"
             titleRx = "Reciever signal"
             titleSc = "Carrier signal"  
+
         elif type == "spectrum":
             keyTx = "spectrumTx"
             keyRx = "spectrumRx"
@@ -727,11 +739,13 @@ class Gui(ctk.CTk):
             titleTx = "Tx spectrum signal"
             titleRx = "Rx spectrum signal"
             titleSc = "Carrier spectrum" 
+
         elif type == "constellation":
             keyTx = "constellationTx"
             keyRx = "constellationRx"
             titleTx = "Tx constellation diagram"
             titleRx = "Rx constellation diagram" 
+
         elif type == "eye":
             keyTx = "eyeTx"
             keyRx = "eyeRx"
@@ -739,22 +753,26 @@ class Gui(ctk.CTk):
             titleRx = "Rx eyediagram" 
         else: raise Exception("Unexpected error")
 
-        # Tx graph was once showed before
+        # Plot was once showed before
         if keyTx in self.plots:
             plotTx = self.plots.get(keyTx)
+        # Get new figure object
         else:
             plotTx = getPlot(keyTx, titleTx, self.simulationResults, self.generalParameters, self.sourceParameters)[0]
             self.plots.update({keyTx: plotTx})
         # Rx graph was once showed before
         if keyRx in self.plots:
             plotRx = self.plots.get(keyRx)
+        # Get new figure object
         else:
             plotRx = getPlot(keyRx, titleRx, self.simulationResults, self.generalParameters, self.sourceParameters)[0]
             self.plots.update({keyRx: plotRx})
         # Source graphs
         if type == "optical" or type == "spectrum":
+            # Was once showed before
             if keySc in self.plots:
                 plotSc = self.plots.get(keySc)
+            # Get new figure object
             else:
                 plotSc = getPlot(keySc, titleSc, self.simulationResults, self.generalParameters, self.sourceParameters)[0]
                 self.plots.update({keySc: plotSc})
@@ -775,46 +793,52 @@ class Gui(ctk.CTk):
 
     def setButtonText(self, type: str) -> str:
         """
-        Sets text of button represeting blocks of communication channel to its set parameters.
+        Sets text of button represeting communication scheme to its setted parameters.
 
         Parameters
         -----
-        type: button type (can be all fo all buttons)
+        type: button type (can be "all" for all buttons)
         """
         if type == "source":
             linewidthText = self.correctLinewidthUnits()
             text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {linewidthText}\nRIN: {self.sourceParameters.get('RIN')} dB/Hz"
             self.sourceButton.configure(text=text)
+
         elif type =="modulator":
             text = f"{self.modulatorParameters.get('Type')}"
             self.modulatorButton.configure(text=text)
+
         elif type == "channel":
             text = f"Length: {self.channelParameters.get('Length')} km\nAttenuation: {self.channelParameters.get('Attenuation')} dB/km\nChromatic dispersion: {self.channelParameters.get('Dispersion')} ps/nm/km"
             self.channelButton.configure(text=text)
             self.comboChannelButton.configure(text=text)
+
         elif type == "reciever":
             bandwidthText = self.correctBandwidthUnits()
             text = f"{self.recieverParameters.get('Type')}\nBandwidth: {bandwidthText}\nResolution: {self.recieverParameters.get('Resolution')} A/W"
             self.recieverButton.configure(text=text)
+
         elif type == "amplifier":
             text = f"Position in channel: {self.amplifierParameters.get('Position')}\nGain: {self.amplifierParameters.get('Gain')} dB\nNoise figure: {self.amplifierParameters.get('Noise')} dB\nSensitivity: {self.amplifierParameters.get('Detection')} dBm"
             self.amplifierButton.configure(text=text)
             self.comboAmplifierButton.configure(text=text)
+
         elif type == "all":
+            # Source
             linewidthText = self.correctLinewidthUnits()
             text = f"Power: {self.sourceParameters.get('Power')} dBm\nFrequency: {self.sourceParameters.get('Frequency')} THz\nLinewidth: {linewidthText}\nRIN: {self.sourceParameters.get('RIN')} dB/Hz"
             self.sourceButton.configure(text=text)
-
+            # Modulator
             text = f"{self.modulatorParameters.get('Type')}"
             self.modulatorButton.configure(text=text)
-
+            # Channel
             text = f"Length: {self.channelParameters.get('Length')} km\nAttenuation: {self.channelParameters.get('Attenuation')} dB/km\nChromatic dispersion: {self.channelParameters.get('Dispersion')} ps/nm/km"
             self.channelButton.configure(text=text)
-
+            # Reciever
             bandwidthText = self.correctBandwidthUnits()
             text = f"{self.recieverParameters.get('Type')}\nBandwidth: {bandwidthText}\nResponsivity: {self.recieverParameters.get('Resolution')} A/W"
             self.recieverButton.configure(text=text)
-
+            # Amplifier
             text = f"Position in channel: {self.amplifierParameters.get('Position')}\nGain: {self.amplifierParameters.get('Gain')} dB\nNoise figure: {self.amplifierParameters.get('Noise')} dB\n Detection limit: {self.amplifierParameters.get('Detection')} dBm"
             self.amplifierButton.configure(text=text)
         else:
@@ -823,14 +847,15 @@ class Gui(ctk.CTk):
 
     def correctBandwidthUnits(self) -> str:
         """
-        Corrects reciever text to show correct bandwidth unist.
+        Corrects reciever text to show correct bandwidth units.
 
         Returns
         ----
-        bandwidth: str value
+        bandwidth: string value with units
         """
         bandwidth = self.recieverParameters.get("Bandwidth")
 
+        # Ideal parameter
         if str(bandwidth) == "inf":
             return f"{bandwidth} Hz"
 
@@ -846,11 +871,11 @@ class Gui(ctk.CTk):
 
     def correctLinewidthUnits(self) -> str:
         """
-        Corrects source text to show correct linewidth unist.
+        Corrects source text to show correct linewidth units.
 
         Returns
         ----
-        linewidth: str value
+        linewidth: string value with units
         """
         linewidth = self.sourceParameters.get("Linewidth")
 
@@ -867,15 +892,19 @@ class Gui(ctk.CTk):
         Sets example parameters to the application. 
         """
         # 10 Gb/s OOK
+
+        # General parameters
         self.mFormatComboBox.set("OOK")
         self.modulationFormatChange(event=None)
         self.symbolRateEntry.delete(0, tk.END)
         self.symbolRateEntry.insert(0, "10")
         self.symbolRateCombobox.set("G (10^9)")
+
         # Remove amplifier if included
         if self.amplifierCheckVar.get():
             self.amplifierCheckbutton.toggle()
 
+        # Scheme blocks parameters
         self.sourceParameters = {"Power": 10, "Frequency": 193.1, "Linewidth": 10**4, "RIN": -150, "Ideal": False}
         self.modulatorParameters = {"Type": "MZM"}
         self.channelParameters = {"Length": 60, "Attenuation": 0.2, "Dispersion": 16, "Ideal": False}

@@ -1,20 +1,13 @@
 
-"""
-Script inspired by OpticommPY functions with a little changes.
-Also added some more functions.
-"""
-
 import numpy as np
 import scipy.constants as const
-from optic.utils import dBm2W
-from optic.dsp.core import gaussianComplexNoise, gaussianNoise
 
-from optic.models.devices import mzm, pm
-from optic.utils import parameters
+from optic.utils import dBm2W
+from optic.dsp.core import gaussianComplexNoise
 
 def edfa(Ei, ideal: bool, param=None) -> np.array:
     """
-    Implement simple EDFA model.
+    Implement simple EDFA model. Edited version from OpticommPY package.
 
     Parameters
     ----------
@@ -43,10 +36,12 @@ def edfa(Ei, ideal: bool, param=None) -> np.array:
     Fc = getattr(param, "Fc")
     Fs = getattr(param, "Fs")
 
+    # Ideal amplifier
     if ideal:
         G_lin = 10 ** (G / 10)
 
         return Ei * np.sqrt(G_lin)
+    # Not ideal amplifier
     else:
         NF_lin = 10 ** (NF / 10)
         G_lin = 10 ** (G / 10)

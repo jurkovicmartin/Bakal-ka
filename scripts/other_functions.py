@@ -1,5 +1,4 @@
 
-
 def calculateTransSpeed(symbolRate: int, modulationOrder: int) -> int:
     """
     Calculates transmission speed in bits/s.

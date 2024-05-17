@@ -1,11 +1,6 @@
-# Popup window to show graphs
 
-import tkinter as tk
-from tkinter import ttk
 import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
-import matplotlib.pyplot as plt
 
 class PlotWindow:
     """
@@ -21,15 +16,9 @@ class PlotWindow:
         self.type = type
         self.title = title
         self.plots = plots
-        self.popupGui()
 
+        # GUI
 
-
-    def popupGui(self):
-        """
-        Creates popup gui for setting parameters.
-        """
-        
         self.popup = ctk.CTkToplevel()
         self.popup.geometry("1000x700")
         self.popup.minsize(1000,700)
@@ -42,6 +31,7 @@ class PlotWindow:
         self.mainFrame = ctk.CTkScrollableFrame(self.popup)
         self.mainFrame.pack(fill="both", expand=True)
 
+        # Title
         self.titleLabel = ctk.CTkLabel(self.mainFrame, text=self.title, font=headFont)
         self.titleLabel.pack(padx=20, pady=20)
 
@@ -66,17 +56,6 @@ class PlotWindow:
             self.canvasRx.get_tk_widget().pack(padx=10, pady=10)
         
         # Show 2 plots
-        elif self.type == "constellation":
-            # Tx plot
-            self.canvasTx = FigureCanvasTkAgg(figure= self.plots[0], master=self.plotsFrame)
-            self.canvasTx.draw()
-            self.canvasTx.get_tk_widget().pack(padx=10, pady=10)
-
-            # Rx plot
-            self.canvasRx = FigureCanvasTkAgg(figure= self.plots[1], master=self.plotsFrame)
-            self.canvasRx.draw()
-            self.canvasRx.get_tk_widget().pack(padx=10, pady=10)
-        
         else:
             # Tx plot
             self.canvasTx = FigureCanvasTkAgg(figure= self.plots[0], master=self.plotsFrame)
@@ -88,9 +67,15 @@ class PlotWindow:
             self.canvasRx.draw()
             self.canvasRx.get_tk_widget().pack(padx=10, pady=10)
 
+
+        # Other
+        
         self.closeButton = ctk.CTkButton(self.popup, text="Close", command=self.closePopup, font=generalFont)
         self.closeButton.pack(padx=20, pady=20)
 
+
+
+    # Methods
 
     def closePopup(self):
         """

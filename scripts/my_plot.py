@@ -1,17 +1,8 @@
 
-"""
-Script inspired by OpticommPY functions with a little changes.
-Also added some more functions.
-"""
-
 import matplotlib.pyplot as plt
-from matplotlib import cm
-import mpl_scatter_density
 import numpy as np
-import copy
 from scipy.interpolate import interp1d
 from scipy.ndimage.filters import gaussian_filter
-
 from optic.dsp.core import pnorm, signal_power
 from optic.models.amplification import get_spectrum
 from optic.plot import constHist
@@ -22,7 +13,7 @@ warnings.filterwarnings("ignore", r"All-NaN (slice|axis) encountered")
 
 def constellation(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True, title="") -> tuple[plt.Figure, plt.Axes]:
     """
-    Plot signal constellations.
+    Plot signal constellations. Edited version from OpticommPY package.
     
     Parameters
     ----------
@@ -162,7 +153,7 @@ def constellation(x, lim=True, R=1.25, pType="fancy", cmap="turbo", whiteb=True,
 
 def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None, title="") -> tuple[plt.Figure, plt.Axes]:
     """
-    Plot the eye diagram of a modulated signal waveform.
+    Plot the eye diagram of a modulated signal waveform. Edited version from OpticommPY package.
 
     Parameters
     ----------
@@ -252,7 +243,6 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None, title=""
 
     axes.set_xlabel("symbol period (Ts)")
     axes.set_ylabel("amplitude")
-    # axes.set_title(f"eye diagram {plotlabel_}")
     axes.grid(alpha=0.15)
 
     plt.suptitle(title)
@@ -263,20 +253,20 @@ def eyediagram(sigIn, Nsamples, SpS, n=3, ptype="fast", plotlabel=None, title=""
 
 def electricalInTime(Ts: int, signal, title: str) -> tuple[plt.Figure, plt.Axes]:
     """
-    Plot electrical signal in time showed as real and imaginary part
+    Plot electrical signal in time showed as real and imaginary part.
     """
-    # interval for plot
+    # Time (samples) interval for plot
     interval = np.arange(100,600)
     time, unitsTime = fixTimeUnits(interval, Ts)
 
     fig, axs = plt.subplots(2, 1, figsize=(8, 4))
 
-    # Real
+    # Real part
     axs[0].plot(time, signal[interval].real, label="Real Part", linewidth=2, color="blue")
     axs[0].set_ylabel("Amplitude (a.u.)")
     axs[0].legend(loc="upper left")
 
-    # Imaginary
+    # Imaginary part
     axs[1].plot(time, signal[interval].imag, label="Imaginary Part", linewidth=2, color="red")
     axs[1].set_ylabel("Amplitude (a.u.)")
     axs[1].set_xlabel(f"Time ({unitsTime})")
@@ -288,7 +278,6 @@ def electricalInTime(Ts: int, signal, title: str) -> tuple[plt.Figure, plt.Axes]
     return fig, axs
 
 
-
 def opticalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, plt.Axes]:
     """
     Plot optical signal in time showed as magnitude and phase.
@@ -298,7 +287,7 @@ def opticalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, p
     type: carrier / modulated
     """
 
-    # interval for plot
+    # Time (samples) interval for plot
     interval = np.arange(100,600)
     time, unitsTime = fixTimeUnits(interval, Ts)
 
@@ -313,16 +302,15 @@ def opticalInTime(Ts: int, signal, title: str, type: str) -> tuple[plt.Figure, p
         yMin = magnitude.min()
         yMax = magnitude.max() + 0.05 * magnitude.max()
 
-    # Plotting magnitude and phase in two subplots
     fig, axs = plt.subplots(2, 1, figsize=(8, 4))
 
-    # Plot magnitude
+    # Magnitude
     axs[0].plot(time, magnitude, label="Magnitude", linewidth=2, color="blue")
     axs[0].set_ylabel("Power (W)")
     axs[0].legend(loc="upper left")
     axs[0].set_ylim([yMin, yMax])
 
-    # Plot phase
+    # Phase
     axs[1].plot(time, phase, label="Phase", linewidth=2, color="red")
     axs[1].set_ylabel("Phase (°)")
     axs[1].set_xlabel(f"Time ({unitsTime})")
@@ -346,20 +334,19 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
     Fc: central frequency
     """
     frequency, spectrum = get_spectrum(signal, Fs, Fc, xunits="Hz")
+
     # Wavelength
     wavelength = c / frequency
     # To nm
     wavelength = wavelength * 10**9
+
     # Frequency to THz
     frequency = frequency / 10**12
 
     yMin = spectrum.min()
     yMax = spectrum.max() + 10
-    # Case of ideal carrier
-    if yMin == -np.inf:
-        yMin = -150
 
-    # Plot spectrum with wavelength
+    # Prepare second x ax
     fig, ax1 = plt.subplots(1)
     ax1.plot( wavelength, frequency)
     ax1.set_ylim([yMin, yMax])   
@@ -368,24 +355,13 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
     ax1.minorticks_on()
     ax1.grid(True)
 
-    # Set scattered ticks on the x-axis
-    # num_ticks = 5  # Set the number of ticks you want to display
-    # tick_indices = np.linspace(0, len(wavelength) - 1, num_ticks, dtype=int)
-    # ax1.set_xticks(wavelength[tick_indices])
-    # ax1.set_xticklabels([f"{freq_nm:.2f}" for freq_nm in wavelength[tick_indices]])
-
-    # Add another x ax with frequency
+    # Plot the spectrum
     ax2 = ax1.twiny()
-    # Make some room at the top
     fig.subplots_adjust(top=0.8)
     ax2.plot(frequency, spectrum)
     ax2.set_xlabel("Frequency [THz]")
     ax2.minorticks_on()
     ax2.grid(True)
-
-    # tick_indices = np.linspace(0, len(frequency) - 1, num_ticks, dtype=int)
-    # ax2.set_xticks(frequency[tick_indices])
-    # ax2.set_xticklabels([f"{freq_nm:.2f}" for freq_nm in frequency[tick_indices]])
 
     plt.suptitle(title)
     plt.close()
@@ -395,7 +371,7 @@ def opticalSpectrum(signal, Fs: int, Fc: float, title: str) -> tuple[plt.Figure,
 
 def fixTimeUnits(interval: np.array,  Ts: int) -> tuple[np.array, str]:
     """
-    Fixes time ax units for showing.
+    Fixes time ax units.
 
     Parameters
     ----
@@ -410,12 +386,15 @@ def fixTimeUnits(interval: np.array,  Ts: int) -> tuple[np.array, str]:
     if Ts <= 10**-9:
         Ts = Ts / 10**-9
         units = "ns"
+
     elif Ts <= 10**6:
         Ts = Ts / 10**-6
         units = "us"
+
     elif Ts <= 10**3:
         Ts = Ts / 10**-3
         units = "ms"
+        
     else:
         units = "s"
 
