@@ -1,5 +1,6 @@
 
 import customtkinter as ctk
+from PIL import Image
 
 class Help:
     """
@@ -20,21 +21,32 @@ class Help:
 
         # Examples chapter
         exampleFrame = ctk.CTkFrame(mainFrame, fg_color=backgroundColor)
+        # exampleFrame.grid_rowconfigure((0, 1, 2), weight=1)
+        exampleFrame.grid_columnconfigure((0, 1), weight=1)
         exampleFrame.pack(fill="both", expand=True, padx=10, pady=10)
 
         exampleTitle = ctk.CTkLabel(exampleFrame, text="Example", font=headFont)
-        exampleTitle.grid(row=0, column=0, padx=10, pady=10)
+        exampleTitle.grid(row=0, column=0, padx=10, pady=10, columnspan=2, sticky="ew")
 
-        text = "10 Gb/s OOK"
+        text = (
+            "After clicking example button general parameters also with communication chain parameters will be set. "
+            "Two examples are ready to use at the moment. First one is to simulate communivcation with OOK modulation and transmission speed 10 Gb/s. "
+            "Second one will set parameters for 50 Gb/s QPSK communication."
+        )
 
-        exampleText = ctk.CTkLabel(exampleFrame, text=text, font=generalFont)
-        exampleText.grid(row=1, column=0, padx=10, pady=10)
+        exampleText = ctk.CTkTextbox(exampleFrame, font=generalFont, fg_color="transparent", wrap="word", height=100)
+        exampleText.insert("0.0", text=text)
+        exampleText.configure(state="disabled")
+        exampleText.grid(row=1, column=0, padx=10, pady=10, columnspan=2, sticky="ew")
 
-        exampleButton = ctk.CTkButton(exampleFrame, text="Set example parameters", command=exampleFunction, font=generalFont)
-        exampleButton.grid(row=2, column=0, padx=10, pady=10)
+        ookButton = ctk.CTkButton(exampleFrame, text="OOK", command=lambda: exampleFunction("ook"), font=generalFont)
+        ookButton.grid(row=2, column=0, padx=10, pady=10)
+
+        qpskButton = ctk.CTkButton(exampleFrame, text="QPSK", command=lambda: exampleFunction("qpsk"), font=generalFont)
+        qpskButton.grid(row=2, column=1, padx=10, pady=10)
 
 
-        # Introduction
+        # Introduction chapter
         introductionFrame = ctk.CTkFrame(mainFrame, fg_color=backgroundColor)
         introductionFrame.grid_rowconfigure((0, 1), weight=1)
         introductionFrame.grid_columnconfigure(0, weight=1)
@@ -59,14 +71,14 @@ class Help:
         introductionText.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
 
-        # Modulation
+        # Modulation chapter
         modulationFrame = ctk.CTkFrame(mainFrame, fg_color=backgroundColor)
-        modulationFrame.grid_rowconfigure((0, 1), weight=1)
-        modulationFrame.grid_columnconfigure(0, weight=1)
+        modulationFrame.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
+        modulationFrame.grid_columnconfigure((0, 1), weight=1)
         modulationFrame.pack(fill="both", padx=10, pady=10)
 
         modulationTitle = ctk.CTkLabel(modulationFrame, text="Modulation", font=headFont)
-        modulationTitle.grid(row=0, column=0, padx=10, pady=10)
+        modulationTitle.grid(row=0, column=0, padx=10, pady=10, columnspan=2)
 
         text = (
             "Modulation is a process of varying a property of the light wave to encode information onto the light signal. "
@@ -81,9 +93,26 @@ class Help:
         modulatinText = ctk.CTkTextbox(modulationFrame, font=generalFont, fg_color="transparent", wrap="word")
         modulatinText.insert("0.0", text)
         modulatinText.configure(state="disabled")
-        modulatinText.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        modulatinText.grid(row=1, column=0, padx=10, pady=10, sticky="ew", columnspan=2)
 
-        # Source
+        image = ctk.CTkImage(light_image=Image.open("img/carrier.png"), dark_image=Image.open("img/carrier.png"), size=(400, 200))
+        carrierImage = ctk.CTkLabel(modulationFrame, image=image, text="")
+        carrierImage.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
+
+        image = ctk.CTkImage(light_image=Image.open("img/amplitude.png"), dark_image=Image.open("img/amplitude.png"), size=(400, 200))
+        amplitudeImage = ctk.CTkLabel(modulationFrame, image=image, text="")
+        amplitudeImage.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
+
+        image = ctk.CTkImage(light_image=Image.open("img/phase.png"), dark_image=Image.open("img/phase.png"), size=(400, 200))
+        phaseImage = ctk.CTkLabel(modulationFrame, image=image, text="")
+        phaseImage.grid(row=4, column=0, padx=10, pady=10, sticky="ew")
+
+        image = ctk.CTkImage(light_image=Image.open("img/constellations.png"), dark_image=Image.open("img/constellations.png"), size=(400, 290))
+        constellationImage = ctk.CTkLabel(modulationFrame, image=image, text="")
+        constellationImage.grid(row=2, column=1, padx=10, pady=10, sticky="ew", rowspan=3)
+
+
+        # Source chapter
         sourceFrame = ctk.CTkFrame(mainFrame, fg_color=backgroundColor)
         sourceFrame.grid_rowconfigure((0, 1), weight=1)
         sourceFrame.grid_columnconfigure(0, weight=1)
@@ -101,13 +130,13 @@ class Help:
             "\n\n - RIN (Relative Intensity Noise) = noise in the optical power relative to its average power"
         )
 
-        sourceText = ctk.CTkTextbox(sourceFrame, font=generalFont, fg_color="transparent", wrap="word")
+        sourceText = ctk.CTkTextbox(sourceFrame, font=generalFont, fg_color="transparent", wrap="word", height=230)
         sourceText.insert("0.0", text)
         sourceText.configure(state="disabled")
         sourceText.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
 
-        # Modulator
+        # Modulator chapter
         modulatorFrame = ctk.CTkFrame(mainFrame, fg_color=backgroundColor)
         modulatorFrame.grid_rowconfigure((0, 1), weight=1)
         modulatorFrame.grid_columnconfigure(0, weight=1)
@@ -132,7 +161,7 @@ class Help:
         modulatorText.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
 
-        # Channel
+        # Channel chapter
         channelFrame = ctk.CTkFrame(mainFrame, fg_color=backgroundColor)
         channelFrame.grid_rowconfigure((0, 1), weight=1)
         channelFrame.grid_columnconfigure(0, weight=1)
@@ -156,7 +185,7 @@ class Help:
         channelText.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
 
-        # Reciever
+        # Reciever chapter
         recieverFrame = ctk.CTkFrame(mainFrame, fg_color=backgroundColor)
         recieverFrame.grid_rowconfigure((0, 1), weight=1)
         recieverFrame.grid_columnconfigure(0, weight=1)
@@ -180,7 +209,7 @@ class Help:
         recieverText.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
 
-        # Amplifier
+        # Amplifier chapter
         amplifierFrame = ctk.CTkFrame(mainFrame, fg_color=backgroundColor)
         amplifierFrame.grid_rowconfigure((0, 1), weight=1)
         amplifierFrame.grid_columnconfigure(0, weight=1)
@@ -201,7 +230,7 @@ class Help:
             "\n\n - Sensitivity = lowest power level that the amplifier can detect and amplify."
         )
 
-        amplifierText = ctk.CTkTextbox(amplifierFrame, font=generalFont, fg_color="transparent", wrap="word")
+        amplifierText = ctk.CTkTextbox(amplifierFrame, font=generalFont, fg_color="transparent", wrap="word", height=230)
         amplifierText.insert("0.0", text)
         amplifierText.configure(state="disabled")
         amplifierText.grid(row=1, column=0, padx=10, pady=10, sticky="ew")

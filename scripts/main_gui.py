@@ -887,27 +887,54 @@ class GUI(ctk.CTk):
             return f"{linewidth} Hz"
 
 
-    def setExampleParameters(self):
+    def setExampleParameters(self, type: str):
         """
         Sets example parameters to the application. 
+
+        Parameters
+        ----
+        type: type of example
         """
         # 10 Gb/s OOK
+        if type == "ook":
+            # General parameters
+            self.mFormatComboBox.set("OOK")
+            self.modulationFormatChange(event=None)
+            self.symbolRateEntry.delete(0, tk.END)
+            self.symbolRateEntry.insert(0, "10")
+            self.symbolRateCombobox.set("G (10^9)")
 
-        # General parameters
-        self.mFormatComboBox.set("OOK")
-        self.modulationFormatChange(event=None)
-        self.symbolRateEntry.delete(0, tk.END)
-        self.symbolRateEntry.insert(0, "10")
-        self.symbolRateCombobox.set("G (10^9)")
+            # Remove amplifier if included
+            if self.amplifierCheckVar.get():
+                self.amplifierCheckbutton.toggle()
 
-        # Remove amplifier if included
-        if self.amplifierCheckVar.get():
-            self.amplifierCheckbutton.toggle()
+            # Scheme blocks parameters
+            self.sourceParameters = {"Power": 10, "Frequency": 193.1, "Linewidth": 10**4, "RIN": -150, "Ideal": False}
+            self.modulatorParameters = {"Type": "MZM"}
+            self.channelParameters = {"Length": 60, "Attenuation": 0.2, "Dispersion": 16, "Ideal": False}
+            self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 10**10, "Resolution": 0.7, "Ideal": False}
+        
+        # 50 Gb/s QPSK
+        elif type == "qpsk":
+            # General parameters
+            self.mFormatComboBox.set("PSK")
+            self.modulationFormatChange(event=None)
+            self.mOrderCombobox.set("4")
+            self.symbolRateEntry.delete(0, tk.END)
+            self.symbolRateEntry.insert(0, "25")
+            self.symbolRateCombobox.set("G (10^9)")
 
-        # Scheme blocks parameters
-        self.sourceParameters = {"Power": 10, "Frequency": 193.1, "Linewidth": 10**4, "RIN": -150, "Ideal": False}
-        self.modulatorParameters = {"Type": "MZM"}
-        self.channelParameters = {"Length": 60, "Attenuation": 0.2, "Dispersion": 16, "Ideal": False}
-        self.recieverParameters = {"Type": "Photodiode", "Bandwidth": 10**10, "Resolution": 0.7, "Ideal": False}
+            # Remove amplifier if included
+            if self.amplifierCheckVar.get():
+                self.amplifierCheckbutton.toggle()
 
+            # Scheme blocks parameters
+            self.sourceParameters = {"Power": 10, "Frequency": 193.1, "Linewidth": 10**4, "RIN": -150, "Ideal": False}
+            self.modulatorParameters = {"Type": "IQM"}
+            self.channelParameters = {"Length": 10, "Attenuation": 0.2, "Dispersion": 16, "Ideal": False}
+            self.recieverParameters = {"Type": "Coherent", "Bandwidth": 5 * 10**10, "Resolution": 0.7, "Ideal": False}
+        else:
+            raise Exception("Unexpected error")
+        
+        # Update showing parameters
         self.setButtonText("all")
