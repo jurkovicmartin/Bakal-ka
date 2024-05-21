@@ -19,8 +19,8 @@ class GUI(ctk.CTk):
         super().__init__()
 
         ctk.set_default_color_theme("dark-blue")
-        self.geometry("1000x700")
-        self.minsize(1000,700)
+        self.geometry("1000x650")
+        self.minsize(1000,650)
         self.after(0, lambda:self.state("zoomed"))
         self.title("Optical communication simulation app")
         self.update()
@@ -182,13 +182,16 @@ class GUI(ctk.CTk):
 
         ### OTHER
 
+        otherFrame = ctk.CTkFrame(self.optionsFrame, fg_color="transparent")
+        otherFrame.pack(padx=10, pady=10)
+
         # Start simulation
-        self.simulateButton = ctk.CTkButton(self.optionsFrame, text="Simulate", command=self.startSimulation, font=generalFont)
-        self.simulateButton.pack(padx=10, pady=10)
+        self.simulateButton = ctk.CTkButton(otherFrame, text="Simulate", command=self.startSimulation, font=generalFont)
+        self.simulateButton.grid(row=0, column=0, padx=10, pady=10)
 
         # Quit
-        self.optionsQuitButton = ctk.CTkButton(self.optionsFrame, text="Quit", command=self.terminateApp, font=generalFont)
-        self.optionsQuitButton.pack(padx=10, pady=10)
+        self.optionsQuitButton = ctk.CTkButton(otherFrame, text="Quit", command=self.terminateApp, font=generalFont)
+        self.optionsQuitButton.grid(row=0, column=1, padx=10, pady=10)
 
 
         ### OUTPUTS TAB
@@ -320,6 +323,9 @@ class GUI(ctk.CTk):
 
         # Not all parameters provided
         if not self.checkParameters(): return
+
+        # Sampling frequency error
+        if not self.checkSamplingFrequency(): return
         
         # Clear plots for new simulation (othervise old graphs could be shown)
         self.plots.clear()
@@ -938,3 +944,26 @@ class GUI(ctk.CTk):
         
         # Update showing parameters
         self.setButtonText("all")
+
+
+    def checkSamplingFrequency(self) -> bool:
+        """
+        Checks sampling frequency for reciever bandwidth. (Fs must be at least twice of B)
+
+        Returns
+        ----
+        True: ok
+
+        False isn't ok
+        """
+        bandwidth = self.recieverParameters.get("Bandwidth")
+        Fs = self.generalParameters.get("Fs")
+        # Ideal reciever
+        if bandwidth == "inf":
+            return True
+        elif Fs < 2 *bandwidth:
+            messagebox.showerror("Simulation error", "You must set lower bandwidth or higher symbol rate!")
+            return False
+        # Fs is ok
+        else:
+            return True

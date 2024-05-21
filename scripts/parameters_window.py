@@ -365,6 +365,7 @@ class ParametersWindow:
                 self.linewidthEntry.delete(0, tk.END)
                 self.linewidthEntry.insert(0, "1")
                 self.linewidthEntry.configure(state="disabled")
+                self.linewidthCombobox.set("Hz")
                 self.linewidthCombobox.configure(state="disabled")
 
                 # RIN
@@ -404,6 +405,7 @@ class ParametersWindow:
                 self.bandwidthEntry.delete(0, tk.END)
                 self.bandwidthEntry.insert(0, "inf")
                 self.bandwidthEntry.configure(state="disabled")
+                self.bandwidthCombobox.set("Hz")
                 self.bandwidthCombobox.configure(state="disabled")
 
                 # Resolution
@@ -494,7 +496,8 @@ class ParametersWindow:
             else:
                 self.recieverCombobox.set(self.defaultParameters.get("Type"))
                 self.setDefaultBandwidth()
-                self.resolutionEntry.insert(0, str(self.defaultParameters.get("Resolution")))
+                if not self.defaultParameters.get("Resolution") == 0:
+                    self.resolutionEntry.insert(0, str(self.defaultParameters.get("Resolution")))
 
         elif self.type == "amplifier":
             # No default parameters
@@ -560,6 +563,8 @@ class ParametersWindow:
             self.bandwidthLabel.grid(row=1, column=0, padx=10, pady=10)
             self.bandwidthEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
             self.bandwidthEntry.grid(row=1, column=1, padx=10, pady=10)
+            self.bandwidthEntry.delete(0, tk.END)
+            self.bandwidthEntry.insert(0, "0")
             self.bandwidthCombobox = ctk.CTkComboBox(self.recieverHelpFrame, values=["Hz", "kHz", "MHz", "GHz"], state="readonly", font=self.generalFont)
             self.bandwidthCombobox.set("Hz")
             self.bandwidthCombobox.grid(row=1, column=2, padx=10, pady=10)
@@ -568,6 +573,8 @@ class ParametersWindow:
             self.resolutionLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Responsivity [A/W]", font=self.generalFont)
             self.resolutionLabel.grid(row=2, column=0, padx=10, pady=10)
             self.resolutionEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
+            self.resolutionEntry.delete(0, tk.END)
+            self.resolutionEntry.insert(0, "0")
             self.resolutionEntry.grid(row=2, column=1, padx=10, pady=10)
             
             # Ideal parameters checkbutton
@@ -586,6 +593,8 @@ class ParametersWindow:
             self.bandwidthLabel.grid(row=1, column=0, padx=10, pady=10)
             self.bandwidthEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
             self.bandwidthEntry.grid(row=1, column=1, padx=10, pady=10)
+            self.bandwidthEntry.delete(0, tk.END)
+            self.bandwidthEntry.insert(0, "0")
             self.bandwidthCombobox = ctk.CTkComboBox(self.recieverHelpFrame, values=["Hz", "kHz", "MHz", "GHz"], state="readonly", font=self.generalFont)
             self.bandwidthCombobox.set("Hz")
             self.bandwidthCombobox.grid(row=1, column=2, padx=10, pady=10)
@@ -594,6 +603,8 @@ class ParametersWindow:
             self.resolutionLabel = ctk.CTkLabel(self.recieverHelpFrame, text="Responsivity [A/W]", font=self.generalFont)
             self.resolutionLabel.grid(row=2, column=0, padx=10, pady=10)
             self.resolutionEntry = ctk.CTkEntry(self.recieverHelpFrame, font=self.generalFont)
+            self.resolutionEntry.delete(0, tk.END)
+            self.resolutionEntry.insert(0, "0")
             self.resolutionEntry.grid(row=2, column=1, padx=10, pady=10)
 
             # Ideal parameters checkbutton
@@ -624,7 +635,8 @@ class ParametersWindow:
             self.bandwidthEntry.insert(0, str(bandwidth / 10**3))
             self.bandwidthCombobox.set("kHz")
         else:
-            self.bandwidthEntry.insert(0, str(bandwidth))
+            if not bandwidth == 0:
+                self.bandwidthEntry.insert(0, str(bandwidth))
             self.bandwidthCombobox.set("Hz")
 
 
